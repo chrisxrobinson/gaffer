@@ -29,7 +29,7 @@ def sandboxd(tmp_path):
     work.mkdir()
     env = {**os.environ, "ANTHROPIC_API_KEY": "sk-ant-should-never-leak"}
     proc = subprocess.Popen(
-        [sys.executable, str(SANDBOXD), "--host", "127.0.0.1", "--port", str(port), "--work", str(work)],
+        [sys.executable, str(SANDBOXD), "--host", "127.0.0.1", "--port", str(port), "--work", str(work), "--max-procs", "0"],
         env=env,
     )
     base = f"http://127.0.0.1:{port}"

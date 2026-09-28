@@ -280,10 +280,10 @@ Each stage ships only if it beats the previous stage in the backtest (§6).
 |---|---|
 | Language/runtime | Python 3.14 (`python:3.14-slim`); open-fpl-solver requires ≥3.14 |
 | Preinstalled | `gaffer_lib`, `open-fpl-solver` (pinned commit), `highspy`, `numpy`, `pandas`, `scipy`, `pydantic`. No pip at runtime. |
-| Limits | 2 vCPU, 2 GB RAM (4 GB on Fargate), pids 128, 120 s per command (solver calls run with a 45 s time limit), `/work` tmpfs 256 MB |
+| Limits | 2 vCPU, 2 GB RAM (4 GB on Fargate), pids 128 (commands get `RLIMIT_NPROC` 96), 120 s per command (solver calls run with a 45 s time limit), `/work` tmpfs 256 MB |
 | Filesystem | Read-only root; `/data` read-only; `/work` read-write and ephemeral |
 | Network | None: an `internal: true` network that reaches the harness only |
-| Privileges | Non-root, cap-drop ALL, no-new-privileges, default seccomp, gVisor `runsc` on Linux hosts |
+| Privileges | Non-root, cap-drop ALL, no-new-privileges, Docker's default seccomp profile set explicitly, init as PID 1, gVisor `runsc` on Linux hosts |
 | Lifetime | One per session, lazily provisioned, released after 15 min idle or at session end |
 | Env | A fixed minimal env built by `sandboxd`, never inherited |
 
@@ -367,7 +367,7 @@ This section is how the theory in the brief gets tested. There are four layers, 
 The full decision is in [ADR 0005](decisions/0005-web-tui.md).
 
 - **Approach (MVP):** the browser runs xterm.js served by **ttyd**, which runs `tmux new -A -s gaffer pi …` in the `gaffer` container. The UI **is** the Pi CLI, so it looks and behaves exactly like Pi, including the Gaffer theme, slash commands and tool renderers.
-- **Connection:** a WebSocket from the browser to ttyd. ttyd is bound to `127.0.0.1` locally, and sits behind ALB/OIDC in the cloud (`-H` auth-proxy header, idle timeout 3600 s).
+- **Connection:** a WebSocket from the browser to ttyd. Locally the port is published on the host's `127.0.0.1` only, and inside the container ttyd listens only on the egress-network interface (never the sandbox network); in the cloud it sits behind ALB/OIDC in the cloud (`-H` auth-proxy header, idle timeout 3600 s).
 - **Streaming:** native. Pi's TUI renders token deltas and tool progress, and ttyd relays the PTY bytes.
 - **Reconnects:** tmux keeps the Pi process and any in-flight run alive, so a reload re-attaches (`new -A`). If the container restarts, `pi --continue` resumes from the JSONL session. The tmux prefix and bindings are removed.
 - **Hardening:** single client (`-m 1`), user `!` shell blocked, tool allowlist, and nothing sensitive in the harness beyond the LLM key.

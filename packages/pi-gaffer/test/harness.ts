@@ -44,7 +44,7 @@ export async function startEnv(): Promise<GafferTestEnv> {
 	for (const d of [sandboxWork, dataDir, sessionsDir]) mkdirSync(d);
 	const fpl = await new MockFpl().start();
 	const port = await freePort();
-	const sbx: ChildProcess = spawn("python3", [SANDBOXD, "--host", "127.0.0.1", "--port", String(port), "--work", sandboxWork], { stdio: "ignore" });
+	const sbx: ChildProcess = spawn("python3", [SANDBOXD, "--host", "127.0.0.1", "--port", String(port), "--work", sandboxWork, "--max-procs", "0"], { stdio: "ignore" });
 	Object.assign(process.env, {
 		FPL_BASE_URL: fpl.base,
 		SANDBOX_URL: `http://127.0.0.1:${port}`,

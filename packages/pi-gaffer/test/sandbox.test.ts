@@ -25,7 +25,7 @@ beforeEach(async () => {
 	mkdirSync(work);
 	const port = await freePort();
 	url = `http://127.0.0.1:${port}`;
-	proc = spawn("python3", [SANDBOXD, "--host", "127.0.0.1", "--port", String(port), "--work", work], { stdio: "ignore" });
+	proc = spawn("python3", [SANDBOXD, "--host", "127.0.0.1", "--port", String(port), "--work", work, "--max-procs", "0"], { stdio: "ignore" });
 	await new ComposeSandboxProvider(url).provision();
 });
 afterEach(() => void proc.kill());

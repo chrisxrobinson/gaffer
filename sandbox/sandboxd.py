@@ -30,6 +30,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 MAX_TIMEOUT_S = 120
+# Per-command process/thread cap (RLIMIT_NPROC, per uid), kept below the container's pids limit (128)
+# so a fork bomb can't starve sandboxd of the threads it needs to report and kill it.
+MAX_PROCS = 96
 MAX_BODY = 32 * 1024 * 1024
 WORK = "/work"
 
@@ -160,30 +163,26 @@ class Handler(BaseHTTPRequestHandler):
         self.exec_stream(command, cwd, timeout)
 
     def exec_stream(self, command, cwd, timeout):
-        proc = subprocess.Popen(
-            ["/bin/bash", "-c", command],
-            cwd=cwd,
-            env=command_env(),
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            start_new_session=True,
-        )
+        # Start every helper thread before the command runs: once it forks, threads may be unavailable.
+        state = {"proc": None}
         timed_out = threading.Event()
+        done = threading.Event()
 
         def kill_group():
-            try:
-                os.killpg(proc.pid, signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
-                pass  # group already gone (macOS reports EPERM for a reaped group)
+            proc = state["proc"]
+            if proc is None:
+                return
+            # Repeat: a fork racing the first SIGKILL can leave survivors (e.g. a fork bomb).
+            for _ in range(50):
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except (ProcessLookupError, PermissionError):
+                    return  # group gone (macOS reports EPERM for a reaped group)
+                time.sleep(0.02)
 
         def on_timeout():
             timed_out.set()
             kill_group()
-
-        timer = threading.Timer(timeout, on_timeout)
-        timer.start()
-        done = threading.Event()
 
         def watch_client():
             # A silent command never writes, so detect the caller hanging up (abort) by watching the socket.
@@ -198,7 +197,19 @@ class Handler(BaseHTTPRequestHandler):
                     kill_group()
                     return
 
+        timer = threading.Timer(timeout, on_timeout)
+        timer.start()
         threading.Thread(target=watch_client, daemon=True).start()
+        proc = subprocess.Popen(
+            ["/bin/bash", "-c", f"ulimit -u {MAX_PROCS}\n{command}" if MAX_PROCS else command],
+            cwd=cwd,
+            env=command_env(),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        state["proc"] = proc
         self.send_response(200)
         self.send_header("content-type", "application/x-ndjson")
         self.send_header("transfer-encoding", "chunked")
@@ -237,13 +248,15 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    global WORK
+    global WORK, MAX_PROCS
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--work", default="/work")
+    ap.add_argument("--max-procs", type=int, default=MAX_PROCS, help="RLIMIT_NPROC for commands; 0 disables (it is per uid, host-wide)")
     args = ap.parse_args()
     WORK = os.path.abspath(args.work)
+    MAX_PROCS = args.max_procs
     os.makedirs(WORK, exist_ok=True)
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.daemon_threads = True
