@@ -15,7 +15,7 @@ services:
     init: true
     environment:
       GAFFER_PROVIDER: ${GAFFER_PROVIDER:-anthropic}
-      GAFFER_MODEL: ${GAFFER_MODEL:-claude-sonnet-5}
+      GAFFER_MODEL: ${GAFFER_MODEL:-claude-sonnet-5-5}
       GAFFER_THINKING: ${GAFFER_THINKING:-medium}
       GAFFER_BUDGET_HARD: ${GAFFER_BUDGET_HARD:-1.50}
       GAFFER_BUDGET_DAILY: ${GAFFER_BUDGET_DAILY:-5}

@@ -44,6 +44,8 @@ Branch `build-m1-claude`. Scope and exit criteria from [ROADMAP M1](docs/ROADMAP
 | "What's my squad and bank?" | **Blocked** (data path passes) | Needs a model key for the model's answer. The data it would answer from is verified: the live `fpl_snapshot` summary for team 1 gives the 15-man GW4 squad (Free Hit revert) and bank £0.0m, matching the hand fetch. |
 
 ## Discovered
+- [x] 2026-09-28: default model switched to `claude-sonnet-5-5` (released after Pi 0.87.1, so declared in `harness/models.json`; ID, 1M context and 128K output verified with the Models API). A real call through Pi reached the API but was refused with "Your credit balance is too low", so the model-dependent criteria stay blocked until the account has credit.
+- [x] ttyd's `--max-clients 1` shows a refused second client only "Press ⏎ to Reconnect", which looks like a failure. Documented in the README troubleshooting section.
 - [x] Pi loads each extension with `moduleCache: false`, so extensions can't share module state. They share it through session entries (`gaffer.team`, `gaffer.snapshot`), and the rate limiter is a `globalThis` singleton.
 - [x] Pi resolves tool paths and command cwds against the **session** cwd (`ctx.cwd || cwd`), so the harness runs Pi from an empty root-owned `/work` that mirrors the sandbox (ARCHITECTURE §1.4 updated).
 - [x] Pi's `bash` operations receive the harness env (`options.env`) and `PI_*` session vars; the sandbox operations drop it, and `exposeSessionEnvironment: false`.

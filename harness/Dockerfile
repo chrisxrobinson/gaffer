@@ -47,6 +47,8 @@ COPY packages/pi-gaffer/src /opt/pi-gaffer/src
 COPY packages/pi-gaffer/themes /opt/pi-gaffer/themes
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/
+# Models newer than Pi 0.87.1's bundled catalogue (claude-sonnet-5-5), added by configuration (ADR 0008).
+COPY --chown=10002:10002 harness/models.json /opt/pi-agent/models.json
 
 # Pi runs with cwd /work, the sandbox's working dir: Pi resolves tool paths and command cwds against the
 # session cwd, so the two must match. Here /work is empty and root-owned: no project resources, no context files.

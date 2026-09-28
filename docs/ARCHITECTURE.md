@@ -32,7 +32,7 @@ flowchart LR
     S[(/sessions<br/>Pi JSONL)]
     D[(/data<br/>snapshots, history,<br/>ledger, users)]
   end
-  LLM[(LLM provider<br/>default claude-sonnet-5)]
+  LLM[(LLM provider<br/>default claude-sonnet-5-5)]
   FPL[(fantasy.premierleague.com/api)]
   FD[(football-data.co.uk<br/>fixtures.csv)]
 
@@ -193,7 +193,7 @@ The TypeBox definition lives in `packages/pi-gaffer/src/schema/recommendation.ts
   "created_at": "2026-10-09T18:02:11Z",
   "season": "2026/27", "gw": 6, "deadline": "2026-10-10T10:00:00Z",
   "team_id_hash": "hmac-sha256:…",
-  "model": "anthropic/claude-sonnet-5", "gaffer_lib": "0.3.1", "pi": "0.87.1",
+  "model": "anthropic/claude-sonnet-5-5", "gaffer_lib": "0.3.1", "pi": "0.87.1",
   "snapshot": { "id": "…/20261009T1801Z-3fa2c1", "fetched_at": "…", "stale": false, "stale_reason": null },
   "assumptions": { "free_transfers": 2, "ft_source": "derived", "bank": 1.4, "pending_transfers": [] },
   "preferences": { "risk": "balanced", "save_chips": ["wildcard"], "keep": [], "avoid": [] },
@@ -489,7 +489,7 @@ sequenceDiagram
   participant T as ttyd/tmux
   participant P as Pi core loop
   participant X as Gaffer extensions
-  participant L as LLM (claude-sonnet-5)
+  participant L as LLM (claude-sonnet-5-5)
   participant D as fpl_snapshot (harness)
   participant F as FPL API / football-data
   participant S as sandboxd (no network)
