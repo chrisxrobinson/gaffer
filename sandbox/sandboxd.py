@@ -18,6 +18,8 @@ import base64
 import errno
 import json
 import os
+import select
+import socket
 import shutil
 import signal
 import subprocess
@@ -181,6 +183,22 @@ class Handler(BaseHTTPRequestHandler):
 
         timer = threading.Timer(timeout, on_timeout)
         timer.start()
+        done = threading.Event()
+
+        def watch_client():
+            # A silent command never writes, so detect the caller hanging up (abort) by watching the socket.
+            sock = self.connection
+            while not done.wait(0.2):
+                try:
+                    readable, _, _ = select.select([sock], [], [], 0)
+                    if readable and sock.recv(1, socket.MSG_PEEK) == b"":
+                        kill_group()
+                        return
+                except OSError:
+                    kill_group()
+                    return
+
+        threading.Thread(target=watch_client, daemon=True).start()
         self.send_response(200)
         self.send_header("content-type", "application/x-ndjson")
         self.send_header("transfer-encoding", "chunked")
@@ -210,6 +228,7 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             kill_group()  # the caller went away (e.g. the user aborted): stop the command
         finally:
+            done.set()
             timer.cancel()
             proc.stdout.close()
             if proc.poll() is None:
