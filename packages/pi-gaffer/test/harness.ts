@@ -3,7 +3,7 @@
  * a real sandboxd (host python) and a mock FPL API. Mirrors the S1 spike's setup.
  */
 import { type ChildProcess, spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -113,15 +113,15 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 			toolResults.push({ name: e.toolName!, isError: !!e.isError, text: e.result?.content?.map((c) => c.text ?? "").join("") ?? "", details: e.result?.details });
 		}
 	});
+	// This session's own JSONL file, as persisted.
 	const sessionEntries = () => {
-		const files = (readdirSync(env.sessionsDir, { recursive: true }) as string[]).filter((f) => f.endsWith(".jsonl"));
-		return files.flatMap((f) =>
-			readFileSync(join(env.sessionsDir, f), "utf8")
-				.trim()
-				.split("\n")
-				.filter(Boolean)
-				.map((l) => JSON.parse(l)),
-		);
+		const file = session.sessionManager.getSessionFile();
+		if (!file || !existsSync(file)) return []; // Pi creates the file lazily
+		return readFileSync(file, "utf8")
+			.trim()
+			.split("\n")
+			.filter(Boolean)
+			.map((l) => JSON.parse(l));
 	};
 	return { session, faux, notifications, toolResults, sessionEntries, bind };
 }
