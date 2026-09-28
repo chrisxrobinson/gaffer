@@ -1,43 +1,68 @@
 # Gaffer — M1 build checklist
 
-Branch `build-m1-claude`. Scope and exit criteria from [ROADMAP M1](docs/ROADMAP.md#m1--skeleton-pi--gaffer-sandbox-data-target-before-gw7-deadline). Evidence is recorded inline as each item is verified.
+Branch `build-m1-claude`. Scope and exit criteria from [ROADMAP M1](docs/ROADMAP.md#m1--skeleton-pi--gaffer-sandbox-data-target-before-gw7-deadline). Evidence was gathered on 2026-09-28 (GW5 current, GW6 deadline 2026-10-10T10:00Z) on macOS / Docker Desktop 27.3.1 (arm64).
+
+**How to re-run the evidence**
+- Unit/integration: `npx pnpm@12.6.0 install && npx pnpm@12.6.0 test`. Covers vitest in `packages/pi-gaffer`: 105 tests, including the S1 checks, a real host `sandboxd` and a mock FPL API.
+- sandboxd: `uv run --no-project --with pytest==9.1.1 pytest sandbox/tests` (7 tests).
+- Stack: `cd deploy/compose && ./init-secrets.sh && docker compose up -d --build && ./tests/verify.sh`. That covers the port binding, 17 sandbox isolation checks and a live `fpl_snapshot` round trip.
 
 ## Scope
-- [ ] Repo scaffold (REPO_LAYOUT): pnpm workspace, `packages/pi-gaffer`, `python/gaffer_lib` skeleton, `sandbox/`, `harness/`, `deploy/compose/`
-- [ ] `gaffer-core`: prompt `customPrompt` + sections (`fpl_context`, `user_preferences`), tool allowlist (`setActiveTools`), `user_bash` block, `/team`
-- [ ] `gaffer-sandbox`: `bash`/`read`/`write`/`edit` overrides → `sandboxd`; `SandboxProvider` (`compose`); lazy provision, idle release; skills read locally
-- [ ] `gaffer-budget`: per-session hard cap (`turn_end` → abort + `gaffer.budget`), daily cap, 40-turn cap
-- [ ] `sandboxd` + hardened sandbox image
-- [ ] `gaffer-data` / `fpl_snapshot`: fetch, cache-bust, TTL, retry+jitter, rate limit, validation, snapshot writing, stale fallback, read-only guard
-- [ ] Gaffer theme
-- [ ] ttyd + tmux in the harness image
-- [ ] Compose file (egress + internal network, volumes, secrets)
-- [ ] S1 checks as automated tests (`packages/pi-gaffer/test`)
+- [x] Repo scaffold (REPO_LAYOUT): pnpm workspace, `packages/pi-gaffer`, `python/gaffer_lib` skeleton, `sandbox/`, `harness/`, `deploy/compose/`
+- [x] `gaffer-core`: `customPrompt` + sections (`fpl_context`, `user_preferences`), tool allowlist (`setActiveTools`), `user_bash` block, `/team`
+- [x] `gaffer-sandbox`: `bash`/`read`/`write`/`edit` overrides → `sandboxd`; `SandboxProvider` (`compose`; `ecs` throws until phase 2); lazy provision, 15-min idle release; skills dir read locally
+- [x] `gaffer-budget`: session hard cap (`turn_end` → `ctx.abort()` + `gaffer.budget` + notice), daily cap (refused at `input`), 40-turn cap
+- [x] `sandboxd` + hardened sandbox image (python:3.14-slim pinned digest, pinned numpy/pandas/scipy/highspy/pydantic, gaffer_lib, no pip, uid 10001, empty env)
+- [x] `gaffer-data` / `fpl_snapshot`: fetch, cache-bust, TTL, retry + full jitter, 2 req/s + 8 in flight, schema + invariant validation, immutable hashed snapshots, stale fallback, T−1h finalise block, `tool_call` read-only guard
+- [x] Gaffer theme (`themes/gaffer.json`)
+- [x] ttyd 1.7.7 + tmux 3.5a in the harness image (Pi 0.87.1 from npm, `pi install` of pi-gaffer)
+- [x] Compose file (egress + internal network, volumes, secrets to the harness only, 127.0.0.1 publish, init, explicit seccomp)
+- [x] S1 checks as automated tests (`packages/pi-gaffer/test/s1.test.ts`, 8 tests incl. the `bindExtensions` gotcha)
 
 ## Exit criteria
 | ID | Status | Evidence |
 |---|---|---|
-| FR-INP-01 | | |
-| FR-DAT-01 | | |
-| FR-DAT-02 | | |
-| FR-DAT-03 | | |
-| FR-DAT-04 | | |
-| FR-DAT-05 | | |
-| FR-DAT-06 | | |
-| FR-DAT-07 | | |
-| FR-UI-01 | | |
-| FR-UI-02 | | |
-| FR-UI-03 | | |
-| FR-ACC-01 | | |
-| FR-BUD-01 | | |
-| NFR-SEC-01 | | |
-| NFR-SEC-02 | | |
-| NFR-SEC-04 | | |
-| NFR-PRIV-02 | | |
-| NFR-MNT-01 | | |
-| NFR-COST-03 | | |
-| "What's my squad and bank?" | | |
+| FR-INP-01 | **Pass** (M1 part) | `test/extensions.test.ts`: `/team 1` then a prompt → `fpl_snapshot` with no args snapshots entry 1. `/team 999999999` → "FPL team 999999999 not found…" error notice, no `gaffer.team` entry, no LLM call. Live in the container: `/team 1` → "Team set: Solio Moose (ID 1)" in 170 ms; `/team 999999999` → not found in 163 ms. In the browser TUI, `/team 1` showed the same notice. *"…produces a recommendation" needs `submit_recommendation` (M4); M1 verifies the snapshot refers to entry 1.* |
+| FR-DAT-01 | **Pass** | Live, 2026-09-28T20:31Z: the snapshot's `history`, `picks` (GW5), `picks-prev` (GW4) and `transfers` files are **identical** (JSON-equal) to hand `curl` fetches made in the same minute. Summary: squad of 15 (GW4 basis, because entry 1 played Free Hit in GW5), bank £0.0m, chips used BB GW2 / WC GW3 / FH GW5, GW5 current / GW6 next / deadline 2026-10-10T10:00:00Z. Team 2: GW5 squad, bank £0.3m. Unit tests in `test/snapshot.test.ts`. |
+| FR-DAT-02 | **Pass** | Every per-user request carries `?_=<unique>` and a recorded `age` (live: `age=0`, `busted=true` on all 5 per-user endpoints; unbusted they return `age` 311176–869903 s). Mock CDN with `age: 700000` → the request is retried and then fails with "…served from CDN cache with age 700000 s (max 60)" (`test/http.test.ts`, `test/snapshot.test.ts`). |
+| FR-DAT-03 | **Pass** | `test/ttl.test.ts` with frozen clocks: bootstrap 30 min / 5 min, fixtures 6 h / 30 min, element-summary 12 h / 1 h, window edges at exactly T−6h and the deadline, forced bootstrap refresh after a passed `price_change_deadline`, entry never cached. Live: second run served bootstrap/fixtures `from_cache=true`. |
+| FR-DAT-04 | **Pass** | `test/http.test.ts`: a mock returning 429, 503, 503 then 200 → 4 attempts, each jittered delay in [0, 0.5·2ⁿ] s (cap 8 s), and ≤ 2 requests in any 1 s window (measured server-side). Stable over 3 consecutive runs. |
+| FR-DAT-05 | **Pass** (M1 part) | `test/snapshot.test.ts`: HTML ("game is being updated") or 503 → last good snapshot served with `stale: true`, `stale_reason: "fpl_updating"` and a warning. At T−30 min with stale per-user data, `finalise_transfers = {allowed: false, reason: "…deadline is under an hour away…"}` and the summary says "DO NOT FINALISE TRANSFERS". With no prior snapshot, downtime is an error. *`confidence.overall ≠ high` and "no transfers submitted" are enforced by `submit_recommendation` (M4); M1 provides the flag it will check.* |
+| FR-DAT-06 | **Pass** | `test/validate.test.ts`: missing `elements[7].now_cost` → `[schema:bootstrap-static] /elements/7: must have required properties now_cost`; 14 picks → `[picks.count] expected 15 picks, got 14`; two `is_next` → `[events.is_next] expected exactly one is_next event, got 2`. Also 20 teams, 8 chips, 2/5/5/3, captain/vice, fixture refs. The tool errors and nothing is written. Live bootstrap/fixtures/entry data for teams 1 and 2 validates. |
+| FR-DAT-07 | **Pass** | `test/store.test.ts` and `test/snapshot.test.ts`: identical upstream data → identical sha256; files 0444, dirs 0555, write attempts fail with EACCES. Live: repeated runs for team 1 produced hash prefix `a2f52e6de06e` each time. Sandbox: `touch /data/should-fail` → "Read-only file system", and appending to a snapshot's `picks.json` → "Permission denied". |
+| FR-UI-01 | **Pass** (automation caveat) | Browser at `http://127.0.0.1:7681`: the Pi 0.87.1 TUI with the Gaffer theme (tab title "Gaffer"), extensions gaffer-budget/core/data/sandbox listed. Slash command `/team 1` works. `!ls /` is blocked. Shift+Enter inserts a newline: xterm emits `ESC[13;2u` via the injected handler and Pi shows two lines. Up-arrow history/navigation works. Ctrl+C: xterm emits `\x03` and it clears Pi's editor (verified by dispatching a real keydown to xterm). *The desktop browser pane's automation swallows a literal Ctrl+C keystroke before the page, so please confirm Ctrl+C by hand in a normal browser.* |
+| FR-UI-02 | **Blocked** | Needs a model key: first-token latency (p95 over 20 runs) can only be measured against a real provider. Streaming is Pi's native TUI rendering relayed by ttyd. |
+| FR-UI-03 | **Pass** (mechanism) / Blocked (mid-run) | Closed the tab: ttyd killed only its tmux client; Pi (PID 54) and tmux session `gaffer` stayed alive. Reopened: the same session, scrollback and an unsent editor marker were intact. *Closing mid-run needs a model to be running; the process that would run it survives, as shown.* |
+| FR-ACC-01 | **Pass** | No FPL credentials anywhere (config holds only the LLM key and ID salt). `test/guard.test.ts` + `test/http.test.ts`: `my-team/`, `me/`, `accounts/login`, non-allowlisted paths and every non-GET are refused before any request. `test/s1.test.ts` S1-4: a `bash` call with `…/api/my-team/1/` and a `write` to `/data/…` are blocked by the `tool_call` guard. The sandbox has no network (isolation checks below). |
+| FR-BUD-01 | **Pass** | `test/extensions.test.ts`: `GAFFER_BUDGET_HARD=0.05` at $0.02 per message → the run stops after the 3rd model call, `gaffer.budget {capped: "session", session_cost: 0.06, turn: 3}` is recorded, and the user sees "Gaffer stopped this run: this session has cost $0.06, over the $0.05 cap…". Daily cap refuses a prompt with no LLM call; turn cap stops at N. *Cost is injected by a test hook because the faux provider reports $0; real-provider cost accuracy is NFR-COST-03.* |
+| NFR-SEC-01 | **Pass** | `deploy/compose/tests/isolation.mjs`, 17/17 through the real harness→sandboxd path. No curl/wget/nc; HTTPS to FPL fails (DNS); TCP to 1.1.1.1/8.8.8.8 → "Network is unreachable"; the sandbox cannot reach ttyd (refused on sandbox_net, unreachable on the egress IP); uid 10001; CapPrm/CapEff/CapBnd 0; NoNewPrivs 1; Seccomp 2; writes to `/` and site-packages fail (read-only FS); `/data` read-only; `/work` 256 MB tmpfs; cgroup pids 128 / memory 2 GiB / cpu 2; `ulimit -u` 96; fork bomb killed at timeout, sandboxd healthy afterwards, 0 zombies. gVisor: `docker-compose.gvisor.yml` for Linux hosts (not testable on macOS). |
+| NFR-SEC-02 | **Pass** | Same script, run with a dummy key in `secrets/anthropic_api_key` (cleared afterwards): command env is the fixed 7-variable set; `/proc/*/environ` across all sandbox processes has 0 key-like lines, and neither the key value nor the ID salt appears (compared inside the harness, never printed); no `/run/secrets` in the sandbox. `test/s1.test.ts` S1-5 checks the same on the host path. |
+| NFR-SEC-04 | **Pass** (phase 1) | `docker inspect` → `{"7681/tcp":[{"HostIp":"127.0.0.1","HostPort":"7681"}]}`, host socket `127.0.0.1:7681 (LISTEN)`, LAN IP 192.168.1.99:7681 unreachable. `!ls` blocked (browser + `test/extensions.test.ts`). tmux prefix keys (C-b d / c / :, C-a d, C-@ d) reach Pi as plain text: no detach, no new window, no prompt. A second browser client is refused ("refuse to serve WS client due to the --max-clients option"). |
+| NFR-PRIV-02 | **Pass** (without LLM traffic) | `PI_TELEMETRY=0`, plus `PI_OFFLINE=1` and `PI_SKIP_VERSION_CHECK=1`. tcpdump in the harness's network namespace for ~70 s, covering a new Pi TUI start, a live snapshot run and `pi --print`: DNS only `fantasy.premierleague.com`, TCP SYN only to 140.248.134.133:443 (FPL's CDN). No telemetry, version-check or catalogue host. *The LLM host can't appear without a key; re-run the capture once one is configured.* |
+| NFR-MNT-01 | **Pass** | The image runs `npm install -g @earendil-works/pi-coding-agent@0.87.1`; `pi --version` in the container → `0.87.1`. No `patches/` dir, no `patchedDependencies` / patch-package. Dev deps pinned exactly (`save-exact`). |
+| NFR-COST-03 | **Blocked** | Needs a real provider key and access to that provider's billing/usage console, to compare 5 real runs to within 2%. |
+| "What's my squad and bank?" | **Blocked** (data path passes) | Needs a model key for the model's answer. The data it would answer from is verified: the live `fpl_snapshot` summary for team 1 gives the 15-man GW4 squad (Free Hit revert) and bank £0.0m, matching the hand fetch. |
 
 ## Discovered
+- [x] Pi loads each extension with `moduleCache: false`, so extensions can't share module state. They share it through session entries (`gaffer.team`, `gaffer.snapshot`), and the rate limiter is a `globalThis` singleton.
+- [x] Pi resolves tool paths and command cwds against the **session** cwd (`ctx.cwd || cwd`), so the harness runs Pi from an empty root-owned `/work` that mirrors the sandbox (ARCHITECTURE §1.4 updated).
+- [x] Pi's `bash` operations receive the harness env (`options.env`) and `PI_*` session vars; the sandbox operations drop it, and `exposeSessionEnvironment: false`.
+- [x] Pi spreads the extension UI context (`{...ui}`), so a Proxy UI stub loses its methods (test harness uses a plain object).
+- [x] ttyd bound to `127.0.0.1` inside a container can't be reached through Docker port publishing, and `0.0.0.0` would expose the TUI to the sandbox network → bind to the default-route (egress) IP (ADR 0005 corrected).
+- [x] This Docker Desktop daemon defaults to `seccomp=unconfined`, so the sandbox had `Seccomp: 0` → Moby's v27.3.1 default profile is vendored and set explicitly (ADR 0001 corrected).
+- [x] A fork bomb exhausted pids before sandboxd could start its helper threads, and sandboxd as PID 1 left 91 zombies → threads start before the command, `RLIMIT_NPROC` 96 per command, repeated `killpg`, `init: true` (ADR 0001 corrected; ECS needs `initProcessEnabled` in phase 2).
+- [x] tmux launches the pane through the account's login shell; `nologin` made it exit immediately → `default-shell /bin/sh` in tmux.conf.
+- [x] Compose file secrets keep host file modes; the harness (uid 10002) couldn't read 0600 files on Linux → files 0644 inside a 0700 dir (Docker Desktop hid this).
+- [x] `sandboxd` couldn't see an aborted caller of a silent command → socket watcher kills the group on client EOF.
+- [x] CDN staleness also affects `entry/{id}/` and picks, not just history/transfers (ADR 0002 corrected).
+- [x] A Free Hit week's picks aren't the next GW's squad: the summary reverts to the previous GW's picks and bank (full derivation stays M2).
+- [x] Node's strip-only TypeScript rejects parameter properties; the sources use erasable syntax only.
+- [x] pnpm 12 fails on unreviewed dependency build scripts; three (`@google/genai`, `esbuild`, `protobufjs`) are explicitly denied in `pnpm-workspace.yaml` (none are needed).
+- [x] Faux-provider cost is always $0, so budget tests inject cost via a test-only `message_end` hook; real-provider cost is still unverified (NFR-COST-03).
+- [ ] With `PI_OFFLINE=1`, Pi prints "fd/ripgrep not found … skipping download" at startup. Harmless (grep/find tools are not active), but noisy.
+- [ ] Still open from TASKS.md: whether Pi passes a tool's `strict` flag to providers (the design doesn't depend on it).
 
 ## Proposed (not built; outside M1 docs)
+- A `/team` autocomplete or a "last used team" default across sessions (FR-INP-03 in M4 covers preferences, not the team).
+- Bake the `fd`/`ripgrep` binaries into the harness image, or suppress the warning, to keep the startup screen clean.
+- CI workflow running `pnpm test`, the sandboxd pytest and `deploy/compose/tests/verify.sh` on a Linux runner (which would also exercise the gVisor override and real 0600-secret permissions).
