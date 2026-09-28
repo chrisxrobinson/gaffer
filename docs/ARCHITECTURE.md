@@ -123,11 +123,13 @@ Coding sections (`tools`, `rules`, `docs`) disappear because `customPrompt` is s
 In the image, Pi is installed globally (pinned). The Gaffer package is installed with `pi install` into `/opt/pi-agent`. The web TUI runs:
 
 ```
-ttyd … tmux new -A -s gaffer \
-  pi --session-dir /sessions --no-context-files \
+ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s gaffer \
+  sh -c 'cd /work && pi --session-dir /sessions --no-context-files --continue \
      --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
-     --provider "$GAFFER_PROVIDER" --model "$GAFFER_MODEL"
+     --provider "$GAFFER_PROVIDER" --model "$GAFFER_MODEL" --thinking "$GAFFER_THINKING"'
 ```
+
+(As built in M1: `harness/entrypoint.sh` and `harness/gaffer-pi`. The cwd is `/work` because Pi resolves tool paths against the session cwd, see §1.4. The image also sets `PI_OFFLINE=1` and `PI_SKIP_VERSION_CHECK=1`, which stop Pi's startup network calls — model-catalogue refresh, version check, tool downloads — without affecting LLM calls.)
 
 **SDK gotcha (S1):** a host that embeds Pi through the SDK must call `session.bindExtensions()`, or `session_start` never fires. This matters for the evaluation runner and the phase-3 bridge. The CLI and RPC modes do it themselves. The `--tools` allowlist is kept as a second line of defence.
 
@@ -151,7 +153,7 @@ ttyd … tmux new -A -s gaffer \
    - fetches with the freshness policy (ADR 0002); per-user endpoints are always fresh and cache-busted
    - validates schemas and invariants
    - writes an immutable snapshot
-   - provisions the sandbox lazily and runs `gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline
+   - provisions the sandbox lazily and runs `gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline (from M2; in M1 the summary reads squad, bank, chips and GW state straight from the API, including the Free Hit revert, and reports FT as not yet derived)
    - returns a summary of under 1.5k tokens: squad table, flags, staleness
 2. **Golden path.** The model runs `python -m gaffer_lib run --snapshot $S --prefs $P --out /work/plan.json`. That computes strength → xMins → xP → solver (horizon 6, 4 shown) → chip scenarios → captain EV. It prints a compact summary and the top 3 plans.
 3. **Judgement.** Using skills, the model does four things:

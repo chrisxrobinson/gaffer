@@ -23,10 +23,10 @@ gaffer/
 │   └── gaffer_lib/                # Tested analytics library, installed read-only in the sandbox image
 │       ├── src/gaffer_lib/        #   rules, derive, strength, minutes, xp, plan, ownership, validate, backtest, cli
 │       └── tests/                 #   pytest + Hypothesis; golden files from event/{gw}/live explain[]
-├── sandbox/                       # Sandbox image: Dockerfile (python:3.14-slim), sandboxd.py exec service, seccomp notes
-├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux), tmux.conf, entrypoint
+├── sandbox/                       # Sandbox image: Dockerfile (python:3.14-slim), sandboxd.py exec service, seccomp/ (vendored Moby default profile), tests/
+├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux), tmux.conf, entrypoint, gaffer-pi launcher, ttyd key handler
 ├── deploy/
-│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets)
+│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks)
 │   ├── aws/                       #   Phase 2 IaC: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager
 │   └── generic/                   #   Caddy + oauth2-proxy compose override for Hetzner/Fly-style hosts
 ├── evals/
@@ -39,7 +39,8 @@ gaffer/
 ├── schemas/                       # Exported JSON Schemas (recommendation-1.json) for consumers
 ├── spikes/                        # Throwaway design spikes (S1 lives here); never imported
 ├── docs/                          # Research, ADRs, architecture, requirements, roadmap
-└── TASKS.md                       # Working checklist
+├── TASKS.md                       # Research-phase checklist
+└── BUILD.md                       # Build checklist and exit-criteria evidence, per milestone
 ```
 
 ## Top-level folders

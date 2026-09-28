@@ -4,7 +4,7 @@
 
 ## Context
 The official FPL API is public, needs no auth for the data Gaffer uses, and is behind Fastly/Varnish rather than Cloudflare. It showed no rate-limit headers when tested on 2026-09-27 ([research 03](../research/03-fpl-data-sources.md)). `my-team/{id}` needs a login and is out of scope: Gaffer never logs in. Two findings shape the design:
-1. Per-user endpoints (`entry/{id}/history/`, `transfers/`) come back from the CDN up to **about 9 days stale** despite their `no-cache` headers. A unique query parameter returns fresh origin data (verified; see the research 03 addendum).
+1. Per-user endpoints (`entry/{id}/`, `history/`, `transfers/`, `event/{gw}/picks/`) come back from the CDN up to **about 9 days stale** despite their `no-cache` headers (re-verified 2026-09-28: ages of 3.6–10 days on all four for entry 1). A unique query parameter returns fresh origin data (verified; see the research 03 addendum).
 2. Free transfers and selling prices are **not public**, so they have to be derived. Pending transfers for the next GW are not visible at all.
 
 Pi's author deliberately leaves out MCP, because every server costs thousands of tokens of tool descriptions up front ([research 01 §9](../research/01-pi-internals.md)).
@@ -18,7 +18,7 @@ Pi's author deliberately leaves out MCP, because every server costs thousands of
 | **Our own `fpl_snapshot` Pi tool in the harness** | **Chosen.** |
 
 ## Decision
-There is **one** data tool, `fpl_snapshot(team_id, gw?, include?: ["element_summaries"...], force_fresh?)`, registered by the `gaffer-data` extension. It runs in the harness, which already has network access to reach the LLM. What it does:
+There is **one** data tool, `fpl_snapshot(team_id?, element_summaries?: number[], force_fresh?)`, registered by the `gaffer-data` extension (`team_id` defaults to the one set with `/team`; the odds source is added as `include: ["odds"]` with FR-DAT-09 in M3; a historical `gw?` parameter is only needed by the evaluator and is not built in M1). It runs in the harness, which already has network access to reach the LLM. What it does:
 - It fetches `bootstrap-static`, `fixtures`, `entry/{id}`, `entry/{id}/history`, `entry/{id}/transfers`, and `entry/{id}/event/{last_gw}/picks`. It adds `element-summary/{pid}` only for requested players, with at most 8 requests in parallel.
 - **Freshness policy** (TTLs follow FPL's update cycle):
 
