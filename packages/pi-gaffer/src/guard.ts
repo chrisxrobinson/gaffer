@@ -3,8 +3,7 @@
  * Gaffer holds no FPL credentials and only issues GETs to an allowlist of public API paths.
  */
 import { posix } from "node:path";
-
-export const SANDBOX_CWD = "/work";
+import { SANDBOX_CWD } from "./config.ts";
 
 /** Public, unauthenticated FPL API paths Gaffer may GET (relative to /api/). */
 const ALLOWED_PATHS = [
