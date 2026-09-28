@@ -6,7 +6,6 @@ set -eu
 if [ -s /run/secrets/anthropic_api_key ]; then
   ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"; export ANTHROPIC_API_KEY
 fi
-export GAFFER_ID_SALT_FILE="${GAFFER_ID_SALT_FILE:-/run/secrets/gaffer_id_salt}"
 
 # Bind ttyd only to the interface with the default route (the egress network, where Docker publishes
 # the port). Never to the internal sandbox network: sandbox code must not be able to drive the TUI.

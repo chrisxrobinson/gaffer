@@ -90,7 +90,7 @@ describe("S1 checks", () => {
 		await g.session.prompt("run");
 		const out = g.toolResults[0].text;
 		expect(g.toolResults[0].isError).toBe(false);
-		expect(out).toContain(env.sandboxWork); // sandboxd's work dir, not the harness cwd
+		expect(out).toContain(`HOME=${env.sandboxWork}`); // sandboxd's fixed env, not the harness's
 		expect(out).toContain("42");
 		expect(out).not.toContain("sk-ant-test-harness-secret");
 		expect(out).not.toMatch(/ANTHROPIC|PI_SESSION|GAFFER_ID_SALT/);

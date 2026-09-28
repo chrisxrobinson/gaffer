@@ -33,6 +33,7 @@ ENV PI_CODING_AGENT_DIR=/opt/pi-agent \
     PI_OFFLINE=1 \
     PI_SKIP_VERSION_CHECK=1 \
     GAFFER_DATA_DIR=/data \
+    GAFFER_ID_SALT_FILE=/run/secrets/gaffer_id_salt \
     SANDBOX_PROVIDER=compose \
     SANDBOX_URL=http://sandbox:8080 \
     TERM=xterm-256color \
@@ -47,8 +48,10 @@ COPY packages/pi-gaffer/themes /opt/pi-gaffer/themes
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/
 
+# Pi runs with cwd /work, the sandbox's working dir: Pi resolves tool paths and command cwds against the
+# session cwd, so the two must match. Here /work is empty and root-owned: no project resources, no context files.
 RUN useradd --uid 10002 --create-home --home-dir /home/gaffer --shell /usr/sbin/nologin gaffer \
- && mkdir -p /home/gaffer/cwd /sessions /data /opt/pi-agent \
+ && mkdir -p /work /sessions /data /opt/pi-agent \
  && chown -R gaffer:gaffer /home/gaffer /sessions /data /opt/pi-agent
 
 USER gaffer
@@ -57,6 +60,6 @@ RUN pi install /opt/pi-gaffer \
  && node -e 'const f="/opt/pi-agent/settings.json"; const fs=require("fs"); const s=JSON.parse(fs.readFileSync(f,"utf8")); s.theme="gaffer"; fs.writeFileSync(f, JSON.stringify(s,null,2));' \
  && cat /opt/pi-agent/settings.json
 
-WORKDIR /home/gaffer/cwd
+WORKDIR /work
 EXPOSE 7681
 ENTRYPOINT ["/opt/gaffer/entrypoint.sh"]

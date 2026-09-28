@@ -114,7 +114,7 @@ Coding sections (`tools`, `rules`, `docs`) disappear because `customPrompt` is s
 | Tools run on the host (the harness container) | All four routed to the sandbox | Credential isolation |
 | `grep`/`find`/`ls` tools | Not activated | `bash` covers them in the sandbox |
 | User `!cmd` shell escapes | Blocked by `user_bash` | Would be a shell in the harness container |
-| Project-local extensions and trust prompt | Not used (the package is installed globally in the image; cwd is an empty dir) | Reproducible image, no trust UI in the web TUI |
+| Project-local extensions and trust prompt | Not used (the package is installed globally in the image; cwd is `/work`, an empty root-owned dir in the harness that mirrors the sandbox's working dir, because Pi resolves tool paths against the session cwd) | Reproducible image, no trust UI in the web TUI |
 | Coding-shaped compaction summary (tracks files read and modified) | Replaced by an FPL summary: team, GW, snapshot id, candidate plans, decisions so far | Compaction must keep FPL state |
 | Install telemetry (on by default, `settings-manager.js:734`) | `PI_TELEMETRY=0` | Privacy, no outbound surprises |
 | Everything else: session tree, `/resume`, `/tree`, model switching, thinking levels, themes, keybindings, auto-retry | **Kept unchanged** | That's the point of the experiment |

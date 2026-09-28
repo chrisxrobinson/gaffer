@@ -76,7 +76,8 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 	});
 	faux.setResponses(opts.responses);
 	const agentDir = mkdtempSync(join(tmpdir(), "gaffer-agent-"));
-	const cwd = mkdtempSync(join(tmpdir(), "gaffer-cwd-")); // empty, as in the harness image
+	// Session cwd = the sandbox work dir, as in the image (Pi resolves tool paths against the session cwd).
+	const cwd = env.sandboxWork;
 	const settingsManager = SettingsManager.create(cwd, agentDir);
 	const factories: ExtensionFactory[] = [
 		(pi: ExtensionAPI) => pi.registerProvider(faux.provider as never),
