@@ -23,7 +23,10 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Serialises request starts so they are at least 1/rate seconds apart. */
 export class RateLimiter {
 	private next = 0;
-	constructor(private readonly perSecond: number) {}
+	private readonly perSecond: number;
+	constructor(perSecond: number) {
+		this.perSecond = perSecond;
+	}
 	async acquire(): Promise<void> {
 		const now = Date.now();
 		const slot = Math.max(now, this.next);
@@ -35,7 +38,10 @@ export class RateLimiter {
 class Semaphore {
 	private waiting: (() => void)[] = [];
 	private active = 0;
-	constructor(private readonly max: number) {}
+	private readonly max: number;
+	constructor(max: number) {
+		this.max = max;
+	}
 	async run<T>(fn: () => Promise<T>): Promise<T> {
 		if (this.active >= this.max) await new Promise<void>((r) => this.waiting.push(r));
 		this.active++;
@@ -61,8 +67,12 @@ export type UnavailableReason = "fpl_updating" | "cdn_stale" | "network" | "rate
 
 export class FplUnavailableError extends Error {
 	override name = "FplUnavailableError";
-	constructor(message: string, readonly reason: UnavailableReason, readonly attempts: number) {
+	readonly reason: UnavailableReason;
+	readonly attempts: number;
+	constructor(message: string, reason: UnavailableReason, attempts: number) {
 		super(message);
+		this.reason = reason;
+		this.attempts = attempts;
 	}
 }
 export class FplNotFoundError extends Error {
@@ -105,8 +115,10 @@ export class FplClient {
 	private readonly random: () => number;
 	private readonly fetchImpl: typeof fetch;
 	private readonly semaphore = sharedSemaphore();
+	private readonly opts: FplClientOptions;
 
-	constructor(private readonly opts: FplClientOptions = {}) {
+	constructor(opts: FplClientOptions = {}) {
+		this.opts = opts;
 		this.baseUrl = opts.baseUrl ?? process.env.FPL_BASE_URL ?? FPL_BASE_URL;
 		this.limiter = opts.limiter ?? sharedLimiter();
 		this.random = opts.random ?? Math.random;
