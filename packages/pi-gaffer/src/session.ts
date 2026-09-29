@@ -13,6 +13,10 @@ interface EntryLike {
 export interface TeamEntry {
 	team_id: number;
 	team_name?: string;
+	/** User-stated free transfers for the next GW (FR-INP-04), overriding the derived count. */
+	ft?: number;
+	/** User-declared pending transfers for the next GW, e.g. "Salah>Palmer". */
+	pending?: string;
 }
 
 export interface SnapshotEntry {
@@ -26,6 +30,10 @@ export interface SnapshotEntry {
 	stale_reason: string | null;
 	season: string;
 	gw: { current: number | null; next: number | null; deadline: string | null };
+	/** Free transfers used for this snapshot and where they came from (FR-INP-04). */
+	free_transfers?: number | null;
+	ft_source?: "derived" | "user" | null;
+	pending_transfers?: [number, number][];
 	endpoints: unknown[];
 }
 
@@ -45,6 +53,8 @@ export function fplState(branch: readonly EntryLike[]): SessionFplState {
 	return {
 		teamId,
 		teamName: team?.team_name,
+		ft: team?.team_id === teamId ? team?.ft : undefined,
+		pending: team?.team_id === teamId ? team?.pending : undefined,
 		snapshot: snap && snap.team_id === teamId ? snap : undefined,
 	};
 }

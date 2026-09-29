@@ -18,6 +18,8 @@ Ground rules:
 export interface SessionFplState {
 	teamId?: number;
 	teamName?: string;
+	ft?: number;
+	pending?: string;
 	snapshot?: {
 		snapshot_id: string;
 		fetched_at: string;
@@ -38,6 +40,8 @@ function fmtUntil(ms: number): string {
 export function fplContextSection(state: SessionFplState, store: SnapshotStore | undefined, now: number): string {
 	const lines: string[] = [];
 	lines.push(state.teamId ? `team_id: ${state.teamId}${state.teamName ? ` (${state.teamName})` : ""}` : "team_id: not set (ask the user for their FPL team ID, or they can use /team <id>)");
+	if (state.ft !== undefined) lines.push(`free transfers (stated by the user with /team --ft): ${state.ft}`);
+	if (state.pending) lines.push(`pending transfers (stated by the user with /team --pending): ${state.pending}`);
 	let gw = state.snapshot?.gw;
 	let season = state.snapshot?.season;
 	if (!gw && store) {

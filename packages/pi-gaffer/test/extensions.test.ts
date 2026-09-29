@@ -57,6 +57,26 @@ describe("/team (FR-INP-01)", () => {
 		g.session.dispose();
 	});
 
+	it("/team 1 --ft 3: the snapshot uses 3 free transfers with ft_source user (FR-INP-04)", async () => {
+		const g = await startGaffer(env, { responses: [fauxAssistantMessage(fauxToolCall("fpl_snapshot", {})), fauxAssistantMessage(fauxText("ok"))] });
+		await g.session.prompt('/team 1 --ft 3 --pending "P1>P65"');
+		expect(g.notifications.at(-1)).toEqual({ message: "Team set: Test XI (ID 1); free transfers 3 (yours); pending P1>P65.", type: "info" });
+		await g.session.prompt("recommend");
+		const snap = g.sessionEntries().filter((e) => e.customType === "gaffer.snapshot").at(-1);
+		expect(snap.data).toMatchObject({ team_id: 1, free_transfers: 3, ft_source: "user", pending_transfers: [[1, 65]] });
+		expect(g.toolResults[0].text).toMatch(/Free transfers for GW6: 3 \(set by the user/);
+		g.session.dispose();
+	}, 30_000);
+
+	it("/team 1 alone: free transfers are derived (ft_source derived)", async () => {
+		const g = await startGaffer(env, { responses: [fauxAssistantMessage(fauxToolCall("fpl_snapshot", {})), fauxAssistantMessage(fauxText("ok"))] });
+		await g.session.prompt("/team 1");
+		await g.session.prompt("recommend");
+		const snap = g.sessionEntries().filter((e) => e.customType === "gaffer.snapshot").at(-1);
+		expect(snap.data).toMatchObject({ free_transfers: 5, ft_source: "derived", pending_transfers: [] });
+		g.session.dispose();
+	}, 30_000);
+
 	it("rejects a non-numeric argument", async () => {
 		const g = await startGaffer(env, { responses: [] });
 		await g.session.prompt("/team abc");

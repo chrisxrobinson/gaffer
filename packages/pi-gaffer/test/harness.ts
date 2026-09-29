@@ -2,7 +2,7 @@
  * Headless Gaffer for tests: the real extensions in an SDK session driven by Pi's fauxProvider,
  * a real sandboxd (host python) and a mock FPL API. Mirrors the S1 spike's setup.
  */
-import { type ChildProcess, spawn } from "node:child_process";
+import { type ChildProcess, execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -17,6 +17,23 @@ import { GAFFER_TOOLS } from "../src/config.ts";
 import { MockFpl } from "./mock-fpl.ts";
 
 const SANDBOXD = resolve(import.meta.dirname, "../../../sandbox/sandboxd.py");
+const GAFFER_LIB_SRC = resolve(import.meta.dirname, "../../../python/gaffer_lib/src");
+
+/**
+ * How the host sandboxd runs gaffer_lib: the repo source on Python 3.14 (found with uv, a dev
+ * prerequisite), since the host has no installed gaffer_lib. The image uses `python -m gaffer_lib`.
+ */
+export function hostGafferLibCommand(): string {
+	let python = process.env.GAFFER_TEST_PYTHON;
+	if (!python) {
+		try {
+			python = execFileSync("uv", ["python", "find", "3.14"], { encoding: "utf8" }).trim();
+		} catch {
+			python = "python3";
+		}
+	}
+	return `PYTHONPATH='${GAFFER_LIB_SRC}' '${python}' -m gaffer_lib`;
+}
 
 async function freePort(): Promise<number> {
 	return new Promise((r) => {
@@ -50,6 +67,7 @@ export async function startEnv(): Promise<GafferTestEnv> {
 		SANDBOX_URL: `http://127.0.0.1:${port}`,
 		GAFFER_DATA_DIR: dataDir,
 		GAFFER_ID_SALT: "test-salt",
+		GAFFER_LIB_CMD: hostGafferLibCommand(),
 		ANTHROPIC_API_KEY: "sk-ant-test-harness-secret",
 	});
 	return {

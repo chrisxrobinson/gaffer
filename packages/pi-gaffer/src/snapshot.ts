@@ -3,6 +3,7 @@
  * FPL is updating, validate, write an immutable snapshot, and summarise it for the model.
  */
 import { createHmac } from "node:crypto";
+import { type Derived, type DeriveFn, DeriveInputError } from "./derive.ts";
 import { type FplClient, type FplResponse, FplNotFoundError, FplUnavailableError, type UnavailableReason } from "./http.ts";
 import type * as S from "./schema/fpl.ts";
 import type { SnapshotStore } from "./store.ts";
@@ -25,6 +26,8 @@ export interface SnapshotDeps {
 	store: SnapshotStore;
 	salt: string;
 	now?: () => number;
+	/** gaffer_lib derive in the sandbox (M2). Without it, the summary falls back to the raw API values. */
+	derive?: DeriveFn;
 }
 
 export interface SnapshotParams {
@@ -32,6 +35,10 @@ export interface SnapshotParams {
 	/** Element ids whose element-summary should be included. */
 	elementSummaries?: number[];
 	forceFresh?: boolean;
+	/** User override of the free-transfer count (FR-INP-04). */
+	ft?: number;
+	/** Pending transfers the user declared, e.g. "Salah>Palmer" (FR-INP-04). */
+	pending?: string;
 	signal?: AbortSignal;
 }
 
@@ -60,6 +67,9 @@ export interface SquadPlayer {
 	pick_position: number;
 	is_captain: boolean;
 	is_vice_captain: boolean;
+	/** £m; from gaffer_lib derive, null when derivation was unavailable. */
+	purchase_price: number | null;
+	selling_price: number | null;
 }
 
 export interface ChipState {
@@ -85,6 +95,13 @@ export interface SnapshotDetails {
 	bank: number | null;
 	squad_value: number | null;
 	squad: SquadPlayer[];
+	/** Bank plus the squad's selling value (£m), from derive. */
+	budget: number | null;
+	free_transfers: { value: number | null; source: "derived" | "user"; derived: number | null; confidence: string; unlimited?: boolean } | null;
+	pending: Derived["pending"];
+	assumptions: Derived["assumptions"] | null;
+	/** gaffer_lib version that derived the state, or null if derive was unavailable. */
+	derived_by: string | null;
 	chips: ChipState[];
 	flags: DatasetFlags;
 	finalise_transfers: { allowed: boolean; reason?: string };
@@ -236,7 +253,26 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 	if (userFresh) index[teamKey] = { snapshot: written.id, fetched_at: now() };
 	store.index(index);
 
+	let derived: Derived | undefined;
+	if (deps.derive) {
+		const opts = { ft: params.ft, pending: params.pending, signal: params.signal };
+		try {
+			derived = await deps.derive(written.dir, opts);
+		} catch (e) {
+			if (e instanceof DeriveInputError && params.pending) {
+				warnings.push(`The pending transfers "${params.pending}" could not be applied: ${e.message}. Ask the user to correct them (/team <id> --pending "OUT>IN").`);
+				derived = await deps.derive(written.dir, { ...opts, pending: undefined }).catch((e2) => {
+					warnings.push(`Free transfers and selling prices could not be derived: ${(e2 as Error).message}`);
+					return undefined;
+				});
+			} else {
+				warnings.push(`Free transfers and selling prices could not be derived: ${(e as Error).message}`);
+			}
+		}
+	}
+
 	const details = summarise({
+		derived,
 		bootstrap,
 		user,
 		flags,
@@ -273,6 +309,7 @@ function seasonOf(b: S.Bootstrap): { dir: string; label: string } {
 }
 
 function summarise(x: {
+	derived?: Derived;
 	bootstrap: S.Bootstrap;
 	user: Record<string, unknown>;
 	flags: DatasetFlags;
@@ -307,17 +344,33 @@ function summarise(x: {
 			pick_position: p.position,
 			is_captain: p.is_captain,
 			is_vice_captain: p.is_vice_captain,
+			purchase_price: null,
+			selling_price: null,
 		};
 	});
+	const d = x.derived;
+	if (d) {
+		// gaffer_lib owns the squad basis (Free Hit revert) and prices; the API supplies status and news.
+		squad.splice(0, squad.length);
+		for (const p of d.squad) {
+			const e = els.get(p.id)!;
+			squad.push({
+				id: p.id, name: p.name, team: p.team, position: p.position, price: p.now_cost / 10,
+				status: e.status, chance_of_playing_next_round: e.chance_of_playing_next_round, news: e.news, ep_next: e.ep_next,
+				pick_position: p.pick_position, is_captain: p.is_captain, is_vice_captain: p.is_vice_captain,
+				purchase_price: p.purchase_price === null ? null : p.purchase_price / 10, selling_price: p.selling_price / 10,
+			});
+		}
+	}
 	const history = x.user.history as S.History | undefined;
 	const nextGw = x.nextEv?.id ?? null;
-	const chips: ChipState[] = b.chips.map((c) => {
+	const chips: ChipState[] = d ? d.chips.map((c) => ({ ...c })) : b.chips.map((c) => {
 		const used = history?.chips.find((h) => h.name === c.name && h.event >= c.start_event && h.event <= c.stop_event);
 		const open = nextGw !== null && nextGw >= c.start_event && nextGw <= c.stop_event;
 		return { name: c.name, half: c.stop_event <= 19 ? 1 : 2, window: [c.start_event, c.stop_event], used_in: used?.event ?? null, available: !used && open };
 	});
-	const warnings = [...x.warnings];
-	if (picks?.active_chip === "freehit" && x.user["picks-prev"]) {
+	const warnings = [...x.warnings, ...(d?.warnings ?? [])];
+	if (!d && picks?.active_chip === "freehit" && x.user["picks-prev"]) {
 		warnings.push(`Free Hit was played in GW${picks.entry_history.event}; the squad and bank shown are the GW${basis!.entry_history.event} ones it reverts to.`);
 	}
 	const entry = x.user.entry as S.Entry | undefined;
@@ -332,10 +385,15 @@ function summarise(x: {
 		stale_reason: x.staleReason,
 		gw: { current: x.currentGw, next: nextGw, deadline: x.nextEv?.deadline_time ?? null },
 		team_name: entry?.name ?? "?",
-		squad_basis_gw: basis?.entry_history.event ?? null,
-		bank: basis ? basis.entry_history.bank / 10 : null,
-		squad_value: basis ? basis.entry_history.value / 10 : null,
+		squad_basis_gw: d ? d.squad_basis_gw : (basis?.entry_history.event ?? null),
+		bank: d ? (d.bank === null ? null : d.bank / 10) : basis ? basis.entry_history.bank / 10 : null,
+		squad_value: d ? d.squad_value / 10 : basis ? basis.entry_history.value / 10 : null,
 		squad,
+		budget: d ? d.budget / 10 : null,
+		free_transfers: d ? d.free_transfers : null,
+		pending: d ? d.pending : null,
+		assumptions: d ? d.assumptions : null,
+		derived_by: d ? `gaffer_lib ${d.gaffer_lib_version}` : null,
 		chips,
 		flags: x.flags,
 		finalise_transfers: x.finalise,
@@ -351,6 +409,15 @@ function fmtDuration(ms: number): string {
 	return d >= 1 ? `${d}d ${h % 24}h` : `${h}h ${Math.floor((ms % 3_600_000) / 60_000)}m`;
 }
 
+function freeTransfersLine(d: SnapshotDetails): string {
+	const ft = d.free_transfers;
+	const next = d.gw.next ?? "?";
+	if (!ft) return "Free transfers: unknown (derivation unavailable); ask the user if it matters.";
+	if (ft.unlimited) return `Free transfers for GW${next}: unlimited (the team hasn't passed its first deadline).`;
+	if (ft.source === "user") return `Free transfers for GW${next}: ${ft.value} (set by the user${ft.derived !== null && ft.derived !== ft.value ? `; public data suggests ${ft.derived}` : ""}).`;
+	return `Free transfers for GW${next}: ${ft.value} (ASSUMED: derived from public history, confidence ${ft.confidence}; FPL doesn't publish it. The user can correct it with /team <id> --ft N).`;
+}
+
 /** Compact, model-facing summary (< 1.5k tokens). Free text from FPL is quoted as data. */
 export function render(d: SnapshotDetails, now: number): string {
 	const L: string[] = [];
@@ -359,13 +426,21 @@ export function render(d: SnapshotDetails, now: number): string {
 	L.push(`Path (read-only in the sandbox): ${d.snapshot_path}`);
 	L.push(`Season ${d.season}. Current GW${d.gw.current ?? "-"}, next GW${d.gw.next ?? "-"}, deadline ${d.gw.deadline ?? "-"}${deadline ? ` (in ${fmtDuration(deadline - now)})` : ""}.`);
 	L.push(`Team: ${d.team_name}. Squad as of GW${d.squad_basis_gw ?? "-"}.`);
-	L.push(`Bank: £${d.bank?.toFixed(1) ?? "?"}m. Squad value: £${d.squad_value?.toFixed(1) ?? "?"}m. Free transfers: not derived yet (M2); ask the user if it matters.`);
+	const money = (v: number | null | undefined) => (v === null || v === undefined ? "?" : `£${v.toFixed(1)}m`);
+	L.push(`Bank: ${money(d.bank)}. Squad value: ${money(d.squad_value)}${d.budget !== null ? `. Budget (bank + selling prices): ${money(d.budget)}` : ""}.`);
+	L.push(freeTransfersLine(d));
+	if (d.pending) {
+		const p = d.pending;
+		L.push(`Pending transfers declared by the user (not yet in the squad below, which is as of the last deadline): ${p.transfers.map((t) => `${t.out_name} → ${t.in_name}`).join(", ")}; ${p.count} transfer(s), ${p.hits} hit(s) (−${p.hit_cost}), bank after £${(p.bank_after / 10).toFixed(1)}m, FTs left ${p.ft_remaining ?? "?"}.`);
+	}
 	L.push("");
-	L.push("pos  id    player           club  price  status  ep_next  role");
+	const priced = d.squad.some((p) => p.selling_price !== null);
+	L.push(`pos  id    player           club  price${priced ? "   sell" : ""}  status  ep_next  role`);
 	for (const p of d.squad) {
 		const role = p.is_captain ? "C" : p.is_vice_captain ? "V" : p.pick_position > 11 ? `bench${p.pick_position - 11}` : "";
 		const status = p.status === "a" ? "ok" : `${p.status}${p.chance_of_playing_next_round !== null ? ` ${p.chance_of_playing_next_round}%` : ""}`;
-		L.push(`${p.position}  ${String(p.id).padEnd(5)} ${p.name.slice(0, 16).padEnd(16)} ${p.team.padEnd(5)} ${p.price.toFixed(1).padStart(5)}  ${status.padEnd(6)}  ${String(p.ep_next ?? "-").padStart(7)}  ${role}`);
+		const sell = priced ? ` ${p.selling_price?.toFixed(1).padStart(5) ?? "    ?"}` : "";
+		L.push(`${p.position}  ${String(p.id).padEnd(5)} ${p.name.slice(0, 16).padEnd(16)} ${p.team.padEnd(5)} ${p.price.toFixed(1).padStart(5)}${sell}  ${status.padEnd(6)}  ${String(p.ep_next ?? "-").padStart(7)}  ${role}`);
 	}
 	const news = d.squad.filter((p) => p.news);
 	if (news.length) {
