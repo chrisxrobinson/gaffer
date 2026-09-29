@@ -145,8 +145,51 @@ def entries(finished, live, types):
     print(f"entries: {len(ids)}; {len(subs)} entry-GWs, {sum(len(s['automatic_subs']) for s in subs)} automatic_subs records")
 
 
+def trimmed_bootstrap(b):
+    keep = {
+        "events": ("id", "deadline_time", "finished", "data_checked", "is_previous", "is_current", "is_next"),
+        "teams": ("id", "name", "short_name"),
+        "elements": ("id", "web_name", "first_name", "second_name", "team", "element_type", "now_cost", "cost_change_start", "status"),
+    }
+    out = {k: [{f: x[f] for f in fields} for x in b[k]] for k, fields in keep.items()}
+    out["element_types"] = [{k: t[k] for k in ("id", "singular_name_short", "squad_select", "squad_min_play", "squad_max_play", "sub_positions_locked")} for t in b["element_types"]]
+    out["chips"] = [{k: c[k] for k in ("id", "name", "number", "start_event", "stop_event", "chip_type")} for c in b["chips"]]
+    out["game_settings"] = b["game_settings"]
+    out["game_config"] = {"scoring": b["game_config"]["scoring"]}
+    return out
+
+
+def snapshot_entry(bootstrap, entry_id, out_dir):
+    """A frozen, trimmed real snapshot for derive tests (same file names as fpl_snapshot writes)."""
+    d = HERE / out_dir
+    d.mkdir(exist_ok=True)
+    cur = next(e["id"] for e in bootstrap["events"] if e["is_current"])
+    entry = get(f"entry/{entry_id}/", fresh=True)
+    files = {
+        "bootstrap-static": trimmed_bootstrap(bootstrap),
+        "fixtures": [{k: f[k] for k in ("id", "event", "team_h", "team_a", "finished")} for f in get("fixtures/")],
+        # Team-level fields only: no manager names.
+        "entry": {k: entry[k] for k in ("id", "name", "started_event", "current_event", "last_deadline_bank", "last_deadline_value", "last_deadline_total_transfers")},
+        "history": get(f"entry/{entry_id}/history/", fresh=True),
+        "transfers": get(f"entry/{entry_id}/transfers/", fresh=True),
+        "picks": get(f"entry/{entry_id}/event/{cur}/picks/", fresh=True),
+    }
+    files["history"].pop("past", None)
+    if files["picks"]["active_chip"] == "freehit":
+        files["picks-prev"] = get(f"entry/{entry_id}/event/{cur - 1}/picks/", fresh=True)
+    for name, data in files.items():
+        (d / f"{name}.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
+    print(f"snapshot of entry {entry_id} at GW{cur} -> {out_dir}")
+
+
 if __name__ == "__main__":
+    import sys
+
     boot = get("bootstrap-static/")
+    if sys.argv[1:] == ["snapshot"]:
+        snapshot_entry(boot, 1, "snapshot-entry-1")
+        raise SystemExit
     finished, live, types = season_2627(boot)
     season_2526()
     entries(finished, live, types)
+    snapshot_entry(boot, 1, "snapshot-entry-1")
