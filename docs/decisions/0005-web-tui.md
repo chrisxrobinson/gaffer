@@ -19,7 +19,8 @@ The brief asks for a browser UI that "looks and behaves like the Pi CLI". Pi off
 
 ## Decision
 - **MVP (single user, local): Option A.**
-  - Inside the `gaffer` container: `ttyd -i 127.0.0.1 -W -m 1 -t titleFixed=Gaffer tmux new -A -s gaffer pi …`. The port is published on `127.0.0.1` only.
+  - Inside the `gaffer` container: `ttyd -i <egress-interface IP> -W -m 1 -t titleFixed=Gaffer tmux new -A -s gaffer pi …`. The port is published on the host's `127.0.0.1` only.
+    - *Correction (M1):* binding ttyd to `127.0.0.1` inside the container makes it unreachable through Docker's port publishing. Binding to `0.0.0.0` would expose it on the internal `sandbox_net` too, letting sandbox code drive the TUI. The entrypoint binds to the IP of the interface holding the default route (the egress network, where Docker publishes ports); the sandbox has no route to that subnet (verified by `deploy/compose/tests/isolation.mjs`).
   - The Gaffer extension's `user_bash` handler blocks every `!` and `!!` user shell command.
   - Pi starts with `--tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences`, and all four built-ins are routed to the sandbox ([ADR 0001](0001-sandbox.md)).
   - tmux is only there so a run survives a browser disconnect. Its escape routes to a shell are removed with a config that sets `set -g prefix None` and `unbind-key -a`, plus `set -g status off`. Even if a shell were reached, the harness container holds only the LLM key and the data volume. Because the port is localhost-only and single-user, the residual risk is accepted.

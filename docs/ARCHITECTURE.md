@@ -32,7 +32,7 @@ flowchart LR
     S[(/sessions<br/>Pi JSONL)]
     D[(/data<br/>snapshots, history,<br/>ledger, users)]
   end
-  LLM[(LLM provider<br/>default claude-sonnet-5)]
+  LLM[(LLM provider<br/>default claude-sonnet-5-5)]
   FPL[(fantasy.premierleague.com/api)]
   FD[(football-data.co.uk<br/>fixtures.csv)]
 
@@ -114,7 +114,7 @@ Coding sections (`tools`, `rules`, `docs`) disappear because `customPrompt` is s
 | Tools run on the host (the harness container) | All four routed to the sandbox | Credential isolation |
 | `grep`/`find`/`ls` tools | Not activated | `bash` covers them in the sandbox |
 | User `!cmd` shell escapes | Blocked by `user_bash` | Would be a shell in the harness container |
-| Project-local extensions and trust prompt | Not used (the package is installed globally in the image; cwd is an empty dir) | Reproducible image, no trust UI in the web TUI |
+| Project-local extensions and trust prompt | Not used (the package is installed globally in the image; cwd is `/work`, an empty root-owned dir in the harness that mirrors the sandbox's working dir, because Pi resolves tool paths against the session cwd) | Reproducible image, no trust UI in the web TUI |
 | Coding-shaped compaction summary (tracks files read and modified) | Replaced by an FPL summary: team, GW, snapshot id, candidate plans, decisions so far | Compaction must keep FPL state |
 | Install telemetry (on by default, `settings-manager.js:734`) | `PI_TELEMETRY=0` | Privacy, no outbound surprises |
 | Everything else: session tree, `/resume`, `/tree`, model switching, thinking levels, themes, keybindings, auto-retry | **Kept unchanged** | That's the point of the experiment |
@@ -123,11 +123,13 @@ Coding sections (`tools`, `rules`, `docs`) disappear because `customPrompt` is s
 In the image, Pi is installed globally (pinned). The Gaffer package is installed with `pi install` into `/opt/pi-agent`. The web TUI runs:
 
 ```
-ttyd … tmux new -A -s gaffer \
-  pi --session-dir /sessions --no-context-files \
+ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s gaffer \
+  sh -c 'cd /work && pi --session-dir /sessions --no-context-files --continue \
      --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
-     --provider "$GAFFER_PROVIDER" --model "$GAFFER_MODEL"
+     --provider "$GAFFER_PROVIDER" --model "$GAFFER_MODEL" --thinking "$GAFFER_THINKING"'
 ```
+
+(As built in M1: `harness/entrypoint.sh` and `harness/gaffer-pi`. The cwd is `/work` because Pi resolves tool paths against the session cwd, see §1.4. The image also sets `PI_OFFLINE=1` and `PI_SKIP_VERSION_CHECK=1`, which stop Pi's startup network calls — model-catalogue refresh, version check, tool downloads — without affecting LLM calls.)
 
 **SDK gotcha (S1):** a host that embeds Pi through the SDK must call `session.bindExtensions()`, or `session_start` never fires. This matters for the evaluation runner and the phase-3 bridge. The CLI and RPC modes do it themselves. The `--tools` allowlist is kept as a second line of defence.
 
@@ -151,7 +153,7 @@ ttyd … tmux new -A -s gaffer \
    - fetches with the freshness policy (ADR 0002); per-user endpoints are always fresh and cache-busted
    - validates schemas and invariants
    - writes an immutable snapshot
-   - provisions the sandbox lazily and runs `gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline
+   - provisions the sandbox lazily and runs `gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline (from M2; in M1 the summary reads squad, bank, chips and GW state straight from the API, including the Free Hit revert, and reports FT as not yet derived)
    - returns a summary of under 1.5k tokens: squad table, flags, staleness
 2. **Golden path.** The model runs `python -m gaffer_lib run --snapshot $S --prefs $P --out /work/plan.json`. That computes strength → xMins → xP → solver (horizon 6, 4 shown) → chip scenarios → captain EV. It prints a compact summary and the top 3 plans.
 3. **Judgement.** Using skills, the model does four things:
@@ -191,7 +193,7 @@ The TypeBox definition lives in `packages/pi-gaffer/src/schema/recommendation.ts
   "created_at": "2026-10-09T18:02:11Z",
   "season": "2026/27", "gw": 6, "deadline": "2026-10-10T10:00:00Z",
   "team_id_hash": "hmac-sha256:…",
-  "model": "anthropic/claude-sonnet-5", "gaffer_lib": "0.3.1", "pi": "0.87.1",
+  "model": "anthropic/claude-sonnet-5-5", "gaffer_lib": "0.3.1", "pi": "0.87.1",
   "snapshot": { "id": "…/20261009T1801Z-3fa2c1", "fetched_at": "…", "stale": false, "stale_reason": null },
   "assumptions": { "free_transfers": 2, "ft_source": "derived", "bank": 1.4, "pending_transfers": [] },
   "preferences": { "risk": "balanced", "save_chips": ["wildcard"], "keep": [], "avoid": [] },
@@ -280,10 +282,10 @@ Each stage ships only if it beats the previous stage in the backtest (§6).
 |---|---|
 | Language/runtime | Python 3.14 (`python:3.14-slim`); open-fpl-solver requires ≥3.14 |
 | Preinstalled | `gaffer_lib`, `open-fpl-solver` (pinned commit), `highspy`, `numpy`, `pandas`, `scipy`, `pydantic`. No pip at runtime. |
-| Limits | 2 vCPU, 2 GB RAM (4 GB on Fargate), pids 128, 120 s per command (solver calls run with a 45 s time limit), `/work` tmpfs 256 MB |
+| Limits | 2 vCPU, 2 GB RAM (4 GB on Fargate), pids 128 (commands get `RLIMIT_NPROC` 96), 120 s per command (solver calls run with a 45 s time limit), `/work` tmpfs 256 MB |
 | Filesystem | Read-only root; `/data` read-only; `/work` read-write and ephemeral |
 | Network | None: an `internal: true` network that reaches the harness only |
-| Privileges | Non-root, cap-drop ALL, no-new-privileges, default seccomp, gVisor `runsc` on Linux hosts |
+| Privileges | Non-root, cap-drop ALL, no-new-privileges, Docker's default seccomp profile set explicitly, init as PID 1, gVisor `runsc` on Linux hosts |
 | Lifetime | One per session, lazily provisioned, released after 15 min idle or at session end |
 | Env | A fixed minimal env built by `sandboxd`, never inherited |
 
@@ -367,7 +369,7 @@ This section is how the theory in the brief gets tested. There are four layers, 
 The full decision is in [ADR 0005](decisions/0005-web-tui.md).
 
 - **Approach (MVP):** the browser runs xterm.js served by **ttyd**, which runs `tmux new -A -s gaffer pi …` in the `gaffer` container. The UI **is** the Pi CLI, so it looks and behaves exactly like Pi, including the Gaffer theme, slash commands and tool renderers.
-- **Connection:** a WebSocket from the browser to ttyd. ttyd is bound to `127.0.0.1` locally, and sits behind ALB/OIDC in the cloud (`-H` auth-proxy header, idle timeout 3600 s).
+- **Connection:** a WebSocket from the browser to ttyd. Locally the port is published on the host's `127.0.0.1` only, and inside the container ttyd listens only on the egress-network interface (never the sandbox network); in the cloud it sits behind ALB/OIDC in the cloud (`-H` auth-proxy header, idle timeout 3600 s).
 - **Streaming:** native. Pi's TUI renders token deltas and tool progress, and ttyd relays the PTY bytes.
 - **Reconnects:** tmux keeps the Pi process and any in-flight run alive, so a reload re-attaches (`new -A`). If the container restarts, `pi --continue` resumes from the JSONL session. The tmux prefix and bindings are removed.
 - **Hardening:** single client (`-m 1`), user `!` shell blocked, tool allowlist, and nothing sensitive in the harness beyond the LLM key.
@@ -487,7 +489,7 @@ sequenceDiagram
   participant T as ttyd/tmux
   participant P as Pi core loop
   participant X as Gaffer extensions
-  participant L as LLM (claude-sonnet-5)
+  participant L as LLM (claude-sonnet-5-5)
   participant D as fpl_snapshot (harness)
   participant F as FPL API / football-data
   participant S as sandboxd (no network)

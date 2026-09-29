@@ -1,0 +1,68 @@
+# Gaffer, local single-user (ADR 0006). Run from this directory:
+#   ./init-secrets.sh && docker compose up --build   then open http://127.0.0.1:7681
+name: gaffer
+
+services:
+  gaffer:
+    # The brain: Pi + pi-gaffer + ttyd. Holds the LLM key, fetches FPL data, owns the session log.
+    build:
+      context: ../..
+      dockerfile: harness/Dockerfile
+    image: gaffer-harness:local
+    ports:
+      - "127.0.0.1:7681:7681"   # localhost only (NFR-SEC-04)
+    networks: [egress, sandbox_net]
+    init: true
+    environment:
+      GAFFER_PROVIDER: ${GAFFER_PROVIDER:-anthropic}
+      GAFFER_MODEL: ${GAFFER_MODEL:-claude-sonnet-5-5}
+      GAFFER_THINKING: ${GAFFER_THINKING:-medium}
+      GAFFER_BUDGET_HARD: ${GAFFER_BUDGET_HARD:-1.50}
+      GAFFER_BUDGET_DAILY: ${GAFFER_BUDGET_DAILY:-5}
+      SANDBOX_PROVIDER: compose
+      SANDBOX_URL: http://sandbox:8080
+    secrets: [anthropic_api_key, gaffer_id_salt]
+    volumes:
+      - sessions:/sessions
+      - data:/data
+    depends_on: [sandbox]
+    restart: unless-stopped
+
+  sandbox:
+    # The hands: runs generated code. No network beyond the harness, no secrets, non-root, read-only root.
+    build:
+      context: ../..
+      dockerfile: sandbox/Dockerfile
+    image: gaffer-sandbox:local
+    networks: [sandbox_net]
+    init: true   # tini as PID 1 reaps orphaned children (e.g. after a killed fork bomb)
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /work:size=256m,uid=10001,gid=10001,mode=0700
+    volumes:
+      - data:/data:ro
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+      # Explicit, because a daemon may default to unconfined (sandbox/seccomp/README.md).
+      - seccomp=../../sandbox/seccomp/moby-default-v27.3.1.json
+    pids_limit: 128
+    mem_limit: 2g
+    cpus: 2
+    restart: unless-stopped
+
+networks:
+  egress: {}
+  sandbox_net:
+    internal: true   # no route out: the sandbox reaches only the harness
+
+volumes:
+  sessions: {}
+  data: {}
+
+secrets:
+  anthropic_api_key:
+    file: ./secrets/anthropic_api_key
+  gaffer_id_salt:
+    file: ./secrets/gaffer_id_salt

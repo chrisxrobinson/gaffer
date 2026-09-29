@@ -1,0 +1,5 @@
+# Linux hosts with gVisor installed: run the sandbox under runsc (ADR 0001).
+#   docker compose -f docker-compose.yml -f docker-compose.gvisor.yml up
+services:
+  sandbox:
+    runtime: runsc

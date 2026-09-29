@@ -1,2 +1,13 @@
 node_modules/
 .DS_Store
+.env
+.env.*
+secrets/
+*.key
+dist/
+coverage/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+evals/results/*.jsonl
