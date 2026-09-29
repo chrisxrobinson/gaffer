@@ -1,3 +1,25 @@
 [
- {"label": "ref-a-gw6", "gw": 6, "free_transfers": 2, "notes": "Owner-reported 2026-09-29: 2 FT for GW6. No selling prices supplied. BB played GW2; both wildcards unused, so no WC/FH week."}
+ {
+  "label": "ref-a-gw6",
+  "gw": 6,
+  "free_transfers": 2,
+  "notes": "Owner-reported 2026-09-29: 2 FT for GW6; all 15 selling prices read in the app match (8 quoted, 'the rest match'). BB played GW2; both wildcards unused, so no WC/FH week.",
+  "selling_prices": {
+   "496": 45,
+   "418": 48,
+   "502": 44,
+   "173": 40,
+   "532": 49,
+   "40": 76,
+   "368": 70,
+   "542": 57,
+   "557": 63,
+   "411": 155,
+   "379": 91,
+   "110": 45,
+   "10": 55,
+   "165": 76,
+   "575": 48
+  }
+ }
 ]
