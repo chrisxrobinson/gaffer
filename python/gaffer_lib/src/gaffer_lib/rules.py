@@ -85,3 +85,177 @@ class Scoring:
 
     def total(self, stats: Mapping[str, int], element_type: int) -> int:
         return sum(self.points(stats, element_type).values())
+
+
+@dataclass(frozen=True)
+class ChipDef:
+    """One entry of `bootstrap.chips`: a chip usable once within [start_event, stop_event]."""
+
+    name: str
+    start_event: int
+    stop_event: int
+    chip_type: str = ""
+
+
+@dataclass(frozen=True)
+class Rules:
+    """Season parameters, read from `bootstrap-static` (FR-RUL-07)."""
+
+    positions: Mapping[int, str]  # element_type → short name
+    squad_select: Mapping[int, int]  # element_type → players in the 15
+    min_play: Mapping[int, int]  # element_type → min in the XI
+    max_play: Mapping[int, int]  # element_type → max in the XI
+    squad_size: int = 15
+    squad_play: int = 11
+    team_limit: int = 3
+    total_spend: int = 1000
+    sell_on_fee: Fraction = Fraction(1, 2)
+    max_extra_free_transfers: int = 4
+    chips: tuple[ChipDef, ...] = ()
+    hit_cost: int = HIT_COST
+    # FPL's pick positions: 1-11 the XI, 12 the bench GK (`element_types[GKP].sub_positions_locked`), 13-15 bench order.
+    gk_bench_positions: tuple[int, ...] = (12,)
+
+    @property
+    def max_free_transfers(self) -> int:
+        return 1 + self.max_extra_free_transfers
+
+    @classmethod
+    def from_bootstrap(cls, b: Mapping) -> Rules:
+        gs = b.get("game_settings", {})
+        types = b["element_types"]
+        gk_locked = tuple(p for t in types for p in (t.get("sub_positions_locked") or []))
+        return cls(
+            positions={t["id"]: t["singular_name_short"] for t in types},
+            squad_select={t["id"]: t["squad_select"] for t in types},
+            min_play={t["id"]: t["squad_min_play"] for t in types},
+            max_play={t["id"]: t["squad_max_play"] for t in types},
+            squad_size=gs.get("squad_squadsize", 15),
+            squad_play=gs.get("squad_squadplay", 11),
+            team_limit=gs.get("squad_team_limit", 3),
+            total_spend=gs.get("squad_total_spend", 1000),
+            sell_on_fee=Fraction(str(gs.get("transfers_sell_on_fee", 0.5))),
+            max_extra_free_transfers=gs.get("max_extra_free_transfers", 4),
+            chips=tuple(ChipDef(c["name"], c["start_event"], c["stop_event"], c.get("chip_type", "")) for c in b.get("chips", [])),
+            gk_bench_positions=gk_locked or (12,),
+        )
+
+    def position_of(self, element_type: int) -> str:
+        return self.positions[element_type]
+
+
+# ---------------------------------------------------------------------------------------------------
+# Squad legality (FR-RUL-02)
+
+
+@dataclass(frozen=True)
+class Player:
+    id: int
+    team: int
+    element_type: int
+
+
+@dataclass(frozen=True)
+class Violation:
+    code: str
+    message: str
+    gw: int | None = None
+
+    def as_dict(self) -> dict:
+        d = {"code": self.code, "message": self.message}
+        if self.gw is not None:
+            d["gw"] = self.gw
+        return d
+
+
+def check_squad(squad: Sequence[int], players: Mapping[int, Player], rules: Rules, *, cost: int | None = None, budget: int | None = None) -> list[Violation]:
+    """Check a 15-man squad: size, no duplicates, known players, position quotas, club limit, budget.
+
+    `cost` is what the squad costs (selling prices for players kept, current prices for players
+    bought) and `budget` what is available (bank plus the selling value of the current squad); both
+    in tenths. Returns every violation found, each with a stable code.
+    """
+    out: list[Violation] = []
+    if len(squad) != rules.squad_size:
+        out.append(Violation("SQUAD_SIZE", f"squad has {len(squad)} players, needs {rules.squad_size}"))
+    dupes = sorted(p for p, n in Counter(squad).items() if n > 1)
+    if dupes:
+        out.append(Violation("DUPLICATE_PLAYER", f"players appear more than once: {dupes}"))
+    unknown = [p for p in squad if p not in players]
+    if unknown:
+        out.append(Violation("UNKNOWN_PLAYER", f"unknown player ids: {unknown}"))
+    known = [players[p] for p in squad if p in players]
+    by_type = Counter(p.element_type for p in known)
+    for t, need in rules.squad_select.items():
+        if by_type.get(t, 0) != need:
+            out.append(Violation("POSITION_QUOTA", f"{by_type.get(t, 0)} {rules.position_of(t)} in the squad, needs {need}"))
+    by_team = Counter(p.team for p in known)
+    for team, n in sorted(by_team.items()):
+        if n > rules.team_limit:
+            out.append(Violation("CLUB_LIMIT", f"{n} players from team {team}, the limit is {rules.team_limit}"))
+    if cost is not None and budget is not None and cost > budget:
+        out.append(Violation("OVER_BUDGET", f"squad costs £{cost / 10:.1f}m, only £{budget / 10:.1f}m available"))
+    return out
+
+
+# ---------------------------------------------------------------------------------------------------
+# Formation and automatic substitutions (FR-RUL-03)
+
+
+def formation_violations(xi_types: Iterable[int], rules: Rules) -> list[Violation]:
+    """An XI of `squad_play` players within each position's [squad_min_play, squad_max_play]."""
+    types = list(xi_types)
+    out: list[Violation] = []
+    if len(types) != rules.squad_play:
+        out.append(Violation("XI_SIZE", f"the XI has {len(types)} players, needs {rules.squad_play}"))
+    counts = Counter(types)
+    for t in rules.squad_select:
+        n = counts.get(t, 0)
+        if not rules.min_play[t] <= n <= rules.max_play[t]:
+            out.append(Violation("FORMATION", f"{n} {rules.position_of(t)} in the XI, allowed {rules.min_play[t]}-{rules.max_play[t]}"))
+    return out
+
+
+def valid_formation(xi_types: Iterable[int], rules: Rules) -> bool:
+    return not formation_violations(xi_types, rules)
+
+
+@dataclass(frozen=True)
+class Pick:
+    element: int
+    position: int  # 1-11 XI, 12-15 bench in order
+    element_type: int
+
+
+def automatic_subs(picks: Sequence[Pick], played: Callable[[int], bool], rules: Rules) -> list[tuple[int, int]]:
+    """FPL's automatic substitutions: (element_out, element_in) pairs, in the order they are made.
+
+    Each starter who didn't play, in pick order, is replaced by the first bench player (bench order)
+    who played, isn't already used, and keeps the XI's formation valid. A goalkeeper can only be
+    replaced by the bench goalkeeper, and an outfield player only by outfield players.
+
+    FPL records the subs in Bench Boost weeks too (observed in the 2026/27 sample); they don't change
+    the points there, because all 15 score.
+    """
+    ordered = sorted(picks, key=lambda p: p.position)
+    xi = [p for p in ordered if p.position <= rules.squad_play]
+    bench = [p for p in ordered if p.position > rules.squad_play]
+    gk_type = next(t for t, name in rules.positions.items() if name == "GKP")
+    used: set[int] = set()
+    subs: list[tuple[int, int]] = []
+    for starter in list(xi):
+        if played(starter.element):
+            continue
+        for cand in bench:
+            if cand.element in used or not played(cand.element):
+                continue
+            if (starter.element_type == gk_type) != (cand.element_type == gk_type):
+                continue
+            trial = [cand if p is starter else p for p in xi]
+            if not valid_formation((p.element_type for p in trial), rules):
+                continue
+            xi = trial
+            used.add(cand.element)
+            subs.append((starter.element, cand.element))
+            break
+    return subs
