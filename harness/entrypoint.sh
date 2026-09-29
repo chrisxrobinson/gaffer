@@ -13,5 +13,5 @@ BIND_IP="$(node /opt/gaffer/egress-ip.mjs)"
 
 exec ttyd --interface "$BIND_IP" --port 7681 --writable --max-clients 1 \
   --index /opt/gaffer/ttyd-index.html \
-  -t titleFixed=Gaffer -t fontSize=15 -t disableLeaveAlert=true \
+  -t titleFixed=Gaffer -t fontSize=15 -t disableLeaveAlert=true -t scrollback=10000 \
   tmux -f /opt/gaffer/tmux.conf new-session -A -s gaffer /opt/gaffer/gaffer-pi

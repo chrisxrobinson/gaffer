@@ -30,7 +30,7 @@ To stop the stack, run `docker compose down`. Your sessions and snapshots are ke
 
 ### Using the terminal UI
 
-- It behaves like the Pi CLI. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit).
+- It behaves like the Pi CLI. Scroll with the mouse wheel or scrollbar to see earlier output (up to 10,000 lines per browser connection; after a reconnect, the history before it is shown again only when Pi redraws, e.g. on resume). `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit).
 - `!` shell commands are disabled, because the harness container holds the API key. Gaffer's own code runs in the sandbox.
 - Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session.
 - **Only one browser tab can be connected at a time.** A second tab shows "Press ⏎ to Reconnect" and won't connect until the first tab is closed. See [Troubleshooting](#troubleshooting).
