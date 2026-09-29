@@ -86,7 +86,7 @@ How to read it: 8 chips, 4 types × 2 halves. First half is GW1–19 (WC and FH 
 |---|---|---|
 | Bank | `entry/{id}/.last_deadline_bank`, `history.current[-1].bank`, `picks.entry_history.bank` (tenths of £m) | Value as of the last deadline |
 | Squad value | `last_deadline_value` / `value` | Market value, **not** selling value |
-| Free transfers available | **Not exposed.** Only `my-team` (auth) has it | Derive: start at 1 after GW1, +1 each GW, capped at 5; subtract `event_transfers` minus the paid ones (`event_transfers_cost/4`). WC/FH weeks keep the FT count (rule from 2024/25 onward; confirm against the official rules). Needs validation against real accounts |
+| Free transfers available | **Not exposed.** Only `my-team` (auth) has it | Derive: start at 1 after GW1, +1 each GW, capped at 5; subtract `event_transfers` minus the paid ones (`event_transfers_cost/4`). WC/FH weeks keep the FT count with no +1 (confirmed 2026-09-29 against open-fpl-solver's FT constraint and the PL's five-FT article). In WC/FH weeks `history.current[].event_transfers` is **0**, although `transfers/` lists every move, FH ones included (checked on 50 entries). `gaffer_lib.derive` implements this; owner-checked reference accounts are FR-DAT-08 |
 | Selling prices | Not exposed publicly | Derive from `transfers/` purchase price + `now_cost` + 50% sell-on fee. Players held since GW1 without transfers: purchase price = `now_cost - cost_change_start` |
 | Chips used / remaining | `history.chips[]` + `bootstrap.chips` | See A.3 |
 | Pending (unconfirmed) transfers for next GW | Not visible | Ask the user |

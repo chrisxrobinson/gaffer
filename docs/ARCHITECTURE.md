@@ -153,7 +153,7 @@ ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s 
    - fetches with the freshness policy (ADR 0002); per-user endpoints are always fresh and cache-busted
    - validates schemas and invariants
    - writes an immutable snapshot
-   - provisions the sandbox lazily and runs `gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline (from M2; in M1 the summary reads squad, bank, chips and GW state straight from the API, including the Free Hit revert, and reports FT as not yet derived)
+   - provisions the sandbox lazily and runs `python -m gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline, applying the user's `/team --ft` and `--pending` overrides and recording `ft_source`. If the sandbox or derive fails, the summary falls back to the raw API values with FT unknown and a warning
    - returns a summary of under 1.5k tokens: squad table, flags, staleness
 2. **Golden path.** The model runs `python -m gaffer_lib run --snapshot $S --prefs $P --out /work/plan.json`. That computes strength → xMins → xP → solver (horizon 6, 4 shown) → chip scenarios → captain EV. It prints a compact summary and the top 3 plans.
 3. **Judgement.** Using skills, the model does four things:
@@ -178,7 +178,7 @@ ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s 
 | Squad rules | 15 = 2 GK / 5 DEF / 5 MID / 3 FWD; ≤3 per club (`squad_team_limit`); budget `squad_total_spend` against **selling prices**; XI formation GK1, DEF 3–5, MID 2–5, FWD 1–3 (`element_types`). |
 | Transfers and hits | 1 FT per GW, bank up to 5 (`max_extra_free_transfers: 4`); −4 per extra; WC/FH weeks preserve FTs; selling price = purchase + ⌊50% of profit⌋ to £0.1m. |
 | Captain/vice | 2× captain (3× with TC); vice takes over only if the captain plays 0 minutes. |
-| Bench and auto-subs | Bench order 1–3 (+ GK). Auto-subs follow bench order while keeping formation valid; the simulator is used to value bench order. |
+| Bench and auto-subs | Bench order 1–3 (+ GK). Auto-subs follow bench order while keeping formation valid; the simulator is used to value bench order. The API stores `picks` *after* auto-subs (slots swapped, XI re-sorted by position), and FPL records subs in Bench Boost weeks too. |
 | Chips (2026/27) | 8 chips: WC, FH, BB, TC × 2 halves. First half WC/FH GW2–19, BB/TC GW1–19; second half GW20–38. One chip per GW. First-half chips expire at the GW19 deadline (API: 2027-01-01T18:30Z, which conflicts with the PL article's 2 Jan 13:30 GMT; the API wins and is re-checked in December). FH can't follow FH across GW19→20. **No Assistant Manager chip this season.** |
 | Scoring | From `game_config.scoring`, including DefCon (DEF +2 at ≥10 CBIT; MID/FWD +2 at ≥12 CBIRT; cap 2) and GK goal = 10. The thresholds aren't in the API, so they are constants with a source comment and a test. 2026/27 BPS changes affect the bonus model. |
 | Read-only | No auth anywhere. `fpl_snapshot` refuses `my-team`, `me` and any non-GET, and a `tool_call` guard blocks such paths (S1-4). |
@@ -314,7 +314,7 @@ Each feature must pass the "no pointless features" test. Evidence is in [researc
 This section is how the theory in the brief gets tested. There are four layers, from cheap and deterministic to expensive and end-to-end.
 
 ### 6.1 Rules-engine regression tests (every commit, CI)
-- **Golden files from real FPL data.** For every finished 2025/26 and 2026/27 GW, the `event/{gw}/live/` `explain[]` breakdown is ground truth. `gaffer_lib.rules.points()` must reproduce `total_points` for **every player** (target 100% for the current scoring; DefCon from 2025/26 onward).
+- **Golden files from real FPL data.** For every finished 2026/27 GW, the `event/{gw}/live/` `explain[]` breakdown is ground truth; for 2025/26, which the API no longer serves, the per-fixture rows of vaastav's `merged_gw.csv` at a pinned commit. `gaffer_lib.rules` must reproduce `total_points` for **every player** (target 100% for the current scoring; DefCon from 2025/26 onward). `python/gaffer_lib/tests/data/build_fixtures.py` rebuilds the fixtures as GWs finish.
 - **Transitions.** FT accrual and cap, WC/FH preserving FTs, chip windows and GW19 expiry, one chip per GW, selling-price rounding, and auto-sub formation edge cases. These are table-driven tests plus Hypothesis property tests (for example, "any `validate`-passing squad has exactly 15 players, ≤3 per club, spend ≤ budget").
 - **Derivation check.** `derive` FT and selling prices are compared against at least 3 real accounts whose true values the owners read from the app (a manual fixture, refreshed each season).
 

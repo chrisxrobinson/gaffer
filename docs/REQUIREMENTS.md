@@ -31,7 +31,7 @@
 ### Rules engine
 | ID | Requirement | Pri | Phase | Acceptance criterion |
 |---|---|---|---|---|
-| FR-RUL-01 | Compute player points under the current scoring (read from `game_config.scoring`, DefCon thresholds as constants) | M | 1 | Reproduces `total_points` from `event/{gw}/live` `explain[]` for **100%** of player-GWs in all finished 2025/26 and 2026/27 GWs. |
+| FR-RUL-01 | Compute player points under the current scoring (read from `game_config.scoring`, DefCon thresholds as constants) | M | 1 | Reproduces `total_points` for **100%** of player-GWs in all finished 2025/26 and 2026/27 GWs: for 2026/27 from `event/{gw}/live` `explain[]`; for 2025/26, which the API no longer serves, from the per-fixture rows of `vaastav/Fantasy-Premier-League` `merged_gw.csv` at a pinned commit. |
 | FR-RUL-02 | Squad legality: 15 = 2/5/5/3, ≤3 per club, spend ≤ budget using selling prices | M | 1 | Table-driven tests plus a Hypothesis property: every squad the validator accepts satisfies all constraints, and every single-constraint violation is rejected with the right code. |
 | FR-RUL-03 | XI formation and auto-sub simulation | M | 1 | Tests for every formation edge case (GK absent, a DEF auto-sub that would break 3-DEF, bench order). They match ≥20 real `automatic_subs` records from 2026/27 (the API serves picks for the current season only, so 2025/26 records can't be fetched). |
 | FR-RUL-04 | FT accrual (+1 per GW, cap 5), hits (−4 each), WC/FH preserve FTs | M | 1 | A transition table test covers 0–5 FTs × 0–6 transfers × {none, WC, FH}. |

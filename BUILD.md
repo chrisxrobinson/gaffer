@@ -69,3 +69,58 @@ Branch `build-m1-claude`. Scope and exit criteria from [ROADMAP M1](docs/ROADMAP
 - A `/team` autocomplete or a "last used team" default across sessions (FR-INP-03 in M4 covers preferences, not the team).
 - Bake the `fd`/`ripgrep` binaries into the harness image, or suppress the warning, to keep the startup screen clean.
 - CI workflow running `pnpm test`, the sandboxd pytest and `deploy/compose/tests/verify.sh` on a Linux runner (which would also exercise the gVisor override and real 0600-secret permissions).
+
+---
+
+# Gaffer — M2 build checklist
+
+Branch `build-m2`. Scope and exit criteria from [ROADMAP M2](docs/ROADMAP.md#m2--rules-engine-and-derivation-target-before-gw8). Evidence was gathered on 2026-09-29 (GW5 finished and data-checked, GW6 deadline 2026-10-10T10:00Z) on macOS / Docker Desktop 27.3.1 (arm64).
+
+**How to re-run the evidence**
+- gaffer_lib: `PYTHONPATH=python/gaffer_lib/src uv run --no-project --python 3.14 --with pytest==9.1.1 --with hypothesis==6.168.3 pytest python/gaffer_lib/tests`. That's 237 tests plus 2 FR-DAT-08 tests that skip until reference accounts exist.
+- TypeScript: `npx pnpm@12.6.0 test`. That's 128 tests; `fpl_snapshot` runs the repo's gaffer_lib through a host sandboxd.
+- sandboxd: `uv run --no-project --with pytest==9.1.1 pytest sandbox/tests` (7 tests).
+- Stack: `cd deploy/compose && docker compose up -d --build && ./tests/verify.sh`. The live round trip now fails unless derive ran in the sandbox.
+- Golden fixtures: `uv run --no-project --python 3.14 python python/gaffer_lib/tests/data/build_fixtures.py` rebuilds them from the live API and vaastav (pinned commit `f9ed3e88`).
+
+## Scope
+- [x] `gaffer_lib.rules`: scoring from `game_config.scoring` (DefCon thresholds, saves/goals-conceded divisors and hit cost as constants with source comments); squad legality; XI formations; auto-subs; FT/hit transitions; selling price; chips; BGW/DGW. All parameters come from `Rules.from_bootstrap`.
+- [x] Golden-file tests: 2026/27 from `event/{gw}/live` `explain[]`, and 2025/26 from vaastav per-fixture rows (the live API only serves the current season).
+- [x] `gaffer_lib.derive`: FT count, purchase/selling prices, bank, chips, Free Hit revert, BGW/DGW flags, `--ft` and `--pending`.
+- [x] `gaffer_lib validate` (`python -m gaffer_lib validate --snapshot … --proposal …`): transfers, legality, budget with selling prices, recomputed hits, chips, XI/bench/captaincy, and multi-GW state threading.
+- [x] `fpl_snapshot` runs `python -m gaffer_lib derive` in the sandbox (ARCHITECTURE §2.2). It falls back to the M1 raw-API summary, with FT unknown and a warning, if the sandbox or derive fails.
+- [x] `/team <id> --ft N --pending "OUT>IN, …"`, with `free_transfers`, `ft_source` and `pending_transfers` in the `gaffer.snapshot` entry.
+- [x] Sandbox image rebuilt with gaffer_lib 0.2.0; derive proven through the real stack on live public teams.
+- [ ] FT and selling-price derivation validated against ≥3 real accounts: **blocked on the owner-read values** (see FR-DAT-08).
+
+## Exit criteria
+| ID | Status | Evidence |
+|---|---|---|
+| FR-RUL-01 | **Pass** (GW1–5 of 2026/27; all of 2025/26) | `tests/test_scoring.py`. **2026/27:** every player-GW in finished GW1–5 (3,216 rows from `event/{1..5}/live`, fetched 2026-09-29) matches `explain[]` both in total and per identifier, **100%**, with scoring read from the live `game_config.scoring`. **2025/26:** all 29,757 player-fixtures across GW1–38 (vaastav `merged_gw.csv` @ `f9ed3e88`) match `total_points`, **100%**. The 2025/26 `game_config.scoring` couldn't be fetched (the live API serves 2026/27 only, and the Wayback Machine was offline), so `scoring-2025-26.json` is the 2026/27 table, which research 03/04 record as unchanged; the 100% match is the check. Later 2026/27 GWs are added by re-running `build_fixtures.py` as they finish. Plus 22 table cases, e.g. DefCon 9/10 DEF and 11/12 MID, GK never, 2 points once. |
+| FR-RUL-02 | **Pass** | `tests/test_squad.py`: table tests, plus Hypothesis properties (pinned 6.168.3) over 500/300 examples. Every accepted squad satisfies size, uniqueness, 2/5/5/3, ≤3 per club and cost ≤ budget, checked by an independent oracle. Single-constraint mutations of legal squads (club, position, budget, duplicate) each give exactly `CLUB_LIMIT`, `POSITION_QUOTA`, `OVER_BUDGET` or `DUPLICATE_PLAYER`. Size and unknown-player errors necessarily also break quotas, so those tests assert the code is present. |
+| FR-RUL-03 | **Pass** (2026/27 records; criterion corrected) | `tests/test_autosubs.py`: 9 formation cases, plus GK absent (with and without a bench GK), outfield never replaced by a GK, bench order, a DEF sub that would break 3-DEF skipped, lone-FWD cover, and several absentees. **Real data: all 250 sampled entry-GWs from 50 public 2026/27 entries (GW1–5) are reproduced exactly, including 76 real `automatic_subs` records** (≥20 required). REQUIREMENTS said "20 records from 2025/26", but entry picks are only served for the current season, so the criterion now uses 2026/27 (doc fixed in `100c990`). |
+| FR-RUL-04 | **Pass** | `tests/test_transitions.py`: a hand-written table for FTs 0–5 × transfers 0–6 × {none, WC, FH}: next FT and hit points (126 cases), plus BB/TC don't affect transfers. WC/FH keep the FT count with no +1, which matches open-fpl-solver's FT constraint (`fts - transfers + 1 - wc - fh`, clamped to 1–5). |
+| FR-RUL-05 | **Pass** | `tests/test_transitions.py` over the API's 8-chip array: chip status at GW6 and GW20 (first half expired after GW19, second half open); WC/FH from GW2 and BB/TC from GW1; each chip once per window; one chip per GW; **no FH in GW20 after FH in GW19**; no Assistant Manager chip; plus a Hypothesis property that an accepted chip is in an open, unused window. `validate` rejects a plan that plays one chip twice (`CHIP_ALREADY_USED`) or two in one GW (`CHIP_ONE_PER_GW`). The "recommendation never proposes…" half is enforced at M4 submit by this `validate`. |
+| FR-RUL-06 | **Pass** | A synthetic GW30 fixtures file, with team A playing twice, team B not at all, and a postponed fixture with `event: null`, gives `{"blank": [B], "double": [A]}` and nothing else. The real 2026/27 shape (10 fixtures per GW) gives no flags. `derive` reports BGW/DGW for the next 6 GWs. |
+| FR-RUL-07 | **Pass** | `max_extra_free_transfers: 3` in a fixture caps FTs at 4, both in `rules` (`test_ft_cap_is_read_from_the_api`) and end to end through `derive` on a modified real snapshot (`test_ft_cap_from_bootstrap_via_derive`). Squad size, club limit (`squad_team_limit: 2` → `CLUB_LIMIT`), spend, sell-on fee, formation bounds, chip windows and scoring values are all read from bootstrap; a changed `game_config.scoring` changes points with no code change. |
+| FR-DAT-08 | **Blocked on you** | The machinery is built and tested, but the acceptance needs owner-read values. **Derivation:** FT replay with WC/FH preservation and hit re-anchoring; purchase price from the latest non-Free-Hit transfer in, else the season-start price. **Self-consistency on real data:** over 50 public 2026/27 histories, every week's hit cost matches the replayed FT count with 0 re-anchors, and `event_transfers` equals the listed transfers in all non-chip weeks. **Frozen real snapshot of entry 1** (BB GW2, WC GW3, FH GW5): FT 1→2→2→3→3, squad and bank revert to GW4, no purchase price from FH-week transfers. **Live, through the stack:** entry 1 → 3 FT, budget £100.5m; team 2 → 3 FT; five overall-league entries → FT 3/1/1/2/1, one of them a Free Hit revert. **Still needed:** ≥3 team IDs with the FT and every selling price read from the app (including one WC/FH week and one banked-FT week). Then run `build_fixtures.py reference <label> <id>` before the next deadline and add the values to `tests/data/reference-accounts.json`; `tests/test_reference_accounts.py` checks them. |
+| FR-INP-04 | **Pass** | `/team 1 --ft 3 --pending "P1>P65"` → notice "…free transfers 3 (yours); pending P1>P65"; the `gaffer.snapshot` entry has `free_transfers: 3, ft_source: "user", pending_transfers: [[1, 65]]`; the summary says "Free transfers for GW6: 3 (set by the user; public data suggests 5)" (`test/extensions.test.ts`). `gaffer_lib`: `derive(ft=3)` → `assumptions = {free_transfers: 3, ft_source: "user"}`, and **the validator uses it**: the same 2 transfers cost 0 hits with the derived 3 FT and 1 hit with `--ft 1` (`tests/test_validate.py`). Live in the stack: `/team 1 --ft 2 --pending "Egan>Andersen"` → "Free transfers for GW6: 2 (set by the user; public data suggests 3)", and the pending move is flagged "leave the bank at £-1.0m". |
+| M1 regression | **Pass** | 128 vitest (was 105), 7 sandboxd, `verify.sh` exit 0 after the rebuild: port binding, 17/17 isolation checks, and the live round trip for team 1 with derive. |
+
+## Discovered
+- [x] **`history.current[].event_transfers` is 0 in Wildcard and Free Hit weeks**, although `entry/{id}/transfers/` lists every move, including FH ones (26 WC and 16 FH moves for entry 1; all 31 chip weeks across 50 entries). FT derivation relies on the chip, not the count, and selling prices ignore FH-week transfers.
+- [x] **WC/FH keep the FT count with no +1**, confirmed against open-fpl-solver's constraint and the PL article (research 03 A.5 updated).
+- [x] **The API's `picks` are stored after auto-subs**: the two players' slots are swapped and the XI is re-sorted by position. A naive "undo the swaps" gives a wrong deadline order (2 of 250 mismatches until fixed).
+- [x] **FPL records auto-subs in Bench Boost weeks** (1 observation in the sample; it doesn't change points). An earlier "no subs under BB" rule was wrong and was removed.
+- [x] The API's per-fixture `defensive_contribution` is already the position's count (CBIT for DEF, CBIRT for MID/FWD), so the DefCon thresholds apply to it directly.
+- [x] `event/{gw}/live` only lists ~640 of ~800 elements (players with a fixture). Missing elements score 0.
+- [x] The live API serves only the current season, so 2025/26 `explain[]` and `automatic_subs` can't be fetched; 2025/26 scoring is covered via vaastav instead (FR-RUL-01, FR-RUL-03 wording fixed).
+- [x] sandboxd rejects a cwd that doesn't exist on the host, so `sandboxRun` passes an empty cwd, meaning sandboxd's own work dir.
+- [x] zsh doesn't word-split unquoted variables, so multi-ID shell loops in the evidence were run under `bash -c`.
+- [ ] Reference accounts (FR-DAT-08) are pending, and they need re-checking after each WC/FH use (ROADMAP risk table).
+
+## Proposed (not built; outside M2 docs)
+- Accept `/team --ft N` without repeating the team ID (currently the ID is required and options are replaced by each `/team`).
+- Validate `--pending` at `/team` time (it's checked at the next snapshot today, where an invalid move is reported and derive retries without it).
+- For teams that joined after GW1, request `element-summary` for initial-squad players so their purchase price can be approximated (today it's "unknown" with selling price = current price and a warning).
+- A CI job that re-runs `build_fixtures.py` weekly after `data_checked`, so FR-RUL-01 stays at "all finished GWs" automatically.
