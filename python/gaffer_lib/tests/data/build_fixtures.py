@@ -179,6 +179,9 @@ def snapshot_entry(bootstrap, entry_id, out_dir, keep_id=True):
         files["entry"]["name"] = out_dir.rsplit("/", 1)[-1]
         for t in files["transfers"]:
             t.pop("entry", None)
+        for name in ("picks", "picks-prev"):
+            for sub in (files.get(name) or {}).get("automatic_subs", []):
+                sub.pop("entry", None)
     if files["picks"]["active_chip"] == "freehit":
         files["picks-prev"] = get(f"entry/{entry_id}/event/{cur - 1}/picks/", fresh=True)
     for name, data in files.items():
