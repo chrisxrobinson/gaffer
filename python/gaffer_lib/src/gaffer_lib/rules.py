@@ -259,3 +259,120 @@ def automatic_subs(picks: Sequence[Pick], played: Callable[[int], bool], rules: 
             subs.append((starter.element, cand.element))
             break
     return subs
+
+
+# ---------------------------------------------------------------------------------------------------
+# Free transfers and hits (FR-RUL-04)
+
+
+def hits(ft: int, transfers: int, chip: str | None, rules: Rules) -> int:
+    """Paid transfers this GW: those beyond the free ones. Wildcard and Free Hit transfers are free."""
+    if chip in TRANSFER_CHIPS:
+        return 0
+    return max(0, transfers - ft)
+
+
+def hit_cost(ft: int, transfers: int, chip: str | None, rules: Rules) -> int:
+    return hits(ft, transfers, chip, rules) * rules.hit_cost
+
+
+def next_free_transfers(ft: int, transfers: int, chip: str | None, rules: Rules) -> int:
+    """FTs for the next GW: unused ones roll over, +1, capped at 1 + max_extra_free_transfers.
+
+    A Wildcard or Free Hit week keeps the FT count unchanged, with no +1 (FPL rules since 2024/25;
+    open-fpl-solver encodes the same: next = ft - transfers + 1 - WC - FH, clamped to [1, 5]).
+    """
+    if chip in TRANSFER_CHIPS:
+        return min(ft, rules.max_free_transfers)
+    return min(max(ft - transfers, 0) + 1, rules.max_free_transfers)
+
+
+# ---------------------------------------------------------------------------------------------------
+# Selling prices
+
+
+def selling_price(purchase: int, now: int, rules: Rules) -> int:
+    """Selling price in tenths: a rise keeps only `transfers_sell_on_fee` of the profit, rounded down
+    to £0.1m; a fall is taken in full. With `element_sell_at_purchase_price` false (2026/27)."""
+    if now <= purchase:
+        return now
+    return purchase + int((now - purchase) * rules.sell_on_fee)
+
+
+# ---------------------------------------------------------------------------------------------------
+# Chips (FR-RUL-05)
+
+
+@dataclass(frozen=True)
+class ChipState:
+    name: str
+    half: int  # 1 for the first window of this chip name, 2 for the second
+    start_event: int
+    stop_event: int
+    used_in: int | None
+    available: bool  # usable in the GW asked about
+
+    def as_dict(self) -> dict:
+        return {"name": self.name, "half": self.half, "window": [self.start_event, self.stop_event], "used_in": self.used_in, "available": self.available}
+
+
+def _chip_defs(name: str, rules: Rules) -> list[ChipDef]:
+    return sorted((c for c in rules.chips if c.name == name), key=lambda c: c.start_event)
+
+
+def chip_status(rules: Rules, used: Iterable[Mapping], gw: int | None) -> list[ChipState]:
+    """Each chip definition with the GW it was used in (within its window) and whether it can be
+    played in `gw`. `used` is `history.chips` ({name, event})."""
+    used = list(used)
+    out = []
+    for name in dict.fromkeys(c.name for c in rules.chips):
+        for half, c in enumerate(_chip_defs(name, rules), start=1):
+            u = next((x["event"] for x in used if x["name"] == name and c.start_event <= x["event"] <= c.stop_event), None)
+            open_ = gw is not None and c.start_event <= gw <= c.stop_event
+            out.append(ChipState(name, half, c.start_event, c.stop_event, u, u is None and open_))
+    return out
+
+
+def chip_violations(chips: Sequence[str], gw: int, rules: Rules, used: Iterable[Mapping]) -> list[Violation]:
+    """Can `chips` (the chips proposed for `gw`) be played, given the chips already used or planned
+    in other GWs (`used`: {name, event})? One chip per GW; each chip once per window; first-half
+    chips expire at the GW19 deadline (their window ends at GW19); no Free Hit in consecutive GWs."""
+    used = [u for u in used if u["event"] != gw]
+    out: list[Violation] = []
+    if len(chips) > 1:
+        out.append(Violation("CHIP_ONE_PER_GW", f"only one chip per GW, got {list(chips)}", gw))
+    for name in chips:
+        defs = _chip_defs(name, rules)
+        if not defs:
+            out.append(Violation("CHIP_UNKNOWN", f"no chip called {name!r} this season", gw))
+            continue
+        window = next((c for c in defs if c.start_event <= gw <= c.stop_event), None)
+        if window is None:
+            spans = ", ".join(f"GW{c.start_event}-{c.stop_event}" for c in defs)
+            out.append(Violation("CHIP_OUT_OF_WINDOW", f"{name} can't be played in GW{gw} (windows {spans})", gw))
+            continue
+        prior = next((u["event"] for u in used if u["name"] == name and window.start_event <= u["event"] <= window.stop_event), None)
+        if prior is not None:
+            out.append(Violation("CHIP_ALREADY_USED", f"{name} for GW{window.start_event}-{window.stop_event} was already used in GW{prior}", gw))
+        if name == "freehit" and any(u["name"] == "freehit" and abs(u["event"] - gw) == 1 for u in used):
+            out.append(Violation("FH_CONSECUTIVE", f"Free Hit can't be played in consecutive GWs (GW{gw})", gw))
+    return out
+
+
+# ---------------------------------------------------------------------------------------------------
+# Blank and double GWs (FR-RUL-06)
+
+
+def fixture_counts(fixtures: Iterable[Mapping], gw: int, team_ids: Iterable[int]) -> dict[int, int]:
+    """Fixtures per team in `gw`. Unscheduled fixtures (`event` null) belong to no GW."""
+    counts = {t: 0 for t in team_ids}
+    for f in fixtures:
+        if f.get("event") == gw:
+            for t in (f["team_h"], f["team_a"]):
+                counts[t] = counts.get(t, 0) + 1
+    return counts
+
+
+def blanks_and_doubles(fixtures: Iterable[Mapping], gw: int, team_ids: Iterable[int]) -> dict[str, list[int]]:
+    counts = fixture_counts(fixtures, gw, team_ids)
+    return {"blank": sorted(t for t, n in counts.items() if n == 0), "double": sorted(t for t, n in counts.items() if n >= 2)}
