@@ -38,16 +38,20 @@ MAX_GOALS = 10
 # A typical Premier League match: used when a market or a model is missing entirely.
 LEAGUE_HOME_GOALS, LEAGUE_AWAY_GOALS = 1.55, 1.25
 
-# football-data.co.uk team names that differ from FPL's `teams[].name`.
-FOOTBALL_DATA_NAMES = {
-    "Man United": "Man Utd", "Tottenham": "Spurs", "Sheffield United": "Sheffield Utd",
-    "Nottingham Forest": "Nott'm Forest", "Wolverhampton": "Wolves",
+# Team names differ between sources and seasons (football-data.co.uk says "Man United" and "Hull",
+# FPL says "Man Utd" and "Hull City"), so both are reduced to one key.
+_TEAM_ALIASES = {
+    "man united": "man utd", "manchester united": "man utd", "manchester city": "man city", "tottenham": "spurs",
+    "sheffield united": "sheffield utd", "nottingham forest": "nott'm forest", "wolverhampton": "wolves",
+    "coventry city": "coventry", "hull city": "hull", "ipswich town": "ipswich", "leicester city": "leicester",
+    "luton town": "luton", "leeds united": "leeds", "newcastle united": "newcastle", "west ham united": "west ham",
 }
 
 
-def fpl_team_name(football_data_name: str) -> str:
-    name = football_data_name.strip()
-    return FOOTBALL_DATA_NAMES.get(name, name)
+def team_key(name: str) -> str:
+    """One key for a team across FPL (`teams[].name`) and football-data.co.uk (`HomeTeam`)."""
+    k = " ".join(str(name).strip().lower().split())
+    return _TEAM_ALIASES.get(k, k)
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -146,7 +150,7 @@ def lambdas_from_odds(odds: Mapping[str, float], rho: float = DEFAULT_RHO) -> tu
 
 @dataclass(frozen=True)
 class Match:
-    """One played match. Teams are any hashable key, used consistently (Gaffer uses FPL team names)."""
+    """One played match. Teams are any hashable key, used consistently (Gaffer uses `team_key` names)."""
 
     date: datetime
     home: Hashable
@@ -174,6 +178,15 @@ class TeamStrength:
         ah, dh = self.attack.get(home, self.default[0]), self.defence.get(home, self.default[1])
         aa, da = self.attack.get(away, self.default[0]), self.defence.get(away, self.default[1])
         return math.exp(self.mu + self.home_adv + ah - da), math.exp(self.mu + aa - dh)
+
+    def typical(self, team: Hashable) -> tuple[float, float]:
+        """(scored, conceded) per match for `team` against an average opponent, averaged over home
+        and away: the baseline a fixture's λ is compared with."""
+        a, d = self.attack.get(team, self.default[0]), self.defence.get(team, self.default[1])
+        avg_att = float(np.mean(list(self.attack.values()))) if self.attack else 0.0
+        avg_def = float(np.mean(list(self.defence.values()))) if self.defence else 0.0
+        venue = (math.exp(self.home_adv) + 1.0) / 2.0
+        return math.exp(self.mu + a - avg_def) * venue, math.exp(self.mu + avg_att - d) * venue
 
 
 def fit_dixon_coles(
@@ -267,20 +280,21 @@ def _fit_rho(matches: Sequence[Match], w: np.ndarray, s: TeamStrength) -> float:
     return float(minimize_scalar(nll, bounds=(-0.25, 0.25), method="bounded").x)
 
 
-def promoted_default(previous: Sequence[Match], current_teams: Iterable[Hashable], asof: datetime) -> tuple[dict, tuple[float, float]]:
-    """Priors from the previous season, for the teams still in the league and for the newcomers.
-
-    Returns (`priors` for teams that played in `previous` and are in `current_teams`, `default` for
-    everyone else). The default is the mean strength of the teams that left the league, i.e. the
-    relegated sides the promoted teams replaced, so it needs no tuned constant.
+def newcomer_priors(previous: Sequence[Match], current_teams: Iterable[Hashable], asof: datetime) -> dict:
+    """Prior (attack, defence) for each current team that didn't play in `previous` (the promoted
+    sides): the mean strength of the teams that left the league, i.e. the relegated sides they
+    replaced. That needs no tuned constant. Teams that stayed need no prior: their previous-season
+    matches are in the fit itself.
     """
     if not previous:
-        return {}, (0.0, 0.0)
+        return {}
     base = fit_dixon_coles(previous, asof)
     current = set(current_teams)
     gone = [t for t in base.attack if t not in current]
-    default = (float(np.mean([base.attack[t] for t in gone])), float(np.mean([base.defence[t] for t in gone]))) if gone else (0.0, 0.0)
-    return {t: (base.attack[t], base.defence[t]) for t in base.attack if t in current}, default
+    if not gone:
+        return {}
+    mean = (float(np.mean([base.attack[t] for t in gone])), float(np.mean([base.defence[t] for t in gone])))
+    return {t: mean for t in current if t not in base.attack}
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -334,12 +348,12 @@ def fixture_lambdas(
     for r in odds_rows:
         lam = lambdas_from_odds(r.get("odds", {}), model.rho if model else DEFAULT_RHO)
         if lam:
-            by_teams[(fpl_team_name(r["home"]), fpl_team_name(r["away"]))] = lam
+            by_teams[(team_key(r["home"]), team_key(r["away"]))] = lam
     out = []
     for f in fixtures:
         if f.get("event") not in gws:
             continue
-        hn, an = team_names[f["team_h"]], team_names[f["team_a"]]
+        hn, an = team_key(team_names[f["team_h"]]), team_key(team_names[f["team_a"]])
         m = model.lambdas(hn, an) if model else None
         o = by_teams.get((hn, an)) if f["event"] == odds_gw else None
         if o and m:

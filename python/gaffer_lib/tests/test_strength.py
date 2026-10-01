@@ -167,12 +167,16 @@ def test_no_matches_gives_priors_and_league_average():
 
 def test_promoted_teams_start_at_the_relegated_teams_strength():
     matches, *_ = _league(n_rounds=10)
-    priors, default = S.promoted_default(matches, {"A", "B", "C", "NEW"}, T0 + timedelta(days=500))
-    base = S.fit_dixon_coles(matches, T0 + timedelta(days=500))
-    assert set(priors) == {"A", "B", "C"}
-    assert default == pytest.approx((base.attack["D"], base.defence["D"]))  # D went down, NEW replaces it
-    s = S.fit_dixon_coles([], T0, priors=priors, default=default)
+    asof = T0 + timedelta(days=500)
+    priors = S.newcomer_priors(matches, {"A", "B", "C", "NEW"}, asof)
+    base = S.fit_dixon_coles(matches, asof)
+    # D went down and NEW replaces it; the teams that stayed need no prior.
+    assert set(priors) == {"NEW"}
+    assert priors["NEW"] == pytest.approx((base.attack["D"], base.defence["D"]))
+    s = S.fit_dixon_coles(matches, asof, priors=priors)
+    assert s.lambdas("NEW", "A")[0] == pytest.approx(s.lambdas("D", "A")[0], rel=0.05)
     assert s.lambdas("NEW", "A")[0] < s.lambdas("B", "A")[0]
+    assert S.newcomer_priors([], {"A"}, asof) == {}
 
 
 # --- the horizon ----------------------------------------------------------------------------------
@@ -189,14 +193,14 @@ ODDS = [{"home": "Arsenal", "away": "Tottenham", "odds": {"AvgH": 1.6, "AvgD": 4
 
 
 def test_fixture_lambdas_sources():
-    model = S.TeamStrength(attack={"Arsenal": 0.3}, defence={"Arsenal": 0.2})
+    model = S.TeamStrength(attack={"arsenal": 0.3}, defence={"arsenal": 0.2})
     out = {f.fixture: f for f in S.fixture_lambdas(FIXTURES, [6, 7, 8], NAMES, model, ODDS)}
     assert set(out) == {10, 11, 12}  # unscheduled and out-of-horizon fixtures are left out
     assert out[10].source == "odds+dixon_coles"  # football-data's "Tottenham" is FPL's "Spurs"
     assert out[11].source == "dixon_coles"  # no odds row for this fixture
     assert out[12].source == "dixon_coles"  # odds apply to the next GW only
     o = S.lambdas_from_odds(ODDS[0]["odds"], model.rho)
-    m = model.lambdas("Arsenal", "Spurs")
+    m = model.lambdas("arsenal", "spurs")
     assert out[10].lam_home == pytest.approx(S.blend(o[0], m[0]))
     assert min(o[0], m[0]) <= out[10].lam_home <= max(o[0], m[0])
     assert out[10].for_team(2) == (out[10].lam_away, out[10].lam_home)
@@ -213,3 +217,19 @@ def test_blend_is_geometric():
     assert S.blend(2.0, 1.0, 1.0) == pytest.approx(2.0)
     assert S.blend(2.0, 1.0, 0.0) == pytest.approx(1.0)
     assert S.blend(2.0, 0.5, 0.5) == pytest.approx(1.0)
+
+
+def test_team_key_joins_fpl_and_football_data_names():
+    pairs = [("Man United", "Man Utd"), ("Tottenham", "Spurs"), ("Hull", "Hull City"), ("Coventry", "Coventry City"), ("Ipswich", "Ipswich Town"),
+             ("Ipswich", "Ipswich"), ("Sheffield United", "Sheffield Utd"), ("Nott'm Forest", "Nott'm Forest"), ("Wolves", "Wolves")]
+    for football_data, fpl in pairs:
+        assert S.team_key(football_data) == S.team_key(fpl)
+    assert S.team_key("Man City") != S.team_key("Man Utd")
+
+
+def test_typical_lambda_is_the_average_fixture():
+    s = S.TeamStrength(attack={"a": 0.2, "b": -0.2}, defence={"a": 0.1, "b": -0.1})
+    scored, conceded = s.typical("a")
+    home, away = s.lambdas("a", "avg")[0], s.lambdas("avg", "a")[1]
+    assert scored == pytest.approx((home + away) / 2)
+    assert conceded < s.typical("b")[1]
