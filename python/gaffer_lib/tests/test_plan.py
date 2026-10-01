@@ -191,6 +191,21 @@ def test_one_second_limit_returns_the_incumbent_with_its_gap(world):
 
 
 @needs_solver
+def test_a_deadline_caps_every_run(world):
+    """NFR-LAT-03's budget: the main solve and the next-best plans all end by the caller's deadline."""
+    import time
+
+    snap, inputs, proj = world
+    _, st = state_for(snap, inputs)
+    t0 = time.perf_counter()
+    plans = P.solve(inputs, proj, st, horizon=6, time_limit=45, alternatives=3, alt_time_limit=8, deadline=t0 + 4.0)
+    assert time.perf_counter() - t0 < 6.5
+    assert plans[0].info.timed_out and plans[0].info.time_limit_s <= 4.0 and plans[0].info.gap is not None
+    for pl in plans:
+        assert_valid(snap, pl)
+
+
+@needs_solver
 def test_no_incumbent_falls_back_to_holding(world, monkeypatch):
     snap, inputs, proj = world
     _, st = state_for(snap, inputs)
@@ -303,7 +318,7 @@ def test_run_golden_path_end_to_end(tmp_path, capsys):
     assert next(x for x in doc["chip_scenarios"] if x["chip"] == "3xc")["reason"] == "saved by preference"
     assert len(doc["captain"]) == 3 and doc["captain"][0]["xp"] >= doc["captain"][1]["xp"]
     assert doc["ep_next_comparison"]["players"] > 100 and "correlation" in doc["ep_next_comparison"]
-    assert doc["timings"]["total_s"] < 30
+    assert doc["timings"]["total_s"] < 14 + 4  # the budget, plus start-up and validation
     assert doc["assumptions"]["ft_source"] == "derived" and doc["preferences"]["max_hits_per_gw"] == 1
     assert text.startswith("Gaffer plan for GW6") and "Plan 1" in text and "odds unavailable — team strength from Dixon-Coles" in text
     assert f"Full plan JSON: {out}" in text and len(text) < 9000

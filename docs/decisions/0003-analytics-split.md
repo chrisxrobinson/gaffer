@@ -26,14 +26,15 @@ Pi's philosophy favours few tools and the model running code ([research 01 §9](
 |---|---|
 | `rules` | Scoring table **read from the snapshot's `game_config.scoring`** (not hard-coded); squad legality (15 = 2/5/5/3, £ budget with selling prices, ≤3 per club, XI formations); FT accrual (cap 5, WC/FH preserve); chip windows per half and one chip per GW; selling price (50% of profit, rounded down); auto-sub simulation; BGW/DGW detection |
 | `derive` | FT count, selling prices and chips remaining from public entry endpoints ([ADR 0002](0002-data-access.md)) |
-| `strength` | Odds de-vig → team λ for the next GW; time-decayed Dixon-Coles on FPL results + xG for GW+2…+6; blending |
-| `minutes` | Rules + recency xMins: P(start), E[mins given start], P(60+); applies structured `xmins_overrides` |
-| `xp` | Component expected points (appearance, goals, assists, CS/GC, DefCon threshold probability, bonus, saves), clipped and compared with `ep_next` |
-| `plan` | Thin wrapper over `open-fpl-solver` (pinned): horizon 6 (the 4-GW plan is shown), decay 0.9, default FT values and bench weights, hit 4, 45 s limit, chips off; `chip_scenarios()` runs 5–20 forced-chip solves |
-| `ownership` | EO from ownership and captaincy; optional top-10k sample |
+| `inputs` | What the model sees at one deadline (players with season totals and recent GWs, fixtures, odds, results, rules), built from a snapshot; `backtest` builds the same shape from history, so both run the same model code |
+| `strength` | Odds de-vig → team λ for the next GW; time-decayed Dixon-Coles for GW+2…+6, fitted on the previous and current season's results (football-data.co.uk, with FPL's current-season results as the fallback) and on match xG where the source has it; a geometric blend where both exist (weight 0.8 on the market) |
+| `minutes` | Rules + recency xMins: P(start), E[mins given start], P(60+), sub appearances, from the last six GWs shrunk towards the season; FPL's availability flags; applies structured `xmins_overrides` |
+| `xp` | Component expected points (appearance, goals, assists, CS/GC, DefCon threshold probability, bonus, saves) scored with `rules.Scoring`, clipped and compared with `ep_next`. Cards, own goals and penalty saves/misses are not modelled |
+| `plan` | Thin wrapper over `open-fpl-solver` (pinned commit `ec65f5e`): horizon 6 (the 4-GW plan is shown), decay 0.9, default FT values and bench weights, hit 4, 45 s limit, chips off. It builds the solver's input itself (the solver's `prep_data` calls the FPL API), seeds the solve with the no-transfer plan so a time-out always has an incumbent and a gap, and stops at an absolute gap of 0.25 points. `chip_scenarios()` runs one forced-chip solve per available chip (Bench Boost and Triple Captain over the players of the chip-free plan, Wildcard and Free Hit over the full pool) |
+| `ownership` | EO from ownership and captaincy; optional top-10k sample *(not built in M3; no M3 requirement needs it)* |
 | `validate` | Full check of a proposed recommendation against the snapshot. **This is the deterministic gate.** |
-| `backtest` | Replays seasons and snapshots against baselines ([ARCHITECTURE §6](../ARCHITECTURE.md)) |
-| `cli` | `python -m gaffer_lib run --snapshot … --prefs …`, the **golden path** that produces a full candidate plan JSON in one command |
+| `backtest` | Replays seasons against baselines B0, B1, B2 and G0 ([ARCHITECTURE §6](../ARCHITECTURE.md)) |
+| `cli` | `python -m gaffer_lib run --snapshot … --prefs … --out …`, the **golden path** that produces a full candidate plan JSON (`gaffer.plan/1`: up to 3 plans each checked by `validate`, chip scenarios, captain candidates, confidence, the `ep_next` comparison) in one command, inside a 50 s budget |
 
 **Layer 2 — Skills** (Pi `SKILL.md`, loaded on demand) hold judgement and procedure, never numbers the code can compute:
 - `fpl-rules-2026-27`: rules reference in words, with pointers to `gaffer_lib.rules`

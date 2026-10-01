@@ -43,6 +43,8 @@ DECAY = 0.9
 TIME_LIMIT_S = 45.0
 # The golden path (NFR-LAT-03) must finish inside 60 s including alternatives and chip scenarios.
 TOTAL_BUDGET_S = 50.0
+# Of that budget, this much is kept back from the main solve and the next-best plans for chip scenarios.
+CHIP_RESERVE_S = 6.0
 # Stop when the plan is proven within this many decayed points of the optimum: far below the
 # projection's noise, and inside FR-REC-09's 0.5.
 MIP_ABS_GAP = 0.25
@@ -224,14 +226,19 @@ class _Recorder:
     """Stands in for the `highspy` module inside dev.solver so each model it creates is ours:
     a `Highs` subclass that applies Gaffer's time limits per run and records status and gap."""
 
-    def __init__(self, highspy, limits: list[float], threads: int | None, start: Mapping[str, float] | None = None):
+    def __init__(self, highspy, limits: list[float], threads: int | None, start: Mapping[str, float] | None = None, deadline: float | None = None):
         self._real = highspy
         self.runs: list[dict] = []
         recorder = self
 
         class Highs(highspy.Highs):
             def run(self):
-                limit = limits[min(len(recorder.runs), len(limits) - 1)]
+                n = len(recorder.runs)
+                limit = limits[min(n, len(limits) - 1)]
+                if deadline is not None:
+                    # Whatever is left before the caller's deadline is shared between the runs still to come.
+                    left = deadline - time.perf_counter()
+                    limit = min(limit, left if n == 0 else left / max(len(limits) - n, 1))
                 if start and not recorder.runs:
                     # A MIP start (the hold plan), so that even a 1 s solve has an incumbent and a gap.
                     cols = [(i, start[n]) for i in range(self.numVariables) if (n := self.variableName(i)) in start]
@@ -384,8 +391,10 @@ def solve(
     inputs: ModelInputs, proj: Projection, state: TeamState, *, horizon: int = HORIZON, time_limit: float = TIME_LIMIT_S,
     alternatives: int = 1, chip: tuple[str, int] | None = None, prefs: Mapping | None = None, threads: int | None = None,
     alt_time_limit: float | None = None, decay: float = DECAY, hit_cost: int = 4, only: Sequence[int] | None = None,
+    deadline: float | None = None,
 ) -> list[Plan]:
     """Solve the plan, plus `alternatives - 1` next-best plans that differ in this GW's transfers.
+    `deadline` (a `time.perf_counter()` value) caps the time limits so every run ends by then.
 
     Returns at least one Plan: the solver's best incumbent with its gap, or the hold plan if HiGHS
     found nothing feasible in time. Later alternatives that find nothing are dropped.
@@ -401,7 +410,7 @@ def solve(
     if chip is None:
         hold = hold_plan(inputs, proj, state, SolveInfo("", None, 0.0, time_limit, None, False), len(gws))
         start = _hold_start(hold, state, list(data["merged_data"].index), 5)
-    rec = _Recorder(highspy, limits, threads, start)
+    rec = _Recorder(highspy, limits, threads, start, deadline)
     saved, solutions, error = solver.highspy, [], None
     solver.highspy = rec
     try:

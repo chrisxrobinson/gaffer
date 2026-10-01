@@ -83,8 +83,9 @@ def golden_path(
 
     # The main solve gets its full limit; next-best plans are capped so chip scenarios keep a share.
     t = time.perf_counter()
+    reserve = P.CHIP_RESERVE_S if chips else 0.0
     plans = P.solve(inputs, proj, state, horizon=horizon, time_limit=min(time_limit, budget), alternatives=alternatives, prefs=prefs,
-                    threads=threads, alt_time_limit=min(ALTERNATIVE_LIMIT_S, time_limit))
+                    threads=threads, alt_time_limit=min(ALTERNATIVE_LIMIT_S, time_limit), deadline=t0 + max(budget - reserve, 1.0))
     timings["solve_s"] = time.perf_counter() - t
     best = plans[0]
 

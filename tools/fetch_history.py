@@ -22,7 +22,7 @@ from pathlib import Path
 UA = "Gaffer-dev/0.1 (personal FPL advisor; backtest history)"
 VAASTAV_COMMIT = "f9ed3e8839b0f970e0d5d4a83c5628f6eaee755a"  # "Final 2025-26 update", 2026-06-17
 VAASTAV = f"https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/{VAASTAV_COMMIT}/data"
-FOOTBALL_DATA = "https://www.football-data.co.uk/mmz4281"
+FOOTBALL_DATA = "https://football-data.co.uk/mmz4281"
 # 2022-23 is the development season and the source of priors for 2023-24; the backtest reports the other three.
 SEASONS = ["2022-23", "2023-24", "2024-25", "2025-26"]
 VAASTAV_FILES = ["gws/merged_gw.csv", "players_raw.csv", "teams.csv", "fixtures.csv"]

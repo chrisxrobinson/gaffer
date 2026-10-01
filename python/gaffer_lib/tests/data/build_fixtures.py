@@ -198,7 +198,7 @@ MODEL_ELEMENT_FIELDS = (
     "chance_of_playing_next_round", "ep_next", "selected_by_percent", "minutes", "starts", "expected_goals", "expected_assists",
     "goals_scored", "assists", "saves", "bonus", "defensive_contribution",
 )
-FOOTBALL_DATA = "https://www.football-data.co.uk/"
+FOOTBALL_DATA = "https://football-data.co.uk/"
 ODDS_COLUMNS = ("AvgH", "AvgD", "AvgA", "Avg>2.5", "Avg<2.5", "B365H", "B365D", "B365A", "B365>2.5", "B365<2.5")
 
 
@@ -232,8 +232,7 @@ def odds_file(season_codes):
              "hg": int(r["FTHG"]), "ag": int(r["FTAG"]), "hxg": num(r.get("HxG")), "axg": num(r.get("AxG"))}
             for r in football_data_csv(f"mmz4281/{code}/E0.csv") if r.get("FTHG") not in (None, "")
         ]
-    return {"schema": "gaffer.odds/1", "source": "football-data.co.uk", "available": True, "reason": None,
-            "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "fixtures": fixtures, "results": results}
+    return {"schema": "gaffer.odds/1", "source": "football-data.co.uk", "available": True, "reason": None, "fixtures": fixtures, "results": results}
 
 
 def snapshot_model(bootstrap, entry_id, out_dir):

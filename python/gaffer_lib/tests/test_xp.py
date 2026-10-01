@@ -246,3 +246,29 @@ def test_from_snapshot_on_the_frozen_real_snapshot():
     assert proj.gws == [6, 7, 8, 9, 10, 11]
     assert proj.warnings and proj.warnings[0].startswith("odds unavailable — team strength from Dixon-Coles")
     assert len(proj.xp) == len(inp.players)
+
+
+def test_snapshot_with_the_odds_source_down_falls_back_to_dixon_coles(tmp_path):
+    """FR-DAT-09: the `odds.json` fpl_snapshot writes when football-data.co.uk is down (see
+    packages/pi-gaffer/test/odds.test.ts) still gives a projection, with the specified warning."""
+    import json
+    import shutil
+
+    d = tmp_path / "snap"
+    shutil.copytree(DATA / "snapshot-model", d)
+    down = {"schema": "gaffer.odds/1", "source": "football-data.co.uk", "available": False, "reason": "football-data.co.uk unavailable: HTTP 503", "fixtures": [], "results": {}}
+    (d / "odds.json").write_text(json.dumps(down))
+    inp = from_snapshot(Snapshot(d))
+    assert not inp.odds_available and inp.prev_matches == [] and len(inp.matches) == 50  # this season's FPL results only
+    proj = X.project(inp, horizon=6)
+    assert proj.warnings == ["odds unavailable — team strength from Dixon-Coles (football-data.co.uk unavailable: HTTP 503)"]
+    assert {f.source for f in proj.fixtures} == {"dixon_coles"} and proj.strength.matches == 50
+    assert max(row[6] for row in proj.xp.values()) > 4
+
+    # With the source up, the previous season's results and this season's xG feed the model too.
+    up = from_snapshot(Snapshot(DATA / "snapshot-model"))
+    assert up.odds_available and len(up.prev_matches) == 380 and len(up.matches) == 50
+    assert sum(m.home_xg is not None for m in up.matches) == 50
+    assert up.odds_reason == "football-data.co.uk lists no Premier League fixtures yet"  # frozen in an international break
+    assert X.project(up, horizon=1).warnings[0].startswith("odds unavailable — team strength from Dixon-Coles (football-data.co.uk lists no")
+    assert all(len(p.recent) <= 5 and p.totals["games"] == 5 for p in up.players.values())
