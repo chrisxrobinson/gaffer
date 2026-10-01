@@ -125,3 +125,39 @@ Branch `build-m2`. Scope and exit criteria from [ROADMAP M2](docs/ROADMAP.md#m2-
 - Validate `--pending` at `/team` time (it's checked at the next snapshot today, where an invalid move is reported and derive retries without it).
 - For teams that joined after GW1, request `element-summary` for initial-squad players so their purchase price can be approximated (today it's "unknown" with selling price = current price and a warning).
 - A CI job that re-runs `build_fixtures.py` weekly after `data_checked`, so FR-RUL-01 stays at "all finished GWs" automatically.
+
+---
+
+# Gaffer — M3 build checklist
+
+Branch `build-m3`. Scope and exit criteria from [ROADMAP M3](docs/ROADMAP.md#m3--baseline-model-and-optimiser-target-before-gw10). Evidence is filled in as each item is finished.
+
+## Scope
+- [ ] `gaffer_lib.strength`: odds de-vig → team λ for the next GW; time-decayed Dixon-Coles for GW+2…+6; blending
+- [ ] `gaffer_lib.minutes`: rules + recency expected minutes, `xmins_overrides`
+- [ ] `gaffer_lib.xp`: component expected points scored with `rules.Scoring`, compared with `ep_next`
+- [ ] `gaffer_lib.plan`: wrapper over open-fpl-solver (pinned commit), `chip_scenarios()`
+- [ ] `python -m gaffer_lib run --snapshot … --prefs … --out …`
+- [ ] `gaffer_lib.backtest`: B0, B1, B2, G0 over 2023/24–2025/26
+- [ ] Odds source in `fpl_snapshot` (`include: ["odds"]`), with the FR-DAT-09 fallback
+- [ ] `ep_next` recorded before each deadline (FR-DAT-10)
+- [ ] Sandbox image with open-fpl-solver; golden path proven through the real stack
+
+## Exit criteria
+| ID | Status | Evidence |
+|---|---|---|
+| FR-DAT-09 | pending | |
+| FR-DAT-10 | pending | |
+| FR-EVL-01 | pending | |
+| NFR-LAT-03 | pending | |
+| NFR-REL-02 | pending | |
+| M1/M2 regression | pending | |
+
+## Discovered
+- [x] **vaastav's `xP` column for GW *g* contains GW *g*'s own points.** It is `ep_this` captured after the matches, when FPL's form already includes them. Measured on `merged_gw.csv` @ `f9ed3e88`: `xP_g` correlates 0.89–0.93 with form over GW *g−3…g* but 0.78–0.82 with form over *g−4…g−1*, and a regression at GW10 gives `xP = 0.60·form_before + 0.42·points_this_GW` (2023/24; 0.58 / 0.36 in 2024/25). Using it as B1's input would hand B1 the result. The honest input is the previous GW's value (captured before the deadline), so B1 uses `xP` lagged by one GW.
+- [x] **2025/26 `xP` coverage, checked live:** 11 of 38 GWs are populated (1–6, 8, 9, 24, 29, 38); the rest are zeros. 2023/24 has 37 of 38 (GW26 empty) and 2024/25 has 35 of 38 (GW22, 32, 34 empty).
+- [x] **football-data.co.uk `fixtures.csv` only lists the next few days.** On 2026-10-01, in the international break, it held 12 National League rows and no Premier League row; GW6 odds will only appear nearer 2026-10-10. Match xG (`HxG`, `AxG`) exists in the 2026/27 season file but not in earlier seasons.
+- [x] **open-fpl-solver's `prep_data` calls the live FPL API and reads a projections CSV from its own `data/` folder**, so it can't run in the sandbox. `gaffer_lib.plan` builds the solver's input from the snapshot and calls `solve_multi_period_fpl` directly. The repo is not an installable package (its wheel omits `utils.py` and `paths.py`), so the image vendors the source tree at the pinned commit.
+- [x] **open-fpl-solver's licence:** `LICENSE` is Apache-2.0 (GitHub agrees), `requires-python >=3.14`; at run time it prints that commercial entities need a separate commercial licence. Gaffer is personal and non-commercial, so this is recorded alongside NFR-SEC-06.
+
+## Proposed (not built; outside M3 docs)

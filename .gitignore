@@ -11,3 +11,6 @@ __pycache__/
 .venv/
 .pytest_cache/
 evals/results/*.jsonl
+
+# Third-party history for backtests (tools/fetch_history.py); never committed
+var/
