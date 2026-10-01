@@ -130,34 +130,83 @@ Branch `build-m2`. Scope and exit criteria from [ROADMAP M2](docs/ROADMAP.md#m2-
 
 # Gaffer — M3 build checklist
 
-Branch `build-m3`. Scope and exit criteria from [ROADMAP M3](docs/ROADMAP.md#m3--baseline-model-and-optimiser-target-before-gw10). Evidence is filled in as each item is finished.
+Branch `build-m3`. Scope and exit criteria from [ROADMAP M3](docs/ROADMAP.md#m3--baseline-model-and-optimiser-target-before-gw10). Evidence was gathered on 2026-10-01 (GW5 finished, GW6 deadline 2026-10-10T10:00Z, international break) on macOS / Docker Desktop 27.3.1 (arm64).
+
+**How to re-run the evidence**
+- gaffer_lib: the command in the README's "Develop" section (pinned numpy, pandas, scipy, highspy, requests, fuzzywuzzy and `GAFFER_SOLVER_DIR` at an open-fpl-solver checkout of `ec65f5e`): 353 tests, 1 skipped (FR-DAT-08). With only pytest and hypothesis (the M2 command) the model tests skip: 238 pass, 6 skipped.
+- TypeScript: `npx pnpm@12.6.0 test` (166 tests; was 128). sandboxd: 7 tests.
+- Backtest: `uv run … python tools/fetch_history.py`, then `python -m gaffer_lib backtest --seasons 2023-24,2024-25,2025-26 --out backtest.json` (about 30 minutes).
+- Stack: `cd deploy/compose && docker compose up -d --build && ./tests/verify.sh`.
 
 ## Scope
-- [ ] `gaffer_lib.strength`: odds de-vig → team λ for the next GW; time-decayed Dixon-Coles for GW+2…+6; blending
-- [ ] `gaffer_lib.minutes`: rules + recency expected minutes, `xmins_overrides`
-- [ ] `gaffer_lib.xp`: component expected points scored with `rules.Scoring`, compared with `ep_next`
-- [ ] `gaffer_lib.plan`: wrapper over open-fpl-solver (pinned commit), `chip_scenarios()`
-- [ ] `python -m gaffer_lib run --snapshot … --prefs … --out …`
-- [ ] `gaffer_lib.backtest`: B0, B1, B2, G0 over 2023/24–2025/26
-- [ ] Odds source in `fpl_snapshot` (`include: ["odds"]`), with the FR-DAT-09 fallback
-- [ ] `ep_next` recorded before each deadline (FR-DAT-10)
-- [ ] Sandbox image with open-fpl-solver; golden path proven through the real stack
+- [x] `gaffer_lib.strength`: odds de-vig → team λ for the next GW; time-decayed Dixon-Coles for GW+2…+6; blending (24 tests: de-vigged probabilities sum to 1, a known score grid gives e^-λ clean sheets, λ round-trips through market probabilities, the fit ignores matches after `asof`)
+- [x] `gaffer_lib.minutes`: rules + recency expected minutes, availability flags, `xmins_overrides` (33 tests)
+- [x] `gaffer_lib.xp`: component expected points scored with `rules.Scoring` (a Hypothesis property: the xP of a known stat line equals `Scoring.total`), compared with `ep_next`
+- [x] `gaffer_lib.inputs`: the model's input, built from a snapshot or from history (not in ADR 0003's original table; added there)
+- [x] `gaffer_lib.plan`: wrapper over open-fpl-solver at `ec65f5e`, `chip_scenarios()`, confidence by rules. Every plan the solver returns in the tests passes `validate` against the same snapshot: derived FT and `--ft` 0/1/5, pending transfers, keep/avoid/max-hits preferences, three perturbed projections, the four chips forced, the 1 s limit and the hold fallback
+- [x] `python -m gaffer_lib run --snapshot … --prefs … --out …`
+- [x] `gaffer_lib.backtest`: B0, B1, B2, G0 over 2023/24–2025/26
+- [x] Odds source in `fpl_snapshot` (`include: ["odds"]`), with the FR-DAT-09 fallback; the guard's allowlist grew by `football-data.co.uk` only
+- [x] `ep_next` recorded by every pre-deadline snapshot, indexed per GW (FR-DAT-10). **The trigger for weeks when Gaffer isn't opened is not defined in the docs: see "Blocked on you".**
+- [x] Sandbox image with open-fpl-solver (checksum-verified, pinned); golden path proven through the real stack on live teams 1–4
+- [ ] The golden path with real next-round odds, live: not possible on 2026-10-01 (football-data.co.uk listed no Premier League fixture). The odds path is covered by tests on real odds rows and by the backtest (every backtest GW used real pre-match odds)
 
 ## Exit criteria
 | ID | Status | Evidence |
 |---|---|---|
-| FR-DAT-09 | pending | |
-| FR-DAT-10 | pending | |
-| FR-EVL-01 | pending | |
-| NFR-LAT-03 | pending | |
-| NFR-REL-02 | pending | |
-| M1/M2 regression | pending | |
+| FR-DAT-09 | **Pass** | **Stack, source down** (`verify.sh`, a fresh store so nothing is cached, `FOOTBALL_DATA_BASE_URL` at a closed port): 3 tries per file then `odds.json = {available: false, reason: "football-data.co.uk unavailable: fetch failed"}`; the snapshot completes, and `gaffer_lib run` in the sandbox completes in 38.2 s with a valid plan and the warning `odds unavailable — team strength from Dixon-Coles (football-data.co.uk unavailable: fetch failed)`. **Stack, source up:** `fixtures.csv` and both season files fetched (200, about 0.5 s each), then served from cache. **Tests:** `test/odds.test.ts` (35 tests: parsing, the guard, caching per part, bounded retries, fallback to a cached copy under 48 h, hash stability, an HTML page counted as unavailable) and `test_xp.py` (the down-shaped `odds.json` gives the warning and a Dixon-Coles fit on FPL's 50 results). *"the recommendation still completes" is the plan here; `submit_recommendation` is M4.* |
+| FR-DAT-10 | **Partly; blocked on you for the trigger** | Every snapshot's bootstrap carries `ep_next` for all players, and the store index records the latest pre-deadline snapshot per GW. Live: `ep_next:2026-27:6 -> 2026-27/6/20261001T205003Z-fc2a90d6ae68 @ 2026-10-01T20:50:03Z` (667 players, deadline 2026-10-10T10:00Z). Tests: a pre-deadline snapshot is recorded, a later pre-deadline one replaces it, a post-deadline one doesn't. **Not met as written:** "for each GW after launch" needs a snapshot every GW, and nothing takes one in a week when Gaffer isn't opened. The docs define no such mechanism for phase 1 (`gaffer-eval` runs after `data_checked`, which is after the deadline), so none was built. |
+| FR-EVL-01 | **Pass against B0 and B2; B1 passes on the two seasons it could be built for and is blocked for 2025/26** | Table below. One command, commit `f10f209`. |
+| NFR-LAT-03 | **Pass** (2-vCPU sandbox; no CI runner exists) | `gaffer_lib run` including next-best plans and chip scenarios, timed inside the sandbox (cgroup `cpu.max` 200000/100000) through the real harness → sandboxd path on live teams: **43.0 s, 50.6 s, 26.7 s, 41.6 s** (teams 1–4), 38.2 s with the odds source down. `verify.sh` fails if it exceeds 60 s. The run is bounded by a 50 s budget: main solve first (22.4, 27.2, 9.6, 9.4 s to a proven plan), then two next-best plans (at most 8 s each), then chip scenarios with what is left. *The criterion says "benchmark in CI"; there is no CI (Proposed since M1).* |
+| NFR-REL-02 | **Pass** | Stack, `--time-limit 1` on team 1: `Solver: Time limit reached, gap 9.98%, 1.0 s (limit 1 s)`, confidence **medium**, warning "best plan found, not a proven optimum", exit 0 with a plan that passes `validate`. The solve is seeded with the no-transfer plan, so there is always an incumbent. Tests: `test_one_second_limit_returns_the_incumbent_with_its_gap`, `test_no_incumbent_falls_back_to_holding` (confidence low), `test_confidence_rules`. |
+| M1/M2 regression | **Pass** | 166 vitest, 7 sandboxd, 353 gaffer_lib; `verify.sh` exit 0 after the rebuild: port binding, 17/17 isolation checks, live round trip with derive. FR-DAT-08 is unchanged (1 of 3 reference accounts). |
+
+### FR-EVL-01: season points per policy
+`python -m gaffer_lib backtest --seasons 2023-24,2024-25,2025-26`, commit `f10f209`, vaastav @ `f9ed3e88`, football-data season files fetched 2026-10-01. No chips; real points after auto-subs; hits deducted; same starting squad per season.
+
+| Policy | 2023/24 | 2024/25 | 2025/26 | Mean |
+|---|---|---|---|---|
+| B0 no transfers | 1773 | 1885 | 1551 | 1736.3 |
+| B1 official-xP greedy | 2084 | 1937 | 1938 (not built) | 1986.3 |
+| B2 template | 2209 | 2051 | 1998 | 2086.0 |
+| **G0 Gaffer** | **2344** | **2501** | **1981** | **2275.3** |
+
+- **G0 beats B0** on the 3-season mean, 2275.3 vs 1736.3, and in every season.
+- **G0 beats B2** on the 3-season mean, 2275.3 vs 2086.0. **It loses 2025/26 to B2 by 17 points** (1981 vs 1998).
+- **G0 beats B1** on the two seasons where B1 could be built (2422.5 vs 2010.5). **B1 is blocked for 2025/26:** the official xP was available before the deadline for 11 of 38 GWs (1–7, 9, 10, 25, 30); in the other 27 B1 holds and picks its XI on stale values. Its 1938 there is reported but is not a valid baseline; G0's 1981 is above it. Coverage was 37/38 in 2023/24 and 35/38 in 2024/25.
+- G0 detail: 47 / 42 / 44 transfers and 10 / 5 / 7 hits. Solver: 2 of 111 solves hit the 45 s limit (both 2024/25, worst gap 0.78%); mean 8.6 / 15.6 / 11.1 s.
+- **Tuning:** none on these seasons. Every constant was fixed beforehand from the literature or the solver's defaults. The only development data was 2022/23 GW22–38 (its earlier GWs have no starts or xG), run once: G0 1144, B2 1040, B0 929, B1 854; nothing was changed after it.
+- **Runs:** the first three-season run (commit `ed4007d`) crashed in 2025/26 GW4 on the replay's own legality check (see Discovered). After the fix all three seasons were re-run in one command; G0's GW-by-GW results for 2023/24 and 2024/25 were identical to the first run.
+- **No leakage:** `test_no_leakage_in_g0_decisions` and `test_no_leakage_in_baseline_decisions` rewrite every result, stat and xP from a GW onwards and check that no decision up to that GW changes; `test_future_results_do_not_change_what_the_model_sees` checks the inputs; `test_dixon_coles_uses_only_matches_before_asof` the team model.
+- **Limits that affect how to read it:** the archive has no injury or suspension flags, so G0 ran without them (a handicap it won't have live); the fixture list for later GWs is the final one, so G0's horizon could see rescheduled fixtures before they were announced; the transfer rules are the current ones in all seasons (2023/24 really capped the bank at 2 FT); the previous season's stats seed the model at each season's start, which the live stack doesn't have yet; B0's XI and captain also use the stale xP in 2025/26.
+
+## Blocked on you
+- **FR-DAT-10:** what should take a pre-deadline snapshot in a GW when you don't open Gaffer? The docs don't say, so nothing was built.
+- **Real next-round odds, live:** re-run `verify.sh` a few days before the GW6 deadline, when football-data.co.uk lists the fixtures.
+- **FR-DAT-08** (M2): still 1 of 3 reference accounts with owner-read values, and no Wildcard or Free Hit week.
 
 ## Discovered
-- [x] **vaastav's `xP` column for GW *g* contains GW *g*'s own points.** It is `ep_this` captured after the matches, when FPL's form already includes them. Measured on `merged_gw.csv` @ `f9ed3e88`: `xP_g` correlates 0.89–0.93 with form over GW *g−3…g* but 0.78–0.82 with form over *g−4…g−1*, and a regression at GW10 gives `xP = 0.60·form_before + 0.42·points_this_GW` (2023/24; 0.58 / 0.36 in 2024/25). Using it as B1's input would hand B1 the result. The honest input is the previous GW's value (captured before the deadline), so B1 uses `xP` lagged by one GW.
-- [x] **2025/26 `xP` coverage, checked live:** 11 of 38 GWs are populated (1–6, 8, 9, 24, 29, 38); the rest are zeros. 2023/24 has 37 of 38 (GW26 empty) and 2024/25 has 35 of 38 (GW22, 32, 34 empty).
-- [x] **football-data.co.uk `fixtures.csv` only lists the next few days.** On 2026-10-01, in the international break, it held 12 National League rows and no Premier League row; GW6 odds will only appear nearer 2026-10-10. Match xG (`HxG`, `AxG`) exists in the 2026/27 season file but not in earlier seasons.
-- [x] **open-fpl-solver's `prep_data` calls the live FPL API and reads a projections CSV from its own `data/` folder**, so it can't run in the sandbox. `gaffer_lib.plan` builds the solver's input from the snapshot and calls `solve_multi_period_fpl` directly. The repo is not an installable package (its wheel omits `utils.py` and `paths.py`), so the image vendors the source tree at the pinned commit.
-- [x] **open-fpl-solver's licence:** `LICENSE` is Apache-2.0 (GitHub agrees), `requires-python >=3.14`; at run time it prints that commercial entities need a separate commercial licence. Gaffer is personal and non-commercial, so this is recorded alongside NFR-SEC-06.
+- [x] **vaastav's `xP` column for GW *g* contains GW *g*'s own points.** It is `ep_this` captured after the matches. Measured on `merged_gw.csv` @ `f9ed3e88`: `xP_g` correlates 0.89–0.93 with form over GW *g−3…g* but 0.78–0.82 with form over *g−4…g−1*, and a regression at GW10 gives `xP = 0.60·form_before + 0.42·points_this_GW` (2023/24; 0.58 / 0.36 in 2024/25). B0 and B1 therefore use the previous GW's value. GW1 uses its own (nothing has been played; its correlation with GW1 points is 0.34–0.42).
+- [x] **2025/26 `xP` coverage, checked live:** 11 of 38 GWs populated (1–6, 8, 9, 24, 29, 38). 2023/24 has 37 and 2024/25 has 35.
+- [x] **The 2025/26 archive repeats 10 player-fixture rows verbatim** (20 rows); counted twice they double a player's points. The backtest drops them.
+- [x] **2022/23 has no `starts` or xG before GW16**, so only GW22–38 could serve as development data.
+- [x] **A squad may hold four from one club after a real-life move.** The replay's legality check rejected it (the first run's crash); it now only rejects a club count that a transfer made grow. **`gaffer_lib validate` (M2) still rejects any plan for such a squad** (`CLUB_LIMIT`), so the live golden path would report an invalid plan for that user. Not changed here: it is M2's rule (FR-RUL-02) and needs a decision.
+- [x] **football-data.co.uk `fixtures.csv` only lists the next few days.** On 2026-10-01 it held 12 National League rows and no Premier League row. `www.` redirects to the bare host. Match xG exists in the 2026/27 season file only.
+- [x] **The FPL API has too few matches for Dixon-Coles** (50 at GW6), so the odds bundle includes the previous and current season's result files from the same host (ADR 0002 corrected).
+- [x] **`bootstrap-static` has no recent form per GW**, so every snapshot now carries the last six checked GWs' `event/{gw}/live` stats, trimmed (ADR 0002 corrected). A snapshot grows by about 1 MB.
+- [x] **open-fpl-solver's `prep_data` calls the live FPL API and reads a CSV from its own `data/` folder**, and the repo is not an installable package (its wheel omits `utils.py` and `paths.py`). `gaffer_lib.plan` builds the solver's input and calls `solve_multi_period_fpl` directly; the image vendors the source. Importing it needs `requests` and `fuzzywuzzy`.
+- [x] **open-fpl-solver's licence:** Apache-2.0, `requires-python >=3.14`, both as research 04 said. At run time it prints that commercial entities need a separate commercial licence. Gaffer is personal and non-commercial; recorded with NFR-SEC-06.
+- [x] **The solver is slower on real state than research 04 measured:** 9–28 s for horizon 6 on 2 vCPUs, and about 3.5 s before its first feasible plan, so a 1 s limit had no incumbent until the solve was seeded with the no-transfer plan.
+- [x] **The solver's shipped default is `weekly_hit_limit: 0`** (no hits). Gaffer follows ARCHITECTURE §4 (hits allowed at 4 points).
+- [x] **Inside the 50 s budget the main solve's limit is about 43 s, not 45 s,** because 6 s is reserved for chip scenarios. `--budget` raises it.
+- [x] **Wildcard and Free Hit scenarios are full solves and may not fit the budget.** They are then reported as "not evaluated — time budget exhausted". Bench Boost and Triple Captain re-solve over the chip-free plan's players in about a second each. Teams 1–4 only had Triple Captain or fewer chips' worth of work in the live runs, so the four-chip case is not measured live.
+- [x] **The live model has no previous-season player stats** (the FPL API doesn't serve them); at GW6 it runs on five GWs shrunk towards a price-aware position prior. The backtest does use them.
 
 ## Proposed (not built; outside M3 docs)
+- A scheduled pre-deadline snapshot (FR-DAT-10's missing trigger), once you say what should run it.
+- Sync `/data/history` (ADR 0002 names it) so the live model has previous-season player priors at the start of a season.
+- Let `validate` accept a squad that already holds four from a club after a real-life move.
+- Seed Wildcard and Free Hit scenario solves with a starting plan so they return something inside a short share of the budget.
+- A form-based stand-in for the official xP, so B1 can be compared in 2025/26; and archive Gaffer's own snapshots' availability flags for future backtests.
+- A CI job on a 2-vCPU runner for NFR-LAT-03 and the stack checks.
+- `gaffer_lib.ownership` (ADR 0003 lists it; no M3 requirement uses it).
