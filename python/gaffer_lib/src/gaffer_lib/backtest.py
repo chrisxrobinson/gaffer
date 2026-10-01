@@ -364,6 +364,11 @@ def greedy_transfer(team: Team, inputs: ModelInputs, value: Mapping[int, float])
 
 
 def apply_transfers(team: Team, transfers: Sequence[tuple[int, int]], inputs: ModelInputs) -> None:
+    """Make the transfers and check the squad is still legal. A club already over the limit because a
+    squad player moved there in real life may stay over it (FPL lets you keep him); it may not grow."""
+    clubs_before: dict[int, int] = {}
+    for p in team.squad:
+        clubs_before[inputs.players[p].team] = clubs_before.get(inputs.players[p].team, 0) + 1
     for out, into in transfers:
         team.bank += R.selling_price(team.purchase.pop(out), inputs.players[out].now_cost, inputs.rules) - inputs.players[into].now_cost
         team.purchase[into] = inputs.players[into].now_cost
@@ -371,7 +376,11 @@ def apply_transfers(team: Team, transfers: Sequence[tuple[int, int]], inputs: Mo
     if team.bank < 0:
         raise AssertionError(f"transfers left the bank at {team.bank}")
     players = {p: R.Player(p, inputs.players[p].team, inputs.players[p].element_type) for p in team.squad}
-    bad = R.check_squad(team.squad, players, inputs.rules)
+    clubs_after: dict[int, int] = {}
+    for p in team.squad:
+        clubs_after[inputs.players[p].team] = clubs_after.get(inputs.players[p].team, 0) + 1
+    grew = any(n > inputs.rules.team_limit and n > clubs_before.get(t, 0) for t, n in clubs_after.items())
+    bad = [v for v in R.check_squad(team.squad, players, inputs.rules) if v.code != "CLUB_LIMIT" or grew]
     if bad:
         raise AssertionError(f"illegal squad after transfers: {[v.message for v in bad]}")
 

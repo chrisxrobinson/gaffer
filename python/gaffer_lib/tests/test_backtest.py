@@ -231,6 +231,32 @@ def test_greedy_transfer_takes_the_best_legal_swap():
     assert team.bank == before.bank + R.selling_price(before.purchase[out], po.now_cost, inp.rules) - pi.now_cost and team.purchase[into] == pi.now_cost
 
 
+def test_a_real_life_move_can_leave_four_from_one_club():
+    """FPL lets you keep a player who moves to a club you already have three from; you can't add a fifth."""
+    m, t, f = synthetic()
+    s0 = B.SeasonData("2025-26", m, t, f)
+    inp, team = start_team(s0)
+    clubs = {}
+    for p in team.squad:
+        clubs.setdefault(inp.players[p].team, []).append(p)
+    full = next(c for c, ps in clubs.items() if len(ps) == 3)
+    mover = next(p for p in team.squad if inp.players[p].team != full)
+    m.loc[(m["element"] == mover) & (m["GW"] >= 3), "team"] = TEAMS[full - 1]  # he joins the full club before GW3
+    s = B.SeasonData("2025-26", m, t, f)
+    inp3 = s.inputs_at(3)
+    assert sum(inp3.players[p].team == full for p in team.squad) == 4
+    for policy in ("B0", "B1", "B2"):
+        out = B.run_policy(s, policy, team, gws=[1, 2, 3, 4])  # no crash; nobody else is bought from that club
+        final = out.squad
+        assert sum(s.inputs_at(4).players[p].team == full for p in final) <= 4
+    newcomer = next(p.id for p in inp3.players.values() if p.team == full and p.id not in team.squad and p.element_type == inp3.players[team.squad[0]].element_type)
+    grow = team.copy()
+    grow.bank = 500
+    victim = next(p for p in grow.squad if inp3.players[p].element_type == inp3.players[newcomer].element_type and inp3.players[p].team != full)
+    with pytest.raises(AssertionError, match="illegal squad"):
+        B.apply_transfers(grow, [(victim, newcomer)], inp3)
+
+
 def test_baselines_run_a_season_and_follow_their_rule():
     s = season()
     out = B.backtest_season(s, ["B0", "B1", "B2"])
