@@ -15,9 +15,9 @@ def player(rows, *, games=None, starts=None, element_type=3, now_cost=60, prev=N
 
 def test_nailed_starter():
     b = M.baseline(player([(90, 1)] * 6))
-    assert b.p_start > 0.95 and b.mins_start > 85 and b.p60_start > 0.9
+    assert b.p_start == M.MAX_P_START and b.mins_start > 85 and b.p60_start > 0.9
     m = M.expected_minutes(b)
-    assert m.xmins > 82 and m.p60 > 0.88 and m.p_play >= m.p_start >= m.p60
+    assert m.xmins > 80 and m.p60 > 0.85 and m.p_play >= m.p_start >= m.p60
 
 
 def test_bench_player_who_comes_on():
@@ -44,7 +44,7 @@ def test_early_substitutions_lower_p60():
 def test_previous_season_is_the_prior_before_any_game():
     regular = M.baseline(player([], games=0, starts=0, prev={"games": 38, "starts": 36}))
     fringe = M.baseline(player([], games=0, starts=0, prev={"games": 38, "starts": 4}))
-    assert regular.p_start == pytest.approx(36 / 38) and fringe.p_start == pytest.approx(4 / 38)
+    assert regular.p_start == pytest.approx(36 / 38) and regular.p_start < M.MAX_P_START and fringe.p_start == pytest.approx(4 / 38)
 
 
 def test_no_history_uses_price():
@@ -59,7 +59,7 @@ def test_double_gw_rows_count_towards_start_share_only():
     p.recent.append({"gw": 4, "games": 2, "minutes": 180, "starts": 2})
     p.totals = {"games": 5, "starts": 5}
     b = M.baseline(p)
-    assert b.p_start > 0.95 and b.mins_start <= 90
+    assert b.p_start == M.MAX_P_START and b.mins_start <= 90
 
 
 @pytest.mark.parametrize(

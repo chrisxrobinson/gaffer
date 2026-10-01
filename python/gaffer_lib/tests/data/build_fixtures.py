@@ -10,6 +10,10 @@ Sources (all public, fetched politely: one request at a time, >= 0.5 s apart, de
 - Auto-subs and FT histories: public entries sampled from the overall league (314). Entry IDs and
   names are dropped; only picks, minutes and transfer counts are kept.
 
+- `model`: a second frozen snapshot of entry 1 for the M3 model and planner tests, with the
+  per-player stats, the last GWs' minutes and starts, and football-data.co.uk results (scores only,
+  no odds are stored). Usage: model
+
 Outputs are small gzip/JSON files next to this script. They are committed so the tests run offline.
 """
 
@@ -189,12 +193,85 @@ def snapshot_entry(bootstrap, entry_id, out_dir, keep_id=True):
     print(f"snapshot of entry {entry_id} at GW{cur} -> {out_dir}")
 
 
+MODEL_ELEMENT_FIELDS = (
+    "id", "web_name", "first_name", "second_name", "team", "element_type", "now_cost", "cost_change_start", "status",
+    "chance_of_playing_next_round", "ep_next", "selected_by_percent", "minutes", "starts", "expected_goals", "expected_assists",
+    "goals_scored", "assists", "saves", "bonus", "defensive_contribution",
+)
+FOOTBALL_DATA = "https://www.football-data.co.uk/"
+ODDS_COLUMNS = ("AvgH", "AvgD", "AvgA", "Avg>2.5", "Avg<2.5", "B365H", "B365D", "B365A", "B365>2.5", "B365<2.5")
+
+
+def football_data_csv(path):
+    req = urllib.request.Request(FOOTBALL_DATA + path, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        text = r.read().decode("utf-8-sig", errors="replace")
+    time.sleep(1.0)
+    return [row for row in csv.DictReader(io.StringIO(text)) if row.get("Div") == "E0"]
+
+
+def num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def odds_file(season_codes):
+    """The `odds.json` fpl_snapshot writes (packages/pi-gaffer/src/odds.ts): next-round odds rows and
+    results for the previous and current season. Only the columns Gaffer uses are kept."""
+    fixtures = [
+        {"date": r["Date"], "time": r.get("Time") or None, "home": r["HomeTeam"], "away": r["AwayTeam"],
+         "odds": {k: num(r.get(k)) for k in ODDS_COLUMNS if num(r.get(k)) is not None}}
+        for r in football_data_csv("fixtures.csv")
+    ]
+    results = {}
+    for label, code in season_codes:
+        results[label] = [
+            {"date": r["Date"], "time": r.get("Time") or None, "home": r["HomeTeam"], "away": r["AwayTeam"],
+             "hg": int(r["FTHG"]), "ag": int(r["FTAG"]), "hxg": num(r.get("HxG")), "axg": num(r.get("AxG"))}
+            for r in football_data_csv(f"mmz4281/{code}/E0.csv") if r.get("FTHG") not in (None, "")
+        ]
+    return {"schema": "gaffer.odds/1", "source": "football-data.co.uk", "available": True, "reason": None,
+            "fetched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "fixtures": fixtures, "results": results}
+
+
+def snapshot_model(bootstrap, entry_id, out_dir):
+    """A frozen real snapshot with what the M3 model reads. Players who have left their club or
+    have no minutes are dropped (unless the entry owns them) to keep the fixture small."""
+    snapshot_entry(bootstrap, entry_id, out_dir)
+    d = HERE / out_dir
+    owned = set()
+    for name in ("picks", "picks-prev"):
+        f = d / f"{name}.json"
+        if f.exists():
+            owned |= {p["element"] for p in json.loads(f.read_text())["picks"]}
+    b = trimmed_bootstrap(bootstrap)
+    b["elements"] = [{k: e.get(k) for k in MODEL_ELEMENT_FIELDS} for e in bootstrap["elements"] if e["id"] in owned or (e["status"] != "u" and e["minutes"] > 0)]
+    (d / "bootstrap-static.json").write_text(json.dumps(b, separators=(",", ":")) + "\n")
+    keep = {e["id"] for e in b["elements"]}
+    fixtures = get("fixtures/")
+    (d / "fixtures.json").write_text(json.dumps([{k: f[k] for k in ("id", "event", "kickoff_time", "team_h", "team_a", "team_h_score", "team_a_score", "finished")} for f in fixtures], separators=(",", ":")) + "\n")
+    nxt = next(e["id"] for e in bootstrap["events"] if e["is_next"])
+    for gw in range(max(1, nxt - 6), nxt):
+        live = get(f"event/{gw}/live/")
+        rows = [{"id": e["id"], "stats": {"minutes": e["stats"]["minutes"], "starts": e["stats"]["starts"]}} for e in live["elements"] if e["id"] in keep and e["stats"]["minutes"] > 0]
+        (d / f"live-{gw}.json").write_text(json.dumps({"elements": rows}, separators=(",", ":")) + "\n")
+    y = int(bootstrap["events"][0]["deadline_time"][:4])
+    codes = [(f"{y - 1}-{y % 100:02d}", f"{(y - 1) % 100:02d}{y % 100:02d}"), (f"{y}-{(y + 1) % 100:02d}", f"{y % 100:02d}{(y + 1) % 100:02d}")]
+    (d / "odds.json").write_text(json.dumps(odds_file(codes), separators=(",", ":")) + "\n")
+    print(f"model snapshot -> {out_dir}: {len(b['elements'])} players")
+
+
 if __name__ == "__main__":
     import sys
 
     boot = get("bootstrap-static/")
     if sys.argv[1:] == ["snapshot"]:
         snapshot_entry(boot, 1, "snapshot-entry-1")
+        raise SystemExit
+    if sys.argv[1:] == ["model"]:
+        snapshot_model(boot, 1, "snapshot-model")
         raise SystemExit
     if sys.argv[1:2] == ["reference"]:
         # FR-DAT-08: freeze a reference account at the moment its owner reads the true values in the

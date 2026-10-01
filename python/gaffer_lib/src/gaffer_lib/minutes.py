@@ -27,6 +27,7 @@ from .inputs import PlayerData
 RECENCY_DECAY = 0.8  # weight of a GW relative to the one after it
 PRIOR_GAMES = 2.0  # pseudo-matches of prior behind each recent-form estimate
 PREV_SEASON_WEIGHT = 0.5  # a previous-season match counts half a current one
+MAX_P_START = 0.95  # nobody is certain to start: knocks, rotation, late illness
 LONG_PLAY = 60
 # Used until the pool has enough recent rows to measure them (per position: GKP, DEF, MID, FWD).
 FALLBACK = {1: (90.0, 0.99, 0.02, 30.0), 2: (86.0, 0.93, 0.15, 20.0), 3: (79.0, 0.85, 0.35, 20.0), 4: (78.0, 0.83, 0.40, 20.0)}
@@ -124,7 +125,7 @@ def baseline(p: PlayerData, defaults: Mapping[int, tuple[float, float, float, fl
                 sub_min += w * r["minutes"]
     k = PRIOR_GAMES
     return Baseline(
-        p_start=(w_starts + k * s0) / (w_games + k),
+        p_start=min((w_starts + k * s0) / (w_games + k), MAX_P_START),
         mins_start=(st_min + k * d[0]) / (st_n + k),
         p60_start=(st_long + k * d[1]) / (st_n + k),
         p_sub=(sub_on + k * d[2]) / (sub_n + k),

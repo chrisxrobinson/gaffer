@@ -160,11 +160,17 @@ def from_snapshot(snap: Snapshot) -> ModelInputs:
             prev_matches += ms
     matches = matches_from_fixtures(fixtures, team_names, xg)
 
+    odds_rows = odds.get("fixtures") or []
+    reason = odds.get("reason")
+    if odds.get("available") and not odds_rows:
+        reason = "football-data.co.uk lists no Premier League fixtures yet"
+    elif not odds:
+        reason = "the snapshot has no odds; call fpl_snapshot with include: [\"odds\"]"
     manifest = snap.load("manifest") or {}
     y = parse_time(b["events"][0]["deadline_time"]).year
     return ModelInputs(
         season=f"{y}/{(y + 1) % 100:02d}", next_gw=next_gw, deadline=parse_time(nxt.get("deadline_time")), players=players,
         team_names=team_names, fixtures=fixtures, scoring=R.Scoring.from_bootstrap(b), rules=R.Rules.from_bootstrap(b),
-        odds_rows=odds.get("fixtures") or [], odds_available=bool(odds.get("available")), odds_reason=odds.get("reason"),
+        odds_rows=odds_rows, odds_available=bool(odds.get("available")), odds_reason=reason,
         matches=matches, prev_matches=prev_matches, stale=bool(manifest.get("stale")), last_gw=max(e["id"] for e in b["events"]),
     )
