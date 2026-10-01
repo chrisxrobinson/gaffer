@@ -46,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     bt.add_argument("--policies", default="B0,B1,B2,G0")
     bt.add_argument("--out", help="write the full result JSON here")
     bt.add_argument("--time-limit", type=float, default=None, help="solver time limit per GW for G0 (default 45)")
+    bt.add_argument("--from-gw", type=int, default=None, help="start the replay at this GW (development runs on part of a season)")
     args = ap.parse_args(argv)
     if args.cmd == "backtest":
         from .backtest import main as backtest_main  # noqa: PLC0415
