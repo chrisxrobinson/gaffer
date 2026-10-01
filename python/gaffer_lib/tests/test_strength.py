@@ -1,10 +1,15 @@
 """gaffer_lib.strength: odds de-vig, the score grid, Dixon-Coles and the horizon (FR-DAT-09)."""
 
+import pytest
+
+# The model needs the sandbox's analytics stack; without it these tests are skipped (README, "Develop").
+for _dep in ("numpy", "scipy"):
+    pytest.importorskip(_dep)
+
 import math
 from datetime import datetime, timedelta
 
 import numpy as np
-import pytest
 from hypothesis import given, settings, strategies as st
 
 from gaffer_lib import strength as S

@@ -1,6 +1,11 @@
 """gaffer_lib.minutes: rules + recency expected minutes."""
 
 import pytest
+
+# The model needs the sandbox's analytics stack; without it these tests are skipped (README, "Develop").
+for _dep in ("numpy", "scipy"):
+    pytest.importorskip(_dep)
+
 from hypothesis import given, strategies as st
 
 from gaffer_lib import minutes as M

@@ -5,12 +5,17 @@ These tests need open-fpl-solver at the pinned commit: set GAFFER_SOLVER_DIR to 
 sandbox image has it at /opt/open-fpl-solver). They are skipped when it isn't there.
 """
 
+import pytest
+
+# The model needs the sandbox's analytics stack; without it these tests are skipped (README, "Develop").
+for _dep in ("numpy", "scipy", "pandas", "highspy"):
+    pytest.importorskip(_dep)
+
 import json
 import os
 import random
 import shutil
 
-import pytest
 from conftest import DATA
 
 from gaffer_lib import cli, plan as P, xp as X

@@ -4,6 +4,12 @@ The tests run on a small synthetic season (6 clubs, 6 GWs) so they need no third
 real seasons live in gitignored var/history (tools/fetch_history.py); one test checks them if present.
 """
 
+import pytest
+
+# The model needs the sandbox's analytics stack; without it these tests are skipped (README, "Develop").
+for _dep in ("numpy", "scipy", "pandas"):
+    pytest.importorskip(_dep)
+
 import copy
 import os
 import random
@@ -11,7 +17,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
 from gaffer_lib import backtest as B, plan as P, rules as R
 

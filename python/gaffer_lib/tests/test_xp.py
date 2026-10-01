@@ -1,9 +1,14 @@
 """gaffer_lib.xp: component expected points scored with rules.Scoring."""
 
+import pytest
+
+# The model needs the sandbox's analytics stack; without it these tests are skipped (README, "Develop").
+for _dep in ("numpy", "scipy"):
+    pytest.importorskip(_dep)
+
 import math
 from datetime import datetime
 
-import pytest
 from conftest import DATA, real_bootstrap_rules_part
 from hypothesis import given, settings, strategies as st
 
