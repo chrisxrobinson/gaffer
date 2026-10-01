@@ -5,10 +5,24 @@
 import { createHmac } from "node:crypto";
 import { type Derived, type DeriveFn, DeriveInputError } from "./derive.ts";
 import { type FplClient, type FplResponse, FplNotFoundError, FplUnavailableError, type UnavailableReason } from "./http.ts";
+import { fetchOdds, type OddsDeps, type OddsFile } from "./odds.ts";
+import { shellQuote } from "./sandbox.ts";
 import type * as S from "./schema/fpl.ts";
 import type { SnapshotStore } from "./store.ts";
 import { isFresh, type Resource, type TtlClock } from "./ttl.ts";
-import { type DatasetFlags, validateDataset } from "./validate.ts";
+import { type DatasetFlags, validateDataset, validateLive } from "./validate.ts";
+
+/** How many finished GWs of per-player stats go into the snapshot for gaffer_lib's minutes model. */
+export const RECENT_GWS = 6;
+/** The event/{gw}/live stats kept (the rest of the response, e.g. `explain`, is dropped to keep snapshots small). */
+const LIVE_STATS = [
+	"minutes", "starts", "goals_scored", "assists", "clean_sheets", "goals_conceded", "saves", "bonus", "bps", "yellow_cards", "red_cards",
+	"defensive_contribution", "expected_goals", "expected_assists", "expected_goals_conceded", "total_points",
+] as const;
+
+function trimLive(live: S.Live): S.Live {
+	return { elements: live.elements.map((e) => ({ id: e.id, stats: Object.fromEntries(LIVE_STATS.filter((k) => k in e.stats).map((k) => [k, (e.stats as Record<string, unknown>)[k]])) as S.Live["elements"][number]["stats"] })) };
+}
 
 /** Inside this window before the deadline, transfers are not finalised on stale per-user data (FR-DAT-05). */
 export const FINALISE_WINDOW_MS = 60 * 60_000;
@@ -28,6 +42,8 @@ export interface SnapshotDeps {
 	now?: () => number;
 	/** gaffer_lib derive in the sandbox (M2). Without it, the summary falls back to the raw API values. */
 	derive?: DeriveFn;
+	/** Overrides for the odds source client (tests point it at a mock). */
+	odds?: Partial<Omit<OddsDeps, "store" | "now">>;
 }
 
 export interface SnapshotParams {
@@ -35,6 +51,8 @@ export interface SnapshotParams {
 	/** Element ids whose element-summary should be included. */
 	elementSummaries?: number[];
 	forceFresh?: boolean;
+	/** Extra sources: "odds" adds football-data.co.uk next-round odds and results (FR-DAT-09). */
+	include?: string[];
 	/** User override of the free-transfer count (FR-INP-04). */
 	ft?: number;
 	/** Pending transfers the user declared, e.g. "Salah>Palmer" (FR-INP-04). */
@@ -105,6 +123,14 @@ export interface SnapshotDetails {
 	chips: ChipState[];
 	flags: DatasetFlags;
 	finalise_transfers: { allowed: boolean; reason?: string };
+	/** The odds source (FR-DAT-09): whether it was asked for, and whether next-round odds are in the snapshot. */
+	odds: { requested: boolean; available: boolean; fixtures: number; reason: string | null };
+	/** Finished GWs whose per-player stats are in the snapshot (`live-<gw>.json`). */
+	recent_gws: number[];
+	/** The official ep_next recorded by this snapshot (FR-DAT-10). */
+	ep_next: { gw: number | null; players: number; before_deadline: boolean };
+	/** The golden-path command for this snapshot, with the user's --ft/--pending overrides. */
+	run_command: string;
 	warnings: string[];
 	endpoints: EndpointHealth[];
 }
@@ -170,6 +196,24 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 	const nextEv = bootstrap.events?.find((e) => e.is_next) ?? null;
 	const lastGw = currentEv?.id ?? null;
 
+	// Per-player stats of the last finished GWs, for gaffer_lib's minutes model. A checked GW never
+	// changes, so each is fetched once and then served from the snapshot cache.
+	const liveFiles: Record<string, unknown> = {};
+	const recentGws: number[] = [];
+	const checked = (bootstrap.events ?? []).filter((e) => e.finished && e.data_checked && (!nextEv || e.id < nextEv.id)).map((e) => e.id);
+	for (const gw of checked.slice(-RECENT_GWS)) {
+		try {
+			const live = (await shared(`live-${gw}`, `event/${gw}/live/`, "event-live", clock)) as S.Live;
+			validateLive(gw, live);
+			liveFiles[`live-${gw}`] = trimLive(live);
+			recentGws.push(gw);
+		} catch (e) {
+			if (params.signal?.aborted) throw e;
+			delete fresh[`event/${gw}/live/`];
+			warnings.push(`GW${gw} player stats could not be fetched (${(e as Error).message.split("\n")[0]}); recent minutes for that GW are missing from the snapshot.`);
+		}
+	}
+
 	// Per-user data: always fresh and cache-busted; all or nothing, falling back to the team's last good snapshot.
 	const userPaths: Record<string, string> = {
 		entry: `entry/${params.teamId}/`,
@@ -231,7 +275,30 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 
 	const fetchedAt = new Date(now()).toISOString();
 	const season = seasonOf(bootstrap);
-	const files: Record<string, unknown> = { "bootstrap-static": bootstrap, fixtures, ...user, ...elementSummaries };
+	const files: Record<string, unknown> = { "bootstrap-static": bootstrap, fixtures, ...user, ...elementSummaries, ...liveFiles };
+
+	// The odds source (FR-DAT-09). It never fails the snapshot: when it is down, `odds.json` says so
+	// and gaffer_lib falls back to Dixon-Coles.
+	const oddsRequested = (params.include ?? []).includes("odds");
+	let odds: OddsFile | undefined;
+	let oddsFresh: string[] = [];
+	if (oddsRequested) {
+		try {
+			const r = await fetchOdds(
+				{ season: season.dir, deadline: nextEv ? Date.parse(nextEv.deadline_time) : undefined, forceFresh: params.forceFresh, signal: params.signal },
+				{ ...deps.odds, store, now },
+			);
+			odds = r.file;
+			oddsFresh = r.fresh;
+			endpoints.push(...r.endpoints);
+			warnings.push(...r.warnings);
+		} catch (e) {
+			if (params.signal?.aborted) throw e;
+			odds = { schema: "gaffer.odds/1", source: "football-data.co.uk", available: false, reason: `football-data.co.uk unavailable: ${(e as Error).message}`, fixtures: [], results: {} };
+			warnings.push(`Odds unavailable (${odds.reason}): the golden path will take team strength from Dixon-Coles alone.`);
+		}
+		files.odds = odds;
+	}
 	const stale = staleReason !== null;
 	const finalise = { allowed: true } as SnapshotDetails["finalise_transfers"];
 	const deadlineMs = nextEv ? Date.parse(nextEv.deadline_time) : undefined;
@@ -250,7 +317,14 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 	});
 	const index: Record<string, { snapshot: string; fetched_at: number }> = {};
 	for (const path of Object.keys(fresh)) index[path] = { snapshot: written.id, fetched_at: now() };
+	for (const key of oddsFresh) index[key] = { snapshot: written.id, fetched_at: now() };
 	if (userFresh) index[teamKey] = { snapshot: written.id, fetched_at: now() };
+	// FR-DAT-10: the official ep_next is recorded before each deadline. Every snapshot's bootstrap
+	// carries it; the index remembers the latest pre-deadline one per GW (`epNextRecorded`).
+	const epPlayers = bootstrap.elements.filter((e) => e.ep_next !== null && e.ep_next !== undefined).length;
+	const beforeDeadline = deadlineMs !== undefined && now() < deadlineMs;
+	const bootstrapStale = endpoints.some((e) => e.path === "bootstrap-static/" && e.error !== undefined);
+	if (nextEv && beforeDeadline && epPlayers > 0 && !bootstrapStale) index[epNextKey(season.dir, nextEv.id)] = { snapshot: written.id, fetched_at: now() };
 	store.index(index);
 
 	let derived: Derived | undefined;
@@ -272,6 +346,10 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 	}
 
 	const details = summarise({
+		odds: { requested: oddsRequested, available: odds?.available ?? false, fixtures: odds?.fixtures.length ?? 0, reason: odds?.reason ?? null },
+		recentGws,
+		epNext: { gw: nextEv?.id ?? null, players: epPlayers, before_deadline: beforeDeadline },
+		runCommand: runCommand(written.dir, params),
 		derived,
 		bootstrap,
 		user,
@@ -288,6 +366,27 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 		nextEv,
 	});
 	return { text: render(details, now()), details };
+}
+
+/** Index key of the snapshot that recorded a GW's official ep_next before its deadline (FR-DAT-10). */
+export function epNextKey(seasonDir: string, gw: number): string {
+	return `ep_next:${seasonDir}:${gw}`;
+}
+
+/** Which GWs have a pre-deadline snapshot containing ep_next (FR-DAT-10's acceptance check). */
+export function epNextRecorded(store: SnapshotStore, seasonDir: string, gws: number[]): { gw: number; snapshot: string | null; fetched_at: string | null }[] {
+	return gws.map((gw) => {
+		const hit = store.lookup(epNextKey(seasonDir, gw));
+		return { gw, snapshot: hit?.snapshot ?? null, fetched_at: hit ? new Date(hit.fetched_at).toISOString() : null };
+	});
+}
+
+/** The golden-path command (ARCHITECTURE §2.2) for a snapshot, carrying the user's overrides. */
+export function runCommand(snapshotDir: string, params: Pick<SnapshotParams, "ft" | "pending">): string {
+	let cmd = `python -m gaffer_lib run --snapshot ${shellQuote(snapshotDir)} --out /work/plan.json`;
+	if (params.ft !== undefined) cmd += ` --ft ${Math.trunc(params.ft)}`;
+	if (params.pending) cmd += ` --pending ${shellQuote(params.pending)}`;
+	return cmd;
 }
 
 async function getPicks(client: FplClient, teamId: number, gw: number, signal: AbortSignal | undefined, endpoints: EndpointHealth[]) {
@@ -309,6 +408,10 @@ function seasonOf(b: S.Bootstrap): { dir: string; label: string } {
 }
 
 function summarise(x: {
+	odds: SnapshotDetails["odds"];
+	recentGws: number[];
+	epNext: SnapshotDetails["ep_next"];
+	runCommand: string;
 	derived?: Derived;
 	bootstrap: S.Bootstrap;
 	user: Record<string, unknown>;
@@ -397,6 +500,10 @@ function summarise(x: {
 		chips,
 		flags: x.flags,
 		finalise_transfers: x.finalise,
+		odds: x.odds,
+		recent_gws: x.recentGws,
+		ep_next: x.epNext,
+		run_command: x.runCommand,
 		warnings,
 		endpoints: x.endpoints,
 	};
@@ -460,6 +567,18 @@ export function render(d: SnapshotDetails, now: number): string {
 	if (next !== null && (d.flags.blanks[next] || d.flags.doubles[next])) {
 		L.push(`GW${next}: blanks for teams ${d.flags.blanks[next]?.join(", ") ?? "none"}; doubles for teams ${d.flags.doubles[next]?.join(", ") ?? "none"}.`);
 	}
+	if (d.odds.requested) {
+		L.push(
+			d.odds.available
+				? d.odds.fixtures > 0
+					? `Odds (football-data.co.uk): ${d.odds.fixtures} Premier League fixture(s) priced.`
+					: "Odds (football-data.co.uk): no Premier League fixtures are listed yet, so team strength will come from Dixon-Coles."
+				: `Odds: unavailable (${d.odds.reason}); team strength will come from Dixon-Coles.`,
+		);
+	} else {
+		L.push('Odds: not in this snapshot. Before planning transfers, call fpl_snapshot with include: ["odds"].');
+	}
+	L.push(`To plan (transfers, XI, captain, chips), run in the sandbox: ${d.run_command}`);
 	if (!d.finalise_transfers.allowed) L.push(`DO NOT FINALISE TRANSFERS: ${d.finalise_transfers.reason}`);
 	if (d.warnings.length) {
 		L.push("");

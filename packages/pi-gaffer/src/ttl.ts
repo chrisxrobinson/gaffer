@@ -3,7 +3,7 @@
  * Inside the deadline window (T-6h up to the deadline) shared data is refreshed more often.
  */
 
-export type Resource = "bootstrap-static" | "fixtures" | "element-summary" | "entry";
+export type Resource = "bootstrap-static" | "fixtures" | "element-summary" | "entry" | "event-live";
 
 export interface TtlClock {
 	/** Current time, ms since epoch. */
@@ -22,6 +22,8 @@ const TTL: Record<Resource, { outside: number; inside: number }> = {
 	"bootstrap-static": { outside: 30 * MIN, inside: 5 * MIN },
 	fixtures: { outside: 6 * HOUR, inside: 30 * MIN },
 	"element-summary": { outside: 12 * HOUR, inside: 1 * HOUR },
+	// event/{gw}/live for a finished, data-checked GW is frozen (ADR 0002); only those are fetched.
+	"event-live": { outside: 365 * 24 * HOUR, inside: 365 * 24 * HOUR },
 	// Per-user endpoints are always fetched fresh (and cache-busted).
 	entry: { outside: 0, inside: 0 },
 };

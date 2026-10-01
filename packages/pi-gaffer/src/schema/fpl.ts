@@ -108,6 +108,12 @@ export const Picks = Type.Object({
 	),
 });
 
+/** event/{gw}/live: per-player stats for one GW (the model reads minutes and starts; ADR 0002). */
+export const Live = Type.Object({
+	elements: Type.Array(Type.Object({ id: Type.Integer(), stats: Type.Object({ minutes: Type.Integer(), starts: Type.Integer() }) })),
+});
+
+export type Live = Static<typeof Live>;
 export type Bootstrap = Static<typeof Bootstrap>;
 export type Fixtures = Static<typeof Fixtures>;
 export type Entry = Static<typeof Entry>;

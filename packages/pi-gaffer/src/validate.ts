@@ -30,6 +30,12 @@ function schemaErrors(name: string, schema: TSchema, value: unknown): { check: s
 	});
 }
 
+/** Schema check for one event/{gw}/live response (FR-DAT-06). */
+export function validateLive(gw: number, live: unknown): void {
+	const failures = schemaErrors(`event/${gw}/live`, S.Live, live);
+	if (failures.length) throw new FplDataError(failures);
+}
+
 export const KNOWN_CHIPS = ["wildcard", "freehit", "bboost", "3xc"] as const;
 
 export interface Dataset {
