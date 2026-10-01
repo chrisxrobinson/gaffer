@@ -177,3 +177,28 @@ export function createSandboxOperations(session: SandboxSession, opts: { localRe
 		edit: { readFile: readRemote, writeFile: writeRemote, access: accessRemote("rw") },
 	};
 }
+
+/**
+ * One SandboxSession per process, shared through globalThis: Pi loads each extension with its own
+ * module cache, and fpl_snapshot (gaffer-data) must use the same sandbox as the model's tools
+ * (gaffer-sandbox), so that its use counts towards the idle timer and never resets /work under them.
+ */
+export function sharedSandboxSession(): SandboxSession {
+	const g = globalThis as { __gafferSandboxSession?: SandboxSession };
+	g.__gafferSandboxSession ??= new SandboxSession(providerFromEnv());
+	return g.__gafferSandboxSession;
+}
+
+/** Run a command in the sandbox and collect its output (stdout and stderr together). */
+export async function sandboxRun(session: SandboxSession, command: string, opts: { timeoutS?: number; signal?: AbortSignal } = {}): Promise<{ exitCode: number | null; output: string }> {
+	const ops = createSandboxOperations(session, { localReadRoots: [] });
+	const chunks: Buffer[] = [];
+	// An empty cwd means sandboxd's own work dir (/work in the image).
+	const { exitCode } = await ops.bash.exec(command, "", { onData: (b) => chunks.push(b), signal: opts.signal, timeout: opts.timeoutS ?? 60 });
+	return { exitCode, output: Buffer.concat(chunks).toString("utf8") };
+}
+
+/** Quote a string for bash. */
+export function shellQuote(s: string): string {
+	return `'${s.replace(/'/g, `'\\''`)}'`;
+}

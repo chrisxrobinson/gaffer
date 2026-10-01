@@ -12,12 +12,12 @@ import {
 	type ExtensionAPI,
 } from "@earendil-works/pi-coding-agent";
 import { SANDBOX_CWD } from "../../src/config.ts";
-import { createSandboxOperations, providerFromEnv, SandboxSession } from "../../src/sandbox.ts";
+import { createSandboxOperations, sharedSandboxSession } from "../../src/sandbox.ts";
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export default function gafferSandbox(pi: ExtensionAPI) {
-	const session = new SandboxSession(providerFromEnv());
+	const session = sharedSandboxSession();
 	// Skills live in the harness; Pi's skill loading reads them with `read`, so serve that dir locally.
 	const ops = createSandboxOperations(session, { localReadRoots: [join(PACKAGE_ROOT, "skills")] });
 

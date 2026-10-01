@@ -9,6 +9,7 @@ import { FplClient, FplNotFoundError } from "../../src/http.ts";
 import { fplContextSection, GAFFER_PREAMBLE, userPreferencesSection } from "../../src/prompt.ts";
 import { fplState, type TeamEntry } from "../../src/session.ts";
 import { hashTeamId } from "../../src/snapshot.ts";
+import { parseTeamArgs } from "../../src/team-args.ts";
 import { SnapshotStore } from "../../src/store.ts";
 
 export const USER_SHELL_BLOCKED = "Shell commands are disabled in Gaffer: the harness holds credentials. Ask Gaffer instead; its code runs in the sandbox.";
@@ -45,14 +46,14 @@ export default function gafferCore(pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("team", {
-		description: "Set your FPL team ID for this session: /team <id>",
+		description: "Set your FPL team for this session: /team <id> [--ft N] [--pending \"OUT>IN, ...\"]",
 		handler: async (args, ctx) => {
-			const raw = args.trim().split(/\s+/)[0] ?? "";
-			if (!/^\d{1,10}$/.test(raw)) {
-				ctx.ui.notify("Usage: /team <id> — your FPL team ID is the number in the URL of your Points page.", "warning");
+			const parsed = parseTeamArgs(args);
+			if ("error" in parsed) {
+				ctx.ui.notify(parsed.error, "warning");
 				return;
 			}
-			const teamId = Number(raw);
+			const { teamId, ft, pending } = parsed;
 			let name: string | undefined;
 			let unreachable: string | undefined;
 			try {
@@ -65,9 +66,11 @@ export default function gafferCore(pi: ExtensionAPI) {
 				}
 				unreachable = (e as Error).message; // keep the ID; fpl_snapshot will report any problem
 			}
-			pi.appendEntry("gaffer.team", { team_id: teamId, team_name: name } satisfies TeamEntry);
-			if (unreachable) ctx.ui.notify(`Team ID ${teamId} set, but FPL could not be reached to confirm it (${unreachable}).`, "warning");
-			else ctx.ui.notify(`Team set: ${name ?? "?"} (ID ${teamId}).`, "info");
+			// Each /team replaces the previous one: options not restated are cleared.
+			pi.appendEntry("gaffer.team", { team_id: teamId, team_name: name, ...(ft !== undefined && { ft }), ...(pending && { pending }) } satisfies TeamEntry);
+			const extra = [ft !== undefined ? `free transfers ${ft} (yours)` : "", pending ? `pending ${pending}` : ""].filter(Boolean).join("; ");
+			if (unreachable) ctx.ui.notify(`Team ID ${teamId} set${extra ? ` (${extra})` : ""}, but FPL could not be reached to confirm it (${unreachable}).`, "warning");
+			else ctx.ui.notify(`Team set: ${name ?? "?"} (ID ${teamId})${extra ? `; ${extra}` : ""}.`, "info");
 		},
 	});
 }

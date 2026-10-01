@@ -6,7 +6,9 @@ import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { dataDir, idSalt } from "../../src/config.ts";
 import { checkToolCall } from "../../src/guard.ts";
+import { sandboxDerive } from "../../src/derive.ts";
 import { FplClient } from "../../src/http.ts";
+import { sharedSandboxSession } from "../../src/sandbox.ts";
 import { fplState, type SnapshotEntry } from "../../src/session.ts";
 import { takeSnapshot, type SnapshotDetails } from "../../src/snapshot.ts";
 import { SnapshotStore } from "../../src/store.ts";
@@ -18,7 +20,7 @@ export default function gafferData(pi: ExtensionAPI) {
 			label: "FPL snapshot",
 			description:
 				"Fetch the user's FPL team and the public FPL data (players, fixtures, GW state, chips), validate it and store an immutable snapshot. " +
-				"Returns a compact summary (squad, bank, chips, deadline, warnings) and the snapshot path, which is readable (read-only) from the sandbox. " +
+				"Returns a compact summary (squad with selling prices, bank, free transfers, chips, deadline, warnings), derived by gaffer_lib in the sandbox, and the snapshot path, which is readable (read-only) from the sandbox. " +
 				"Per-user data is always fetched fresh; shared data is cached per FPL's update cycle. Never returns raw JSON: read the snapshot files with Python for detail.",
 			promptSnippet: "Fetch and snapshot the user's FPL team and public FPL data",
 			parameters: Type.Object({
@@ -29,11 +31,14 @@ export default function gafferData(pi: ExtensionAPI) {
 				force_fresh: Type.Optional(Type.Boolean({ description: "Bypass the shared-data cache. Only when the user asks for the very latest data." })),
 			}),
 			async execute(_id, params, signal, _onUpdate, ctx) {
-				const teamId = params.team_id ?? fplState(ctx.sessionManager.getBranch()).teamId;
+				const state = fplState(ctx.sessionManager.getBranch());
+				const teamId = params.team_id ?? state.teamId;
+				// The /team --ft / --pending overrides apply to the team they were given for.
+				const own = teamId === state.teamId;
 				if (!teamId) throw new Error("No FPL team ID yet. Ask the user for it (the number in the URL of their FPL Points page), or they can run /team <id>.");
 				const { text, details } = await takeSnapshot(
-					{ teamId, elementSummaries: params.element_summaries, forceFresh: params.force_fresh, signal },
-					{ client: new FplClient(), store: new SnapshotStore(dataDir()), salt: idSalt() },
+					{ teamId, elementSummaries: params.element_summaries, forceFresh: params.force_fresh, ft: own ? state.ft : undefined, pending: own ? state.pending : undefined, signal },
+					{ client: new FplClient(), store: new SnapshotStore(dataDir()), salt: idSalt(), derive: sandboxDerive(sharedSandboxSession()) },
 				);
 				const entry: SnapshotEntry = {
 					snapshot_id: details.snapshot_id,
@@ -46,6 +51,9 @@ export default function gafferData(pi: ExtensionAPI) {
 					stale_reason: details.stale_reason,
 					season: details.season,
 					gw: details.gw,
+					free_transfers: details.free_transfers?.value ?? null,
+					ft_source: details.free_transfers?.source ?? null,
+					pending_transfers: details.assumptions?.pending_transfers ?? [],
 					endpoints: details.endpoints,
 				};
 				pi.appendEntry("gaffer.snapshot", entry);

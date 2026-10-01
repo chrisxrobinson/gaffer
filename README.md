@@ -2,7 +2,7 @@
 
 A Fantasy Premier League advisor built as a [Pi](https://pi.dev) package. Pi's agent loop runs unchanged. Everything FPL-specific lives in Gaffer's extensions, skills and theme, a tested Python library, and a sandbox with no network where the model's code runs. You use it through the Pi terminal UI in your browser.
 
-**Status: ROADMAP milestone M1.** Gaffer can load your team from the public FPL API and answer questions about it: squad, bank, chips, deadline, player news. Transfer, captain and chip recommendations arrive in M2–M4. See [docs/ROADMAP.md](docs/ROADMAP.md) and [BUILD.md](BUILD.md).
+**Status: ROADMAP milestone M2.** Gaffer loads your team from the public FPL API and answers questions about it: squad, bank, chips, deadline, player news, and, derived by its rules engine, your free transfers and selling prices. Transfer, captain and chip recommendations arrive in M3–M4. See [docs/ROADMAP.md](docs/ROADMAP.md) and [BUILD.md](BUILD.md).
 
 Gaffer is read-only. It never logs in to FPL and never changes your team.
 
@@ -24,6 +24,7 @@ docker compose up -d --build
 Open **http://127.0.0.1:7681**. You get the Pi terminal UI with Gaffer loaded. Then:
 
 1. `/team <your FPL team ID>`. The ID is the number in the URL of your Points page on the FPL site, for example `/team 1234567`.
+   FPL doesn't publish free transfers or transfers you've made for the next GW, so Gaffer derives the free-transfer count and shows it as assumed. If it's wrong, or you've already made transfers, say so: `/team 1234567 --ft 2 --pending "Salah>Palmer, Saka>Foden"` (names or player IDs, OUT>IN). Each `/team` replaces the last, so restate options you want to keep.
 2. Ask something, for example "What's my squad and bank?" or "Who in my team is injured?".
 
 To stop the stack, run `docker compose down`. Your sessions and snapshots are kept in Docker volumes. To wipe them as well, run `docker compose down -v`.
@@ -86,14 +87,17 @@ npx pnpm@12.6.0 install        # workspace dependencies (versions pinned exactly
 npx pnpm@12.6.0 test           # vitest: unit tests, S1 extension checks, extension behaviour
 ```
 
-The TypeScript tests run the real extensions in a headless Pi session. The model is Pi's scripted `fauxProvider`, the sandbox is a real `sandboxd` on your host's Python, and the FPL API is a local mock. They don't need an API key or network access.
+The TypeScript tests run the real extensions in a headless Pi session. The model is Pi's scripted `fauxProvider`, the sandbox is a real `sandboxd` on your host's Python, and the FPL API is a local mock. `fpl_snapshot` runs the repo's `gaffer_lib` on Python 3.14, found with `uv python find 3.14` (override with `GAFFER_TEST_PYTHON`). They don't need an API key or network access.
 
 ```bash
 # sandboxd protocol tests
 uv run --no-project --with pytest==9.1.1 pytest sandbox/tests
 
-# gaffer_lib (Python 3.14)
-PYTHONPATH=python/gaffer_lib/src uv run --no-project --python 3.14 --with pytest==9.1.1 pytest python/gaffer_lib/tests
+# gaffer_lib (Python 3.14): rules, derive and validate, with golden files from real FPL data
+PYTHONPATH=python/gaffer_lib/src uv run --no-project --python 3.14 --with pytest==9.1.1 --with hypothesis==6.168.3 pytest python/gaffer_lib/tests
+
+# rebuild the golden fixtures from the live API and vaastav (about 300 polite requests)
+uv run --no-project --python 3.14 python python/gaffer_lib/tests/data/build_fixtures.py
 
 # checks against the running stack: port binding, 17 sandbox isolation checks,
 # and a live fpl_snapshot round trip (scripted model, real FPL API)

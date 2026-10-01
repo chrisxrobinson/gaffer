@@ -1,6 +1,7 @@
 // Drive the installed Gaffer package end to end inside the harness container, with a scripted (faux) model:
-// /team <id> → fpl_snapshot against the real FPL API → read the snapshot from the sandbox → try to write it.
-//   docker compose exec -T -e TEAM_ID=1 gaffer node --input-type=module - < tests/live-snapshot.mjs
+// /team <id> → fpl_snapshot against the real FPL API (with gaffer_lib derive in the sandbox) → read the
+// snapshot from the sandbox → try to write it.
+//   docker compose exec -T -e TEAM_ID=1 [-e TEAM_ARGS="--ft 2"] gaffer node --input-type=module - < tests/live-snapshot.mjs
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -54,7 +55,7 @@ session.subscribe((e) => {
 	if (e.type === "tool_execution_end") results.push({ tool: e.toolName, isError: e.isError, text: e.result?.content?.map((c) => c.text).join("") ?? "" });
 });
 const t0 = Date.now();
-await session.prompt(`/team ${teamId}`);
+await session.prompt(`/team ${teamId} ${process.env.TEAM_ARGS ?? ""}`.trim());
 console.log("/team:", notes.at(-1), `(${Date.now() - t0} ms)`);
 await session.prompt("What's my squad and bank?");
 for (const r of results) console.log(`\n--- ${r.tool}${r.isError ? " (ERROR)" : ""}\n${r.text}`);
@@ -64,3 +65,11 @@ const snap = entries.filter((e) => e.customType === "gaffer.snapshot").at(-1)?.d
 console.log("\n--- gaffer.snapshot entry (endpoint health)");
 for (const ep of snap?.endpoints ?? []) console.log(`${ep.path.padEnd(28)} status=${ep.status} age=${ep.age} busted=${ep.cache_busted} cache=${ep.from_cache} retries=${ep.retries} ${ep.latency_ms}ms`);
 session.dispose();
+
+// M2: the summary's free transfers and selling prices come from gaffer_lib derive in the sandbox.
+console.log("\n--- derived:", JSON.stringify({ free_transfers: snap?.free_transfers, ft_source: snap?.ft_source, pending_transfers: snap?.pending_transfers }));
+const summary = results.find((r) => r.tool === "fpl_snapshot")?.text ?? "";
+if (!snap?.ft_source || !/Free transfers for GW\d+: /.test(summary) || /could not be derived/.test(summary)) {
+	console.error("FAIL: gaffer_lib derive did not run in the sandbox");
+	process.exit(1);
+}

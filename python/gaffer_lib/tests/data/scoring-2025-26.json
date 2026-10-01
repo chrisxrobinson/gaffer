@@ -1,0 +1,83 @@
+{
+ "source": "RECONSTRUCTED, not fetched: the live API serves only the current season and the Wayback Machine was offline on 2026-09-29. Values are the 2026/27 game_config.scoring, which research 03 ('What changed vs previous seasons') and 04 \u00a70 record as unchanged from 2025/26: GK goal 10 since 2024/25, DefCon 2 pts for DEF/MID/FWD introduced 2025/26. The 29,757-row golden test is the check that this is right.",
+ "scoring": {
+  "long_play": 2,
+  "short_play": 1,
+  "goals_conceded": {
+   "DEF": -1,
+   "FWD": 0,
+   "GKP": -1,
+   "MID": 0
+  },
+  "saves": 1,
+  "goals_scored": {
+   "DEF": 6,
+   "FWD": 4,
+   "GKP": 10,
+   "MID": 5
+  },
+  "assists": 3,
+  "clean_sheets": {
+   "DEF": 4,
+   "FWD": 0,
+   "GKP": 4,
+   "MID": 1
+  },
+  "penalties_saved": 5,
+  "penalties_missed": -2,
+  "yellow_cards": -1,
+  "red_cards": -3,
+  "own_goals": -2,
+  "bonus": 1,
+  "bps": 0,
+  "influence": 0,
+  "creativity": 0,
+  "threat": 0,
+  "ict_index": 0,
+  "special_multiplier": 1,
+  "tackles": 0,
+  "clearances_blocks_interceptions": 0,
+  "recoveries": 0,
+  "defensive_contribution": {
+   "DEF": 2,
+   "FWD": 2,
+   "GKP": 0,
+   "MID": 2
+  },
+  "starts": 0,
+  "expected_assists": 0,
+  "expected_goal_involvements": 0,
+  "expected_goals_conceded": 0,
+  "expected_goals": 0
+ },
+ "element_types": [
+  {
+   "id": 1,
+   "singular_name_short": "GKP",
+   "squad_select": 2,
+   "squad_min_play": 1,
+   "squad_max_play": 1
+  },
+  {
+   "id": 2,
+   "singular_name_short": "DEF",
+   "squad_select": 5,
+   "squad_min_play": 3,
+   "squad_max_play": 5
+  },
+  {
+   "id": 3,
+   "singular_name_short": "MID",
+   "squad_select": 5,
+   "squad_min_play": 2,
+   "squad_max_play": 5
+  },
+  {
+   "id": 4,
+   "singular_name_short": "FWD",
+   "squad_select": 3,
+   "squad_min_play": 1,
+   "squad_max_play": 3
+  }
+ ]
+}
