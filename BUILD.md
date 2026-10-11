@@ -210,3 +210,56 @@ Branch `build-m3`. Scope and exit criteria from [ROADMAP M3](docs/ROADMAP.md#m3-
 - A form-based stand-in for the official xP, so B1 can be compared in 2025/26; and archive Gaffer's own snapshots' availability flags for future backtests.
 - A CI job on a 2-vCPU runner for NFR-LAT-03 and the stack checks.
 - `gaffer_lib.ownership` (ADR 0003 lists it; no M3 requirement uses it).
+
+---
+
+# Gaffer — M4 build checklist
+
+Branch `build-m4`. Scope and exit criteria from [ROADMAP M4](docs/ROADMAP.md#m4--recommendation-end-to-end-target-before-gw11). Work started 2026-10-11 (GW6 finished, GW7 next) on macOS / Docker Desktop (arm64). Evidence is added as each item is finished; an unticked box is not done.
+
+## Scope
+- [ ] `gaffer_lib`: the recompute half of `validate` (xP, per-transfer gains net of hits, captain EV, expected points, confidence), `max_model_number_drift`, gaps over 0.5 flagged (FR-REC-01, -02, -05, -06, -07)
+- [ ] `gaffer_lib`: a deterministic score for any plan that equals the solver's objective, so "within 0.5 of the solver optimum" can be checked and replayed (FR-REC-09)
+- [ ] `gaffer_lib`: bench order by the auto-sub simulator (FR-REC-03)
+- [ ] `gaffer_lib`: chip scenarios carried with their plans so their numbers are recomputed too (FR-REC-04)
+- [ ] `gaffer.recommendation/1` TypeBox schema (`packages/pi-gaffer/src/schema/recommendation.ts`) and its export `schemas/recommendation-1.json` (FR-OUT-01)
+- [ ] `gaffer-recommend`: `submit_recommendation` (schema, `gaffer_lib validate` in the sandbox against the run's snapshot, recompute, at most 2 retries, `gaffer.recommendation` + `gaffer.validation` entries, ledger index, `terminate: true`) (FR-REC-07, -08)
+- [ ] `gaffer-recommend`: `set_preferences`, `/prefs`, preferences under `/data/users/<hmac>/prefs.json` (FR-INP-02, -03)
+- [ ] `gaffer-recommend`: the recommendation renderer (FR-OUT-02)
+- [ ] `/export` (FR-OUT-03)
+- [ ] The six skills and the three prompt templates
+- [ ] Replay script: `rec_id` → `gaffer_lib validate` → the same numbers (NFR-OBS-01)
+- [ ] Both images rebuilt; `/team <id>` then `/gw` proven through the real stack with a real model
+
+## Exit criteria
+| ID | Status | Evidence |
+|---|---|---|
+| FR-INP-01 (M4 half) | | |
+| FR-INP-02 | | |
+| FR-INP-03 | | |
+| FR-DAT-05 (M4 half) | | |
+| FR-RUL-05 (M4 half) | | |
+| FR-REC-01 | | |
+| FR-REC-02 | | |
+| FR-REC-03 | | |
+| FR-REC-04 | | |
+| FR-REC-05 | | |
+| FR-REC-06 | | |
+| FR-REC-07 | | |
+| FR-REC-08 | | |
+| FR-REC-09 | | |
+| FR-REC-10 | | |
+| FR-OUT-01 | | |
+| FR-OUT-02 | | |
+| FR-OUT-03 | | |
+| NFR-SEC-03 | | |
+| NFR-OBS-01 | | |
+| NFR-OBS-02 | | |
+| NFR-PRIV-01 | | |
+| M1–M3 regression | | |
+
+## Blocked on you
+
+## Discovered
+
+## Proposed (not built; outside M4 docs)
