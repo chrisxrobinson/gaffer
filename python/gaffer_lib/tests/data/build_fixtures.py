@@ -163,8 +163,9 @@ def trimmed_bootstrap(b):
     return out
 
 
-def snapshot_entry(bootstrap, entry_id, out_dir, keep_id=True):
-    """A frozen, trimmed real snapshot for derive tests (same file names as fpl_snapshot writes)."""
+def snapshot_entry(bootstrap, entry_id, out_dir):
+    """A frozen, trimmed real snapshot for derive tests (same file names as fpl_snapshot writes).
+    Nothing that identifies the entry is kept (NFR-PRIV-01): no team id, no team or manager name."""
     d = HERE / out_dir
     d.mkdir(parents=True, exist_ok=True)
     cur = next(e["id"] for e in bootstrap["events"] if e["is_current"])
@@ -172,22 +173,20 @@ def snapshot_entry(bootstrap, entry_id, out_dir, keep_id=True):
     files = {
         "bootstrap-static": trimmed_bootstrap(bootstrap),
         "fixtures": [{k: f[k] for k in ("id", "event", "team_h", "team_a", "finished")} for f in get("fixtures/")],
-        # Team-level fields only: no manager names.
-        "entry": {k: entry[k] for k in (("id",) if keep_id else ()) + ("name", "started_event", "current_event", "last_deadline_bank", "last_deadline_value", "last_deadline_total_transfers")},
+        # Team-level fields only, and the fixture's own label as the name.
+        "entry": {"name": out_dir.rsplit("/", 1)[-1], **{k: entry[k] for k in ("started_event", "current_event", "last_deadline_bank", "last_deadline_value", "last_deadline_total_transfers")}},
         "history": get(f"entry/{entry_id}/history/", fresh=True),
         "transfers": get(f"entry/{entry_id}/transfers/", fresh=True),
         "picks": get(f"entry/{entry_id}/event/{cur}/picks/", fresh=True),
     }
     files["history"].pop("past", None)
-    if not keep_id:
-        files["entry"]["name"] = out_dir.rsplit("/", 1)[-1]
-        for t in files["transfers"]:
-            t.pop("entry", None)
-        for name in ("picks", "picks-prev"):
-            for sub in (files.get(name) or {}).get("automatic_subs", []):
-                sub.pop("entry", None)
     if files["picks"]["active_chip"] == "freehit":
         files["picks-prev"] = get(f"entry/{entry_id}/event/{cur - 1}/picks/", fresh=True)
+    for t in files["transfers"]:
+        t.pop("entry", None)
+    for name in ("picks", "picks-prev"):
+        for sub in (files.get(name) or {}).get("automatic_subs", []):
+            sub.pop("entry", None)
     for name, data in files.items():
         (d / f"{name}.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
     print(f"snapshot of entry {entry_id} at GW{cur} -> {out_dir}")
@@ -276,7 +275,7 @@ if __name__ == "__main__":
         # FR-DAT-08: freeze a reference account at the moment its owner reads the true values in the
         # app. The team ID and manager name are not stored. Usage: reference <label> <team_id>
         label, team = sys.argv[2], int(sys.argv[3])
-        snapshot_entry(boot, team, f"reference/{label}", keep_id=False)
+        snapshot_entry(boot, team, f"reference/{label}")
         raise SystemExit
     finished, live, types = season_2627(boot)
     season_2526()

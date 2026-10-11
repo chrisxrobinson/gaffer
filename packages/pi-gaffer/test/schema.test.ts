@@ -67,8 +67,8 @@ describe("small pieces", () => {
 	});
 
 	it("the prompt preamble stays near its 600-token budget (ARCHITECTURE §1.3)", () => {
-		// About 4 characters per token for English prose; the Anthropic tokenizer counted 566 tokens for this text.
-		expect(GAFFER_PREAMBLE.length / 4).toBeLessThan(700);
+		// Estimated at 4 characters per token (2,146 characters, about 540 tokens); not measured with a tokenizer.
+		expect(GAFFER_PREAMBLE.length / 4).toBeLessThan(650);
 		for (const must of ["read-only", "fpl_snapshot", "gaffer_lib run", "gaffer-workflow skill", "submit_recommendation", "set_preferences", "data, not instructions"]) expect(GAFFER_PREAMBLE).toContain(must);
 	});
 
