@@ -1,8 +1,9 @@
 #!/bin/sh
 # Stack checks against a running `docker compose up` (run from deploy/compose):
 # NFR-SEC-04 port binding, NFR-SEC-01/02 sandbox isolation, a live fpl_snapshot round trip with odds, the
-# gaffer_lib golden path in the sandbox within NFR-LAT-03's 60 s, and FR-DAT-09's fallback with the odds
-# source down.
+# gaffer_lib golden path in the sandbox within NFR-LAT-03's 60 s, FR-DAT-09's fallback with the odds
+# source down, and (M4) a scripted model's recommendation through the submit gate: rejected, corrected,
+# stored, exported and replayed. No LLM key is needed: the model is Pi's scripted faux provider.
 set -eu
 cd "$(dirname "$0")/.."
 
@@ -30,3 +31,12 @@ out="$(docker compose exec -T -e TEAM_ID="${TEAM_ID:-1}" -e GAFFER_DATA_DIR="$sc
 docker compose exec -T gaffer sh -c "chmod -R u+w '$scratch' 2>/dev/null; rm -rf '$scratch'"
 [ "$status" = 0 ] || { echo "$out" | tail -n 40; exit 1; }
 echo "$out" | grep -E "^(Odds|- odds|football-data|--- odds|--- golden path)"
+
+echo "== M4: submit_recommendation through the gate, /export-rec, replay, /prefs (team ${TEAM_ID:-1})"
+out="$(docker compose exec -T -e TEAM_ID="${TEAM_ID:-1}" gaffer node --input-type=module - < tests/recommend.mjs 2>&1)" || { echo "$out" | tail -n 60; exit 1; }
+echo "$out" | grep -E "^(active tools|Solver:|--- /work/gaffer_lib|- \\[|rec_id|widest|validation:|chip scenarios:|/export-rec:|replay:|privacy:|skills offered:|M4 stack check passed)"
+# FR-OUT-01: the exported recommendation validates against the published JSON Schema with ajv (on the host).
+file="$(echo "$out" | sed -n 's/^EXPORT_FILE=//p')"
+docker compose exec -T gaffer cat "$file" > "${TMPDIR:-/tmp}/gaffer-verify-rec.json"
+(cd ../../packages/pi-gaffer && node scripts/check-schema.ts "${TMPDIR:-/tmp}/gaffer-verify-rec.json")
+

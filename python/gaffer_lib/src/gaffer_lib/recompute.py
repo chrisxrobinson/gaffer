@@ -83,9 +83,12 @@ def check_evidence(plan_doc, snap: Snapshot, derived: Mapping, prefs: Mapping) -
     if plan_doc.get("gaffer_lib") != __version__:
         out.append(_violation("PLAN_VERSION_MISMATCH", f"The plan file was made by gaffer_lib {plan_doc.get('gaffer_lib')}; this is {__version__}. {rerun}"))
     a, want = plan_doc.get("assumptions", {}), derived["assumptions"]
-    for k in ("free_transfers", "ft_source", "pending_transfers"):
-        if a.get(k) != want[k]:
-            out.append(_violation("PLAN_ASSUMPTIONS_MISMATCH", f"The plan file assumes {k} = {a.get(k)!r}, but the snapshot was taken with {want[k]!r} (the user's /team --ft and --pending). {rerun}"))
+    said = lambda x: f"--ft {x['free_transfers']}" if x.get("ft_source") == "user" else "no --ft (the count is derived)"  # noqa: E731
+    if (a.get("free_transfers"), a.get("ft_source")) != (want["free_transfers"], want["ft_source"]):
+        out.append(_violation("PLAN_ASSUMPTIONS_MISMATCH", f"The plan file was made with {said(a)}, but the snapshot was taken with {said(want)}: free_transfers = {a.get('free_transfers')!r}, not {want['free_transfers']!r}. "
+                              f"Only the user sets --ft, with /team; never add or drop it yourself. {rerun}"))
+    if a.get("pending_transfers") != want["pending_transfers"]:
+        out.append(_violation("PLAN_ASSUMPTIONS_MISMATCH", f"The plan file was made with pending transfers {a.get('pending_transfers')!r}, but the snapshot was taken with {want['pending_transfers']!r} (the user's /team --pending). {rerun}"))
     if plan_doc.get("prefs_resolved") != resolved_prefs(prefs):
         out.append(_violation("PLAN_PREFS_MISMATCH", f"The plan file wasn't made with the user's saved preferences ({resolved_prefs(prefs)}). Re-run the golden path with the --prefs file the fpl_snapshot summary names, and submit again."))
     return out

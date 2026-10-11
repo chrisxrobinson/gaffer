@@ -12,7 +12,7 @@ import { Type } from "typebox";
 import { dataDir } from "../../src/config.ts";
 import { describePrefs } from "../../src/prefs.ts";
 import { appendLedger, type GateError, MAX_ATTEMPTS, rejectionText, runGate } from "../../src/recommend.ts";
-import { failureLines, type Paint, recommendationLines, type SubmitFailure } from "../../src/render.ts";
+import { failureLines, type Paint, recommendationLines, type SubmitFailure, wrap } from "../../src/render.ts";
 import { sharedSandboxSession } from "../../src/sandbox.ts";
 import { Chip, type Recommendation, Risk, Submission } from "../../src/schema/recommendation.ts";
 import { fplState, latestCustom, type SnapshotEntry } from "../../src/session.ts";
@@ -28,6 +28,23 @@ const themed = (theme: Theme): Paint => ({
 	warn: (s) => theme.fg("warning", s),
 	bad: (s) => theme.fg("error", s),
 });
+
+/**
+ * Lines for a submit_recommendation result in the TUI. A rejected attempt has no details (Pi builds
+ * the error result), so anything that isn't a recommendation or a final failure is shown as its
+ * text; and nothing here may throw, because an exception in a renderer ends the Pi process.
+ */
+export function submitResultLines(result: { content?: unknown[]; details?: unknown }, width: number, paint: Paint): string[] {
+	const text = () => (result.content ?? []).flatMap((c) => (typeof (c as { text?: unknown }).text === "string" ? (c as { text: string }).text.split("\n") : [])).flatMap((l) => wrap(l, Math.max(20, width)));
+	try {
+		const d = result.details as Partial<{ recommendation: Recommendation }> & Partial<SubmitFailure> | undefined;
+		if (d?.recommendation) return recommendationLines(d.recommendation, width, paint);
+		if (d?.failed) return failureLines(d as SubmitFailure, width, paint);
+		return text().map((l) => paint.warn(l));
+	} catch (e) {
+		return [paint.bad(`(could not draw the recommendation: ${(e as Error).message}; the text follows)`), ...text()];
+	}
+}
 
 /** The snapshot the run used: the latest one for the session's team. */
 function runSnapshot(ctx: ExtensionContext): SnapshotEntry | undefined {
@@ -88,14 +105,7 @@ export default function gafferRecommend(pi: ExtensionAPI) {
 				return { content: [{ type: "text", text: failureLines(failure).join("\n") }], details: failure satisfies SubmitDetails, terminate: true };
 			},
 			renderResult(result, _options, theme) {
-				const d = result.details as SubmitDetails | undefined;
-				return {
-					invalidate() {},
-					render(width: number): string[] {
-						if (!d) return (result.content ?? []).flatMap((c) => ("text" in c ? String(c.text).split("\n") : []));
-						return "failed" in d ? failureLines(d, width, themed(theme)) : recommendationLines(d.recommendation, width, themed(theme));
-					},
-				};
+				return { invalidate() {}, render: (width: number) => submitResultLines(result, width, themed(theme)) };
 			},
 		}),
 	);
@@ -132,7 +142,7 @@ export default function gafferRecommend(pi: ExtensionAPI) {
 			}),
 			async execute(_id, params, _signal, _onUpdate, ctx) {
 				const saved = savePreferences(ctx, params);
-				return { content: [{ type: "text", text: `Preferences saved for this team:\n${describePrefs(saved.prefs)}\nFile (readable in the sandbox): ${saved.path}\nIf you already ran the golden path, run it again with --prefs ${saved.path} before submitting.` }], details: saved.prefs };
+				return { content: [{ type: "text", text: `Preferences saved for this team:\n${describePrefs(saved.prefs)}\nFile (readable in the sandbox): ${saved.path}\nThe golden path must be run with these preferences: use the command from the fpl_snapshot summary exactly, adding only \` --prefs ${saved.path}\` if it isn't already there (never add --ft or --pending yourself), then plan from the new /work/plan.json.` }], details: saved.prefs };
 			},
 		}),
 	);

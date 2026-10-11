@@ -438,7 +438,12 @@ def test_a_plan_file_from_other_inputs_is_refused(world, doc):
     assert codes(recompute(snap, sub, {**doc, "snapshot_id": "2026-27/6/other"})) == ["PLAN_SNAPSHOT_MISMATCH"]
     assert codes(recompute(snap, sub, {**doc, "gaffer_lib": "0.3.0"})) == ["PLAN_VERSION_MISMATCH"]
     out = recompute(snap, sub, doc, ft=1)  # the snapshot was taken with /team --ft 1; the plan was not
-    assert codes(out) == ["PLAN_ASSUMPTIONS_MISMATCH", "PLAN_ASSUMPTIONS_MISMATCH"] and "--ft" in out["errors"][0]["message"]
+    assert codes(out) == ["PLAN_ASSUMPTIONS_MISMATCH"]
+    assert "made with no --ft (the count is derived), but the snapshot was taken with --ft 1" in out["errors"][0]["message"]
+    # ... and the other way round: a model that adds --ft to the golden path on its own is refused.
+    out = recompute(snap, sub, {**doc, "assumptions": {**doc["assumptions"], "ft_source": "user"}})
+    assert codes(out) == ["PLAN_ASSUMPTIONS_MISMATCH"] and "made with --ft 3, but the snapshot was taken with no --ft" in out["errors"][0]["message"]
+    assert codes(recompute(snap, sub, {**doc, "assumptions": {**doc["assumptions"], "pending_transfers": [[1, 2]]}})) == ["PLAN_ASSUMPTIONS_MISMATCH"]
     tampered = copy.deepcopy(doc)
     pid = str(doc["plans"][0]["gws"][0]["captain"])
     tampered["players"][pid]["xp"][0] += 3.0

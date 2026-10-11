@@ -165,7 +165,11 @@ export function recommendationLines(rec: Recommendation, width: number = RENDER_
 	L.push("");
 	wrap(`Confidence ${rec.confidence.overall}${rec.confidence.drivers.length ? `: ${rec.confidence.drivers.join("; ")}` : ""}`, W).forEach((line) => L.push(paint.dim(line)));
 	const v = rec.validation;
-	const drift = v.numbers_checked ? `the model's ${v.numbers_checked} figures were within ${v.max_model_number_drift.toFixed(1)} of them` : "the model quoted no figures";
+	const drift = !v.numbers_checked
+		? "the model quoted no figures"
+		: v.drift.length
+			? `${v.drift.length} of the model's ${v.numbers_checked} figures were wrong and were corrected (largest gap ${v.max_model_number_drift.toFixed(1)})`
+			: `the model's ${v.numbers_checked} figures were within ${v.max_model_number_drift.toFixed(1)} of them`;
 	wrap(`Validated against the rules and recomputed by gaffer_lib ${rec.gaffer_lib}; ${drift}. ${rec.rec_id} · /export-rec saves the JSON.`, W).forEach((line) => L.push(paint.dim(line)));
 	return L;
 }

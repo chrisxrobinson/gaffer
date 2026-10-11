@@ -13,7 +13,7 @@ The code does the arithmetic and enforces the rules. You choose between the opti
 
 ## 2. Golden path
 
-Run that command exactly as given (it already carries the user's `--ft`, `--pending` and `--prefs`). It takes up to a minute and writes `/work/plan.json`. Its printed summary has up to 3 plans, chip scenarios, captain candidates, the confidence and the warnings.
+Run that command exactly as given. It already carries the user's `--ft`, `--pending` and `--prefs`; never add, change or drop `--ft` or `--pending` yourself, even when the summary shows a free-transfer count (only the user sets those, with `/team`, and a plan made with different ones is refused). The only things you may append are ` --xmins /work/xmins.json` (team news) and, after `set_preferences`, ` --prefs <the file it names>`. It takes up to a minute and writes `/work/plan.json`. Its printed summary has up to 3 plans, chip scenarios, captain candidates, the confidence and the warnings.
 
 Reading `plan.json` (Python, in the sandbox):
 - `plans[k]`: `transfers` (this GW, with `xp_gain_4gw` and `xp_gain_6gw_decayed`), `gws[0..5]` (per GW: `transfers`, `chip`, `xi`, `bench`, `captain`, `vice_captain`, `expected_points`), `objective_vs_best`, `validation`.

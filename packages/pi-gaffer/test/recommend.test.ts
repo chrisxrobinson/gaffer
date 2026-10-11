@@ -8,7 +8,8 @@ import { join, resolve } from "node:path";
 import { type FauxResponseStep, fauxAssistantMessage, fauxText, fauxToolCall } from "@earendil-works/pi-ai";
 import Ajv2020 from "ajv/dist/2020.js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { failureLines, recommendationLines } from "../src/render.ts";
+import { submitResultLines } from "../extensions/gaffer-recommend/index.ts";
+import { failureLines, PLAIN, recommendationLines } from "../src/render.ts";
 import { findRun, replay } from "../src/replay.ts";
 import { ComposeSandboxProvider, SandboxSession } from "../src/sandbox.ts";
 import type { Recommendation } from "../src/schema/recommendation.ts";
@@ -268,7 +269,7 @@ describe("submit_recommendation (ADR 0003: the single enforcement point)", () =>
 		g2.session.dispose();
 		// The snapshot was taken with /team --ft 1; a plan file made without it is refused.
 		const g3 = await run([submit(submission(doc, planFile)), fauxAssistantMessage(fauxText("ok"))], { ft: 1 });
-		expect(g3.toolResults[0].text).toMatch(/\[PLAN_ASSUMPTIONS_MISMATCH\].*free_transfers = 3.*taken with 1/);
+		expect(g3.toolResults[0].text).toMatch(/\[PLAN_ASSUMPTIONS_MISMATCH\] The plan file was made with no --ft \(the count is derived\), but the snapshot was taken with --ft 1/);
 		g3.session.dispose();
 	}, 90_000);
 });
@@ -504,6 +505,26 @@ describe("the rendered recommendation (FR-OUT-02)", () => {
 		expect(text).toContain("Derived FT count — confirm in app");
 		expect(text).toMatch(/SUMMARY\n {2}Make the three moves/);
 		expect(text).toContain(rec.rec_id);
+		g.session.dispose();
+	}, 60_000);
+
+	it("a rejected attempt, a final failure and a malformed result all render without throwing (a renderer exception ends Pi)", async () => {
+		const bad = submission(doc, planFile);
+		bad.vice_captain = { id: bad.captain.id };
+		const g = await run([submit(bad), submit(bad), submit(bad), never]);
+		const messages = g.sessionEntries().filter((e) => e.type === "message" && e.message.role === "toolResult").map((e) => e.message);
+		expect(messages).toHaveLength(3);
+		// What Pi hands the renderer for a rejected attempt: the error text and empty details.
+		expect(messages[0].details).toEqual({});
+		const rejected = submitResultLines(messages[0], 100, PLAIN);
+		expect(rejected[0]).toMatch(/^Recommendation rejected \(attempt 1 of 3\)/);
+		expect(rejected.join("\n")).toContain("[CAPTAIN_IS_VICE]");
+		expect(submitResultLines(messages[2], 100, PLAIN)[0]).toBe("GAFFER · no recommendation");
+		for (const odd of [{}, { content: [] }, { details: null }, { details: { recommendation: { gw: 7 } }, content: [{ type: "text", text: "fallback" }] }, { content: [{ type: "image" }], details: 5 }]) {
+			expect(() => submitResultLines(odd as never, 100, PLAIN)).not.toThrow();
+		}
+		expect(submitResultLines({ details: { recommendation: { gw: 7 } }, content: [{ type: "text", text: "fallback" }] } as never, 100, PLAIN).join("\n")).toMatch(/could not draw the recommendation[\s\S]*fallback/);
+		expect(Math.max(...rejected.map(width))).toBeLessThanOrEqual(100);
 		g.session.dispose();
 	}, 60_000);
 
