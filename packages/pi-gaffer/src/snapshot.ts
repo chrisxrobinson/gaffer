@@ -125,8 +125,12 @@ export interface SnapshotDetails {
 	chips: ChipState[];
 	flags: DatasetFlags;
 	finalise_transfers: { allowed: boolean; reason?: string };
-	/** The odds source (FR-DAT-09): whether it was asked for, and whether next-round odds are in the snapshot. */
-	odds: { requested: boolean; available: boolean; fixtures: number; reason: string | null };
+	/**
+	 * The odds source (FR-DAT-09): whether it was asked for and reachable, how many of the next GW's
+	 * Premier League fixtures it prices (`fixtures`), and how many it lists in all (`listed`):
+	 * between rounds the source's file still holds the round being played.
+	 */
+	odds: { requested: boolean; available: boolean; fixtures: number; listed?: number; reason: string | null };
 	/** Finished GWs whose per-player stats are in the snapshot (`live-<gw>.json`). */
 	recent_gws: number[];
 	/** The official ep_next recorded by this snapshot (FR-DAT-10). */
@@ -348,7 +352,7 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 	}
 
 	const details = summarise({
-		odds: { requested: oddsRequested, available: odds?.available ?? false, fixtures: odds?.fixtures.length ?? 0, reason: odds?.reason ?? null },
+		odds: { requested: oddsRequested, available: odds?.available ?? false, fixtures: nextRoundOddsFixtures(odds, deadlineMs ?? now()), listed: odds?.fixtures.length ?? 0, reason: odds?.reason ?? null },
 		recentGws,
 		epNext: { gw: nextEv?.id ?? null, players: epPlayers, before_deadline: beforeDeadline },
 		runCommand: runCommand(written.dir, { ...params, hold: !finalise.allowed }),
@@ -368,6 +372,20 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 		nextEv,
 	});
 	return { text: render(details, now()), details };
+}
+
+/**
+ * How many of the odds file's fixtures belong to the next GW: those kicking off after its deadline
+ * (dates are dd/mm/yyyy, UK time; two hours' grace). Between rounds the source's file still holds
+ * the round being played, which must not be reported as odds for the next one.
+ */
+export function nextRoundOddsFixtures(odds: OddsFile | undefined, deadline: number): number {
+	return (odds?.fixtures ?? []).filter((f) => {
+		const [d, m, y] = f.date.split("/").map(Number);
+		const [hh, mm] = (f.time ?? "12:00").split(":").map(Number);
+		const kickoff = Date.UTC(y < 100 ? y + 2000 : y, m - 1, d, hh || 0, mm || 0);
+		return !Number.isFinite(kickoff) || kickoff > deadline - 2 * 3_600_000;
+	}).length;
 }
 
 /** Index key of the snapshot that recorded a GW's official ep_next before its deadline (FR-DAT-10). */
@@ -577,7 +595,9 @@ export function render(d: SnapshotDetails, now: number): string {
 			d.odds.available
 				? d.odds.fixtures > 0
 					? `Odds (football-data.co.uk): ${d.odds.fixtures} Premier League fixture(s) priced.`
-					: "Odds (football-data.co.uk): no Premier League fixtures are listed yet, so team strength will come from Dixon-Coles."
+					: d.odds.listed
+						? `Odds (football-data.co.uk): the source still lists an earlier round (${d.odds.listed} fixture(s)); nothing is priced for GW${d.gw.next ?? "?"} yet, so team strength will come from Dixon-Coles.`
+						: "Odds (football-data.co.uk): no Premier League fixtures are listed yet, so team strength will come from Dixon-Coles."
 				: `Odds: unavailable (${d.odds.reason}); team strength will come from Dixon-Coles.`,
 		);
 	} else {

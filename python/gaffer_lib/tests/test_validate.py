@@ -166,3 +166,79 @@ def test_cli_derive_and_validate():
     assert r.returncode == 2 and "no player called" in json.loads(r.stdout)["error"]
     r = run_cli("derive", "--snapshot", "/nonexistent")
     assert r.returncode == 2
+
+
+# --- PROPOSED, NOT BUILT: a squad that already holds four from one club -------------------------------
+#
+# FR-RUL-02 as built rejects any squad with more than `squad_team_limit` players from a club. FPL
+# lets a manager keep a fourth player who joined that club in real life; only *adding* to the club
+# is barred. Today `validate` therefore fails every plan for such a manager, and so would the
+# submit gate. The change proposed in BUILD.md (M4, "Blocked on you") is: CLUB_LIMIT applies to a GW
+# only if that GW's transfers bring a player in from a club that is over the limit afterwards.
+# These tests state that behaviour. They are expected to fail until the change is approved and made
+# (strict: they will fail the suite, as a reminder to remove the marker, once it is).
+
+import shutil  # noqa: E402
+
+import pytest  # noqa: E402
+
+proposed = pytest.mark.xfail(strict=True, reason="proposed FR-RUL-02 change (four from one club after a real-life move): awaiting a decision")
+
+
+@pytest.fixture
+def four_from_one_club(tmp_path):
+    """The frozen snapshot, with one squad player moved in real life to a club the squad has three of."""
+    clubs = Counter(ELS[p]["team"] for p in SQUAD)
+    club = next(c for c, n in clubs.items() if n == 3)
+    mover = next(p for p in SQUAD if ELS[p]["team"] != club and clubs[ELS[p]["team"]] == 1)
+    dst = tmp_path / "snap"
+    shutil.copytree(DATA / "snapshot-entry-1", dst)
+    b = json.loads((dst / "bootstrap-static.json").read_text())
+    next(e for e in b["elements"] if e["id"] == mover)["team"] = club
+    (dst / "bootstrap-static.json").write_text(json.dumps(b))
+    return Snapshot(dst), club, mover
+
+
+def test_today_such_a_squad_fails_every_plan(four_from_one_club):
+    """The behaviour as built, so the proposal's effect is visible: holding is already 'illegal'."""
+    snap, _, _ = four_from_one_club
+    assert "CLUB_LIMIT" in codes(validate(snap, {"transfers": []}))
+
+
+@proposed
+def test_proposed_holding_four_after_a_real_life_move_is_legal(four_from_one_club):
+    snap, _, _ = four_from_one_club
+    xi, bench = xi_bench()
+    assert validate(snap, {"transfers": [], "xi": xi, "bench": bench})["valid"]
+
+
+@proposed
+def test_proposed_a_transfer_elsewhere_is_legal(four_from_one_club):
+    snap, club, _ = four_from_one_club
+    out = next(p for p in SQUAD if ELS[p]["team"] != club)
+    res = validate(snap, {"transfers": [{"out": out, "in": replacement(out)["id"]}]})
+    assert "CLUB_LIMIT" not in codes(res)
+
+
+def test_proposed_adding_to_the_club_stays_illegal(four_from_one_club):
+    """A fifth player from the club, or swapping one of the four for another from it, is refused
+    (this already holds, and must still hold after the change)."""
+    snap, club, _ = four_from_one_club
+    els = {e["id"]: e for e in snap.bootstrap["elements"]}
+    squad_club = [p for p in SQUAD if els[p]["team"] == club]
+    outsider = next(p for p in SQUAD if els[p]["team"] != club)
+    fifth = next(e for e in els.values() if e["team"] == club and e["id"] not in SQUAD and e["element_type"] == els[outsider]["element_type"])
+    assert "CLUB_LIMIT" in codes(validate(snap, {"transfers": [{"out": outsider, "in": fifth["id"]}]}))
+    one = squad_club[0]
+    like = next(e for e in els.values() if e["team"] == club and e["id"] not in SQUAD and e["element_type"] == els[one]["element_type"])
+    assert "CLUB_LIMIT" in codes(validate(snap, {"transfers": [{"out": one, "in": like["id"]}]}))
+
+
+def test_selling_one_of_the_four_is_legal_already(four_from_one_club):
+    """The one move such a manager can make today: selling down to three."""
+    snap, club, _ = four_from_one_club
+    els = {e["id"]: e for e in snap.bootstrap["elements"]}
+    one = next(p for p in SQUAD if els[p]["team"] == club)
+    clubs = Counter(els[p]["team"] for p in SQUAD if p != one)
+    new = min((e for e in els.values() if e["element_type"] == els[one]["element_type"] and e["id"] not in SQUAD and e["team"] != club and clubs[e["team"]] < 3), key=lambda e: e["now_cost"])
+    assert "CLUB_LIMIT" not in codes(validate(snap, {"transfers": [{"out": one, "in": new["id"]}]}))

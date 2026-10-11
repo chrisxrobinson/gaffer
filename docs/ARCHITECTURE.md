@@ -124,7 +124,7 @@ In the image, Pi is installed globally (pinned). The Gaffer package is installed
 
 ```
 ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s gaffer \
-  sh -c 'cd /work && pi --session-dir /sessions --no-context-files --continue \
+  sh -c 'cd /work && pi --session-dir /sessions --no-context-files --continue --tui-mode fullscreen \
      --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
      --provider "$GAFFER_PROVIDER" --model "$GAFFER_MODEL" --thinking "$GAFFER_THINKING"'
 ```
@@ -391,6 +391,7 @@ The full decision is in [ADR 0005](decisions/0005-web-tui.md).
 - **Approach (MVP):** the browser runs xterm.js served by **ttyd**, which runs `tmux new -A -s gaffer pi …` in the `gaffer` container. The UI **is** the Pi CLI, so it looks and behaves exactly like Pi, including the Gaffer theme, slash commands and tool renderers.
 - **Connection:** a WebSocket from the browser to ttyd. Locally the port is published on the host's `127.0.0.1` only, and inside the container ttyd listens only on the egress-network interface (never the sandbox network); in the cloud it sits behind ALB/OIDC in the cloud (`-H` auth-proxy header, idle timeout 3600 s).
 - **Streaming:** native. Pi's TUI renders token deltas and tool progress, and ttyd relays the PTY bytes.
+- **Scrolling:** Pi runs in its fullscreen mode and scrolls its own transcript (wheel, PageUp/PageDown, Home/End). Its regular mode relies on terminal scrollback, which tmux doesn't relay completely to the browser (ADR 0005).
 - **Reconnects:** tmux keeps the Pi process and any in-flight run alive, so a reload re-attaches (`new -A`). If the container restarts, `pi --continue` resumes from the JSONL session. The tmux prefix and bindings are removed.
 - **Hardening:** single client (`-m 1`), user `!` shell blocked, tool allowlist, and nothing sensitive in the harness beyond the LLM key.
 - **Phase 3:** a `gaffer-web` bridge over `pi --mode rpc` with an allowlist of RPC commands, per-user processes and sandboxes, and terminal-styled HTML. It renders recommendations from tool `details` (already present), with CSV/JSON export. Reconnects use `get_state`/`get_messages` and respawn with `--session-id`.
