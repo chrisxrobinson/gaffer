@@ -3,7 +3,8 @@
 The harness reaches the no-network sandbox only through this small HTTP API on an internal network:
 
   GET  /healthz                     -> {"ok": true, ...}
-  POST /exec {command, cwd, timeout_s} -> NDJSON stream: {"data": <base64>} ... then {"exit": n} or {"exit": null, "timed_out": true}
+  POST /exec {command, cwd, timeout_s, stdin?} -> NDJSON stream: {"data": <base64>} ... then {"exit": n} or {"exit": null, "timed_out": true}
+                                       (`stdin`: text given to the command on standard input; never a named file in the work dir)
   GET  /files?path=/abs              -> file bytes
   PUT  /files?path=/abs  (body)      -> 204 (parents created)
   GET  /access?path=/abs&mode=r|rw   -> 204 / 404 / 403
@@ -24,6 +25,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -159,10 +161,13 @@ class Handler(BaseHTTPRequestHandler):
         timeout = min(float(req.get("timeout_s") or MAX_TIMEOUT_S), MAX_TIMEOUT_S)
         if not os.path.isdir(cwd):
             return self.error(400, f"cwd {cwd} is not a directory")
+        stdin = req.get("stdin")
+        if stdin is not None and not isinstance(stdin, str):
+            return self.error(400, "stdin must be a string")
         os.makedirs(command_env()["TMPDIR"], exist_ok=True)
-        self.exec_stream(command, cwd, timeout)
+        self.exec_stream(command, cwd, timeout, stdin)
 
-    def exec_stream(self, command, cwd, timeout):
+    def exec_stream(self, command, cwd, timeout, stdin=None):
         # Start every helper thread before the command runs: once it forks, threads may be unavailable.
         state = {"proc": None}
         timed_out = threading.Event()
@@ -197,6 +202,13 @@ class Handler(BaseHTTPRequestHandler):
                     kill_group()
                     return
 
+        # Standard input comes from an unlinked temp file: it has no name, so nothing else running
+        # in the work dir can replace what the caller sent (the gate's input, ADR 0003).
+        stdin_file = subprocess.DEVNULL
+        if stdin is not None:
+            stdin_file = tempfile.TemporaryFile(dir=command_env()["TMPDIR"])
+            stdin_file.write(stdin.encode())
+            stdin_file.seek(0)
         timer = threading.Timer(timeout, on_timeout)
         timer.start()
         threading.Thread(target=watch_client, daemon=True).start()
@@ -204,7 +216,7 @@ class Handler(BaseHTTPRequestHandler):
             ["/bin/bash", "-c", f"ulimit -u {MAX_PROCS}\n{command}" if MAX_PROCS else command],
             cwd=cwd,
             env=command_env(),
-            stdin=subprocess.DEVNULL,
+            stdin=stdin_file,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             start_new_session=True,
@@ -241,6 +253,8 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             done.set()
             timer.cancel()
+            if stdin is not None:
+                stdin_file.close()
             proc.stdout.close()
             if proc.poll() is None:
                 kill_group()

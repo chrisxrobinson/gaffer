@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import itertools
 import math
 import os
 import sys
@@ -155,6 +156,60 @@ def best_xi(squad: Sequence[int], xp: Mapping[int, float], element_type: Mapping
     return xi, bench
 
 
+def autosub_value(xi: Sequence[int], bench: Sequence[int], xp: Mapping[int, float], p_play: Mapping[int, float], element_type: Mapping[int, int], rules: R.Rules) -> float:
+    """Expected points the bench adds through automatic substitutions, for this bench order.
+
+    The simulator is `rules.automatic_subs` (the one tested against real FPL records), run over
+    every combination of who plays: each player plays independently with probability `p_play`,
+    and one who plays scores his xP divided by that probability. The goalkeepers are separate
+    from the outfield (a goalkeeper is only ever replaced by the bench goalkeeper), so the
+    outfield is enumerated exactly: 2^(10 starters + 3 on the bench) cases.
+    """
+    gk = next(t for t, n in rules.positions.items() if n == "GKP")
+    cond = {p: (xp.get(p, 0.0) / p_play[p] if p_play.get(p, 0.0) > 0 else 0.0) for p in list(xi) + list(bench)}
+    pp = lambda p: min(max(p_play.get(p, 0.0), 0.0), 1.0)  # noqa: E731
+    total = 0.0
+    for g in (p for p in xi if element_type[p] == gk):
+        for b in (p for p in bench if element_type[p] == gk):
+            total += (1 - pp(g)) * pp(b) * cond[b]
+    starters = [p for p in xi if element_type[p] != gk]
+    subs = [p for p in bench if element_type[p] != gk]
+    picks = [R.Pick(p, i + 1, element_type[p]) for i, p in enumerate(xi)] + [R.Pick(p, len(xi) + 1 + i, element_type[p]) for i, p in enumerate(bench)]
+    risky = [p for p in starters if pp(p) < 1.0]
+    # Cases grouped by which bench players play; for each, every set of absent starters.
+    for mask_b in range(1, 1 << len(subs)):
+        on = {p for i, p in enumerate(subs) if mask_b >> i & 1}
+        pb = 1.0
+        for p in subs:
+            pb *= pp(p) if p in on else 1 - pp(p)
+        if pb == 0.0:
+            continue
+        for mask_a in range(1, 1 << len(risky)):
+            absent = {p for i, p in enumerate(risky) if mask_a >> i & 1}
+            pa = pb
+            for p in risky:
+                pa *= 1 - pp(p) if p in absent else pp(p)
+            if pa < 1e-12:
+                continue
+            came_on = R.automatic_subs(picks, lambda e: e not in absent and (e in on or e not in subs), rules)  # noqa: B023
+            total += pa * sum(cond[i] for _, i in came_on)
+    return total
+
+
+def order_bench(xi: Sequence[int], bench: Sequence[int], xp: Mapping[int, float], p_play: Mapping[int, float], element_type: Mapping[int, int], rules: R.Rules) -> list[int]:
+    """The bench in FPL's order (goalkeeper first), with the outfield players in the order that the
+    auto-sub simulator values most (FR-REC-03). Ties keep the higher xP, then the lower id, first."""
+    gk = next(t for t, n in rules.positions.items() if n == "GKP")
+    keepers = [p for p in bench if element_type[p] == gk]
+    outfield = sorted((p for p in bench if element_type[p] != gk), key=lambda p: (-xp.get(p, 0.0), p))
+    best, best_value = outfield, None
+    for perm in itertools.permutations(outfield):
+        value = autosub_value(xi, keepers + list(perm), xp, p_play, element_type, rules)
+        if best_value is None or value > best_value + 1e-9:
+            best, best_value = list(perm), value
+    return keepers + best
+
+
 def thread_state(steps: Sequence[Mapping], inputs: ModelInputs, state: TeamState) -> list[dict]:
     """Free transfers, hits, bank and squad per step, threaded from `state` (which already has any
     pending transfers applied, so the hits here are those of the plan's own transfers)."""
@@ -175,7 +230,26 @@ def thread_state(steps: Sequence[Mapping], inputs: ModelInputs, state: TeamState
         ft = R.next_free_transfers(ft, n, chip, inputs.rules)
         if chip == "freehit":
             squad, sell, bank = before
+        out[-1]["next_squad"] = list(squad)
     return out
+
+
+def expected_points(step: Mapping, proj: Projection) -> float:
+    """A GW's expected points before hits: the XI plus the captain again (twice more under Triple
+    Captain); under Bench Boost all 15 score."""
+    gw, chip = step["gw"], step.get("chip")
+    x = lambda p: proj.xp[p][gw]  # noqa: E731
+    players = list(step["xi"]) + (list(step["bench"]) if chip == "bboost" else [])
+    return sum(x(p) for p in players) + x(step["captain"]) * (2 if chip == "3xc" else 1)
+
+
+def hold_step(squad: Sequence[int], gw: int, inputs: ModelInputs, proj: Projection) -> dict:
+    """No transfers in `gw`: the best XI from `squad`, captain and vice by xP."""
+    et = {p: inputs.players[p].element_type for p in squad}
+    xp = {p: proj.xp[p][gw] for p in squad}
+    xi, bench = best_xi(squad, xp, et, inputs.rules)
+    ranked = sorted(xi, key=lambda p: (-xp[p], p))
+    return {"gw": gw, "transfers": [], "chip": None, "xi": xi, "bench": bench, "captain": ranked[0], "vice_captain": ranked[1]}
 
 
 def score(steps: Sequence[Mapping], inputs: ModelInputs, proj: Projection, state: TeamState, *, decay: float = DECAY) -> float:
@@ -574,6 +648,8 @@ def chip_scenarios(
             "delta_xp_gw": round(step["expected_points"] - step["hit_cost"] - base_points[gw], 2),
             "delta_xp_horizon": round(total, 2),
             "transfers": len(step["transfers"]), "pool": "base plan players" if only is not None else "full", "solver": plan.info.as_dict(),
+            # The scenario's own plan, so the gate can check it and recompute these numbers (FR-REC-07).
+            "gws": plan.steps,
         })
     return out
 
@@ -582,19 +658,20 @@ def chip_scenarios(
 # Confidence (ARCHITECTURE §2.4): computed by rules, never asserted
 
 
-def confidence(plans: Sequence[Plan], proj: Projection, *, stale: bool) -> dict:
-    best = plans[0]
-    step = best.steps[0]
-    gw = step["gw"]
+def confidence_rules(
+    *, margin: float | None, xi_p_start: Sequence[float], recommended_p_start: Sequence[float], stale: bool, fallback: bool = False,
+    timed_out: bool = False, gap: float | None = None, next_best_timed_out: bool = False,
+) -> dict:
+    """ARCHITECTURE §2.4. high: margin over the next-best plan >= 2 xP, every XI player's P(start)
+    >= 0.85 and a fresh snapshot. low: a stale snapshot, a margin under 0.5, a recommended player
+    (a transfer in, or the captain) with P(start) < 0.7, or no solver plan. medium: everything else.
+    A solve that stopped at its time limit caps the level at medium (NFR-REL-02)."""
     drivers: list[str] = []
-    margin = None
-    if len(plans) > 1 and best.objective is not None and plans[1].objective is not None:
-        margin = best.objective - plans[1].objective
+    if margin is not None:
         drivers.append(f"top-2 plan gap {margin:.1f} xP")
-    low_start = [p for p in step["xi"] if proj.p_start[p][gw] < 0.7]
-    recommended = [t["in"] for t in step["transfers"]] + [step["captain"]]
-    risky = [p for p in recommended if proj.p_start[p][gw] < 0.7]
-    shaky = [p for p in step["xi"] if proj.p_start[p][gw] < 0.85]
+    low_start = [p for p in xi_p_start if p < 0.7]
+    risky = [p for p in recommended_p_start if p < 0.7]
+    shaky = [p for p in xi_p_start if p < 0.85]
     level = "medium"
     if margin is not None and margin >= 2.0 and not shaky and not stale:
         level = "high"
@@ -606,16 +683,31 @@ def confidence(plans: Sequence[Plan], proj: Projection, *, stale: bool) -> dict:
     if risky:
         level = "low"
         drivers.append(f"{len(risky)} recommended player(s) with P(start) < 0.7")
-    if best.fallback:
+    if fallback:
         level = "low"
         drivers.append("no solver plan: holding")
     if shaky:
         drivers.append(f"minutes uncertainty: {len(shaky)} of the XI with P(start) < 0.85 ({len(low_start)} below 0.7)")
-    if best.info.timed_out and not best.fallback:
+    if timed_out and not fallback:
         if level == "high":
             level = "medium"
-        drivers.append(f"solver stopped at its time limit (gap {100 * (best.info.gap or 0):.2f}%)")
-    elif level == "high" and any(p.info.timed_out for p in plans[1:2]):
+        drivers.append(f"solver stopped at its time limit (gap {100 * (gap or 0):.2f}%)")
+    elif level == "high" and next_best_timed_out:
         level = "medium"
         drivers.append("the next-best plan wasn't solved to optimality, so the margin may be overstated")
     return {"overall": level, "drivers": drivers, "margin": None if margin is None else round(margin, 2)}
+
+
+def confidence(plans: Sequence[Plan], proj: Projection, *, stale: bool) -> dict:
+    best = plans[0]
+    step = best.steps[0]
+    gw = step["gw"]
+    margin = None
+    if len(plans) > 1 and best.objective is not None and plans[1].objective is not None:
+        margin = best.objective - plans[1].objective
+    return confidence_rules(
+        margin=margin, xi_p_start=[proj.p_start[p][gw] for p in step["xi"]],
+        recommended_p_start=[proj.p_start[p][gw] for p in [t["in"] for t in step["transfers"]] + [step["captain"]]],
+        stale=stale, fallback=best.fallback, timed_out=best.info.timed_out, gap=best.info.gap,
+        next_best_timed_out=any(p.info.timed_out for p in plans[1:2]),
+    )

@@ -303,7 +303,7 @@ def test_run_golden_path_end_to_end(tmp_path, capsys):
     text = capsys.readouterr().out
     assert code == 0
     doc = json.loads(out.read_text())
-    assert doc["schema"] == "gaffer.plan/1" and doc["gaffer_lib"] == "0.3.0" and doc["gw"] == 6
+    assert doc["schema"] == "gaffer.plan/1" and doc["gaffer_lib"] == "0.4.0" and doc["gw"] == 6
     assert doc["solver"]["commit"] == P.SOLVER_COMMIT and doc["solver"]["gap"] is not None
     assert 1 <= len(doc["plans"]) <= 3
     for p in doc["plans"]:
@@ -401,3 +401,79 @@ def test_thread_state_counts_hits_and_reverts_a_free_hit(world):
     assert [t["free_transfers"] for t in th] == [1, 1, 1]
     assert [t["hits"] for t in th] == [1, 0, 0]
     assert th[1]["bank"] == th[0]["bank"] and th[2]["squad"] == th[0]["squad"]
+
+
+# --- bench order by the auto-sub simulator (FR-REC-03) -----------------------------------------------
+
+
+def _bench_case(inputs):
+    """A 3-4-3 XI and a bench of GK, DEF, MID, FWD from the real rules, as synthetic players."""
+    et = {1: 1, 2: 2, 3: 2, 4: 2, 5: 3, 6: 3, 7: 3, 8: 3, 9: 4, 10: 4, 11: 4, 12: 1, 13: 2, 14: 3, 15: 4}
+    xi, bench = list(range(1, 12)), [12, 13, 14, 15]
+    xp = {p: 4.0 for p in xi} | {12: 1.0, 13: 2.0, 14: 2.0, 15: 2.0}
+    pp = {p: 1.0 for p in et}
+    return xi, bench, xp, pp, et, inputs.rules
+
+
+def test_autosub_value_by_hand(world):
+    _, inputs, _ = world
+    xi, bench, xp, pp, et, rules = _bench_case(inputs)
+    assert P.autosub_value(xi, bench, xp, pp, et, rules) == 0.0  # everyone plays: nobody comes on
+    pp[5] = 0.5  # a midfielder misses half the time; the first outfield sub (xP 2.0, always plays) replaces him
+    assert P.autosub_value(xi, bench, xp, pp, et, rules) == pytest.approx(0.5 * 2.0)
+    pp[1] = 0.8  # and the goalkeeper misses 1 in 5: the bench goalkeeper's 1.0 comes on
+    assert P.autosub_value(xi, bench, xp, pp, et, rules) == pytest.approx(0.5 * 2.0 + 0.2 * 1.0)
+    pp[13] = 0.5  # the first sub only plays half the time (so he scores 4.0 when he does); else the next one comes on
+    assert P.autosub_value(xi, bench, xp, pp, et, rules) == pytest.approx(0.5 * (0.5 * 4.0 + 0.5 * 2.0) + 0.2 * 1.0)
+
+
+def test_bench_order_is_not_simply_xp_order(world):
+    """A doubt who scores well when he plays goes first: if he is absent the next man still comes on.
+    Ordered by xP alone he would be last and his points lost."""
+    _, inputs, _ = world
+    xi, bench, xp, pp, et, rules = _bench_case(inputs)
+    for p in xi:
+        pp[p] = 0.9
+    xp.update({13: 1.5, 14: 1.9, 15: 1.0})
+    pp.update({13: 0.3, 14: 1.0, 15: 1.0})  # player 13: xP 1.5 but 5.0 when he plays
+    by_xp = [12] + sorted([13, 14, 15], key=lambda p: -xp[p])
+    best = P.order_bench(xi, [12, 15, 14, 13], xp, pp, et, rules)
+    assert best[0] == 12 and best[1] == 13 and by_xp[1] == 14
+    assert P.autosub_value(xi, best, xp, pp, et, rules) > P.autosub_value(xi, by_xp, xp, pp, et, rules) + 0.1
+    for perm in ([13, 14, 15], [14, 13, 15], [15, 14, 13], [14, 15, 13], [13, 15, 14], [15, 13, 14]):
+        assert P.autosub_value(xi, [12, *perm], xp, pp, et, rules) <= P.autosub_value(xi, best, xp, pp, et, rules) + 1e-9
+
+
+def test_bench_order_respects_the_formation(world):
+    """With three defenders in the XI, only the bench defender can replace one, wherever he sits:
+    the simulator skips a midfielder who would break the formation, so his place in the order adds
+    nothing, and the tie goes to the higher xP."""
+    _, inputs, _ = world
+    xi, bench, xp, pp, et, rules = _bench_case(inputs)
+    pp[2] = 0.4  # a starting defender is likely to miss out
+    xp.update({13: 2.0, 14: 2.4, 15: 0.5})
+    assert P.autosub_value(xi, [12, 14, 13, 15], xp, pp, et, rules) == pytest.approx(0.6 * 2.0)
+    assert P.autosub_value(xi, [12, 13, 14, 15], xp, pp, et, rules) == pytest.approx(0.6 * 2.0)
+    assert P.order_bench(xi, bench, xp, pp, et, rules) == [12, 14, 13, 15]
+    # When a midfielder is the doubt, either can replace him, and the order decides who does.
+    pp[2], pp[5] = 1.0, 0.4
+    assert P.autosub_value(xi, [12, 14, 13, 15], xp, pp, et, rules) == pytest.approx(0.6 * 2.4)
+    assert P.autosub_value(xi, [12, 13, 14, 15], xp, pp, et, rules) == pytest.approx(0.6 * 2.0)
+    assert P.order_bench(xi, bench, xp, pp, et, rules)[:2] == [12, 14]
+
+
+def test_autosub_value_matches_a_simulation(world):
+    """The exact enumeration against a seeded Monte Carlo run of rules.automatic_subs on the real squad."""
+    snap, inputs, proj = world
+    _, st = state_for(snap, inputs)
+    et = {p: inputs.players[p].element_type for p in st.squad}
+    xp = {p: proj.xp[p][6] for p in st.squad}
+    pp = {p: proj.p_play[p][6] for p in st.squad}
+    xi, bench = P.best_xi(st.squad, xp, et, inputs.rules)
+    picks = [P.R.Pick(p, i + 1, et[p]) for i, p in enumerate(xi + bench)]
+    rng, total, n = random.Random(7), 0.0, 40000
+    for _ in range(n):
+        played = {p for p in st.squad if rng.random() < pp[p]}
+        total += sum(xp[i] / pp[i] for _, i in P.R.automatic_subs(picks, lambda e: e in played, inputs.rules))  # noqa: B023
+    assert P.autosub_value(xi, bench, xp, pp, et, inputs.rules) == pytest.approx(total / n, rel=0.05)
+    assert all(0.0 <= v <= 1.0 for v in pp.values())

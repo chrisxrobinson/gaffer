@@ -101,6 +101,17 @@ def test_exec_timeout_kills_the_process_group(sandboxd):
     assert "never" not in out
 
 
+def test_exec_passes_stdin_without_a_file_in_the_work_dir(sandboxd):
+    base, _ = sandboxd
+    text = '{"quote": "it\'s <<EOF $(rm -rf /) héllo"}\n'
+    out, end = run(base, "cat; ls -A | grep -v '^.tmp$' | wc -l; ls -A .tmp | wc -l", stdin=text)
+    assert out.startswith(text)
+    assert out[len(text):].split() == ["0", "0"]  # nothing named in the work dir or its temp dir
+    assert end == {"exit": 0}
+    status, _ = call(base, "POST", "/exec", {"command": "cat", "stdin": 5})
+    assert status == 400
+
+
 def test_exec_rejects_missing_command(sandboxd):
     base, _ = sandboxd
     status, _ = call(base, "POST", "/exec", {"cwd": "/"}, {"content-type": "application/json"})
