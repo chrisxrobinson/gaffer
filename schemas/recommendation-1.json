@@ -1,0 +1,1001 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "rec_id",
+    "created_at",
+    "season",
+    "gw",
+    "deadline",
+    "team_id_hash",
+    "model",
+    "gaffer_lib",
+    "pi",
+    "snapshot",
+    "assumptions",
+    "preferences",
+    "transfers",
+    "hits",
+    "hit_cost",
+    "net_xp_gain_4gw",
+    "captain",
+    "vice_captain",
+    "starting_xi",
+    "bench",
+    "expected_points_gw",
+    "chip",
+    "plan",
+    "xmins_overrides",
+    "players",
+    "warnings",
+    "summary",
+    "confidence",
+    "validation"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "gaffer.recommendation/1"
+    },
+    "rec_id": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "ULID"
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    },
+    "season": {
+      "type": "string"
+    },
+    "gw": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 38
+    },
+    "deadline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "team_id_hash": {
+      "type": "string",
+      "pattern": "^hmac-sha256:[0-9a-f]{64}$",
+      "description": "HMAC of the FPL team id; the raw id is never stored here (NFR-PRIV-01)"
+    },
+    "model": {
+      "type": "string",
+      "description": "provider/model id of the LLM that made the submission"
+    },
+    "gaffer_lib": {
+      "type": "string"
+    },
+    "pi": {
+      "type": "string"
+    },
+    "snapshot": {
+      "type": "object",
+      "required": [
+        "id",
+        "fetched_at",
+        "stale",
+        "stale_reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "stale_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "assumptions": {
+      "type": "object",
+      "required": [
+        "free_transfers",
+        "ft_source",
+        "bank",
+        "pending_transfers"
+      ],
+      "properties": {
+        "free_transfers": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ft_source": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "derived"
+            },
+            {
+              "type": "string",
+              "const": "user"
+            }
+          ]
+        },
+        "bank": {
+          "type": "number",
+          "description": "£m, after any pending transfers"
+        },
+        "pending_transfers": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "preferences": {
+      "type": "object",
+      "required": [
+        "risk",
+        "save_chips",
+        "keep",
+        "avoid",
+        "max_hits_per_gw"
+      ],
+      "properties": {
+        "risk": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "safe"
+            },
+            {
+              "type": "string",
+              "const": "balanced"
+            },
+            {
+              "type": "string",
+              "const": "aggressive"
+            }
+          ]
+        },
+        "save_chips": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "wildcard"
+              },
+              {
+                "type": "string",
+                "const": "freehit"
+              },
+              {
+                "type": "string",
+                "const": "bboost"
+              },
+              {
+                "type": "string",
+                "const": "3xc"
+              }
+            ],
+            "description": "wildcard, freehit, bboost (Bench Boost) or 3xc (Triple Captain)"
+          }
+        },
+        "keep": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "FPL player (element) id"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "FPL player (element) id"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "max_hits_per_gw": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "transfers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "out",
+          "in",
+          "xp_gain_4gw",
+          "xp_gain_6gw_decayed",
+          "rationale",
+          "confidence"
+        ],
+        "properties": {
+          "out": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "sell_price"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "FPL player (element) id"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sell_price": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "in": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "price"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "FPL player (element) id"
+              },
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "xp_gain_4gw": {
+            "type": "number"
+          },
+          "xp_gain_6gw_decayed": {
+            "type": "number"
+          },
+          "rationale": {
+            "type": "string",
+            "pattern": "^\\s*\\S+(?:\\s+\\S+){0,59}\\s*$",
+            "maxLength": 1440,
+            "description": "Why this move. At most 60 words."
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "low"
+              },
+              {
+                "type": "string",
+                "const": "medium"
+              },
+              {
+                "type": "string",
+                "const": "high"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "hits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "hit_cost": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "net_xp_gain_4gw": {
+      "type": "number",
+      "description": "Σ transfers[].xp_gain_4gw − hit_cost"
+    },
+    "captain": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "xp",
+        "p_start"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "FPL player (element) id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "xp": {
+          "type": "number"
+        },
+        "p_start": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "vice_captain": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "xp",
+        "p_start"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "FPL player (element) id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "xp": {
+          "type": "number"
+        },
+        "p_start": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "starting_xi": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "FPL player (element) id"
+      },
+      "minItems": 11,
+      "maxItems": 11
+    },
+    "bench": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "FPL player (element) id"
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "Goalkeeper first, then the order the auto-sub simulator values most"
+    },
+    "expected_points_gw": {
+      "type": "number"
+    },
+    "chip": {
+      "type": "object",
+      "required": [
+        "play",
+        "rationale",
+        "confidence",
+        "scenarios"
+      ],
+      "properties": {
+        "play": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "wildcard"
+                },
+                {
+                  "type": "string",
+                  "const": "freehit"
+                },
+                {
+                  "type": "string",
+                  "const": "bboost"
+                },
+                {
+                  "type": "string",
+                  "const": "3xc"
+                }
+              ],
+              "description": "wildcard, freehit, bboost (Bench Boost) or 3xc (Triple Captain)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "pattern": "^\\s*\\S+(?:\\s+\\S+){0,59}\\s*$",
+          "maxLength": 1440,
+          "description": "Why this chip now, or why none. At most 60 words."
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "low"
+            },
+            {
+              "type": "string",
+              "const": "medium"
+            },
+            {
+              "type": "string",
+              "const": "high"
+            }
+          ]
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "chip",
+              "gw",
+              "evaluated"
+            ],
+            "properties": {
+              "chip": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "wildcard"
+                  },
+                  {
+                    "type": "string",
+                    "const": "freehit"
+                  },
+                  {
+                    "type": "string",
+                    "const": "bboost"
+                  },
+                  {
+                    "type": "string",
+                    "const": "3xc"
+                  }
+                ],
+                "description": "wildcard, freehit, bboost (Bench Boost) or 3xc (Triple Captain)"
+              },
+              "gw": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "evaluated": {
+                "type": "boolean"
+              },
+              "delta_xp": {
+                "type": "number",
+                "description": "Decayed objective with the chip forced in `gw`, minus the chip-free plan's"
+              },
+              "delta_xp_gw": {
+                "type": "number",
+                "description": "That GW's expected points net of hits, minus the chip-free plan's"
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why the scenario was not evaluated"
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "At least one entry per chip type: an evaluated scenario, or the reason there is none"
+        }
+      },
+      "additionalProperties": false
+    },
+    "plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "gw",
+          "transfers",
+          "roll_ft",
+          "chip",
+          "captain",
+          "free_transfers",
+          "hits",
+          "hit_cost",
+          "expected_points",
+          "note"
+        ],
+        "properties": {
+          "gw": {
+            "type": "integer"
+          },
+          "transfers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "out",
+                "in"
+              ],
+              "properties": {
+                "out": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "FPL player (element) id"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "in": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "FPL player (element) id"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "roll_ft": {
+            "type": "boolean"
+          },
+          "chip": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "const": "wildcard"
+                  },
+                  {
+                    "type": "string",
+                    "const": "freehit"
+                  },
+                  {
+                    "type": "string",
+                    "const": "bboost"
+                  },
+                  {
+                    "type": "string",
+                    "const": "3xc"
+                  }
+                ],
+                "description": "wildcard, freehit, bboost (Bench Boost) or 3xc (Triple Captain)"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "captain": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "FPL player (element) id"
+          },
+          "free_transfers": {
+            "type": "integer",
+            "description": "Free transfers available in that GW"
+          },
+          "hits": {
+            "type": "integer"
+          },
+          "hit_cost": {
+            "type": "integer"
+          },
+          "expected_points": {
+            "type": "number",
+            "description": "Before hits"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 4,
+      "description": "Consecutive GWs from the next deadline: exactly 4 unless the season ends sooner"
+    },
+    "xmins_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "player",
+          "name",
+          "gw",
+          "xmins",
+          "quote",
+          "source"
+        ],
+        "properties": {
+          "player": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "FPL player (element) id"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gw": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "xmins": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "news"
+              },
+              {
+                "type": "string",
+                "const": "user"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Minutes the model set from team news, each with the quoted text (FR-REC-10)"
+    },
+    "players": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": {
+          "type": "object",
+          "required": [
+            "name",
+            "team",
+            "position",
+            "xp",
+            "p_start"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "team": {
+              "type": "string"
+            },
+            "position": {
+              "type": "string"
+            },
+            "xp": {
+              "type": "number"
+            },
+            "p_start": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "description": "Every player the recommendation mentions, by id, with this GW's xP"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "type": "string",
+      "pattern": "^\\s*\\S+(?:\\s+\\S+){0,119}\\s*$",
+      "maxLength": 2880,
+      "description": "The advice in plain words. At most 120 words."
+    },
+    "confidence": {
+      "type": "object",
+      "required": [
+        "overall",
+        "drivers"
+      ],
+      "properties": {
+        "overall": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "low"
+            },
+            {
+              "type": "string",
+              "const": "medium"
+            },
+            {
+              "type": "string",
+              "const": "high"
+            }
+          ]
+        },
+        "drivers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "required": [
+        "passed",
+        "recomputed",
+        "max_model_number_drift",
+        "numbers_checked",
+        "drift",
+        "score",
+        "best_score",
+        "gap_to_best",
+        "margin",
+        "plans_compared",
+        "optimality_checked",
+        "solver",
+        "attempts"
+      ],
+      "properties": {
+        "passed": {
+          "type": "boolean",
+          "const": true
+        },
+        "recomputed": {
+          "type": "boolean",
+          "const": true
+        },
+        "max_model_number_drift": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Largest gap between a figure the model submitted and the recomputed one"
+        },
+        "numbers_checked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "drift": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "model",
+              "recomputed",
+              "gap"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "model": {
+                "type": "number"
+              },
+              "recomputed": {
+                "type": "number"
+              },
+              "gap": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "description": "Gaps over 0.5"
+        },
+        "score": {
+          "type": "number",
+          "description": "The plan's decayed objective (the solver's own, recomputed)"
+        },
+        "best_score": {
+          "type": "number"
+        },
+        "gap_to_best": {
+          "type": "number"
+        },
+        "margin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plans_compared": {
+          "type": "integer"
+        },
+        "optimality_checked": {
+          "type": "boolean"
+        },
+        "solver": {
+          "type": "object",
+          "required": [
+            "name",
+            "commit",
+            "status",
+            "gap",
+            "timed_out"
+          ],
+          "properties": {
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "commit": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "gap": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "timed_out": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Submissions it took, including this one"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://gaffer.invalid/schemas/recommendation-1.json",
+  "title": "gaffer.recommendation/1"
+}

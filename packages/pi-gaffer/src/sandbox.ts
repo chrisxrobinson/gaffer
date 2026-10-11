@@ -89,7 +89,8 @@ function fsError(status: number, path: string, detail: string): Error {
 
 export interface SandboxOperations {
 	bash: {
-		exec(command: string, cwd: string, options: { onData: (data: Buffer) => void; signal?: AbortSignal; timeout?: number; env?: NodeJS.ProcessEnv }): Promise<{ exitCode: number | null }>;
+		/** `stdin` is Gaffer's addition (Pi never passes it): text for the command's standard input. */
+		exec(command: string, cwd: string, options: { onData: (data: Buffer) => void; signal?: AbortSignal; timeout?: number; env?: NodeJS.ProcessEnv; stdin?: string }): Promise<{ exitCode: number | null }>;
 	};
 	read: { readFile(p: string): Promise<Buffer>; access(p: string): Promise<void> };
 	write: { writeFile(p: string, content: string): Promise<void>; mkdir(dir: string): Promise<void> };
@@ -124,7 +125,7 @@ export function createSandboxOperations(session: SandboxSession, opts: { localRe
 		isLocalRead,
 		bash: {
 			// The harness env (options.env: API keys, PI_* session vars) is deliberately never forwarded.
-			async exec(command, cwd, { onData, signal, timeout }) {
+			async exec(command, cwd, { onData, signal, timeout, stdin }) {
 				if (signal?.aborted) throw new Error("aborted");
 				const timeout_s = Math.min(timeout ?? MAX_EXEC_TIMEOUT_S, MAX_EXEC_TIMEOUT_S);
 				let res: Response;
@@ -132,7 +133,7 @@ export function createSandboxOperations(session: SandboxSession, opts: { localRe
 					res = await fetch(`${await session.url()}/exec`, {
 						method: "POST",
 						headers: { "content-type": "application/json" },
-						body: JSON.stringify({ command, cwd, timeout_s }),
+						body: JSON.stringify({ command, cwd, timeout_s, ...(stdin !== undefined && { stdin }) }),
 						signal,
 					});
 				} catch (e) {
@@ -190,12 +191,30 @@ export function sharedSandboxSession(): SandboxSession {
 }
 
 /** Run a command in the sandbox and collect its output (stdout and stderr together). */
-export async function sandboxRun(session: SandboxSession, command: string, opts: { timeoutS?: number; signal?: AbortSignal } = {}): Promise<{ exitCode: number | null; output: string }> {
+export async function sandboxRun(session: SandboxSession, command: string, opts: { timeoutS?: number; signal?: AbortSignal; stdin?: string } = {}): Promise<{ exitCode: number | null; output: string }> {
 	const ops = createSandboxOperations(session, { localReadRoots: [] });
 	const chunks: Buffer[] = [];
 	// An empty cwd means sandboxd's own work dir (/work in the image).
-	const { exitCode } = await ops.bash.exec(command, "", { onData: (b) => chunks.push(b), signal: opts.signal, timeout: opts.timeoutS ?? 60 });
+	const { exitCode } = await ops.bash.exec(command, "", { onData: (b) => chunks.push(b), signal: opts.signal, timeout: opts.timeoutS ?? 60, stdin: opts.stdin });
 	return { exitCode, output: Buffer.concat(chunks).toString("utf8") };
+}
+
+/** Read a file from the sandbox (e.g. the plan JSON the golden path wrote in /work). */
+export async function sandboxReadFile(session: SandboxSession, path: string): Promise<string> {
+	return (await createSandboxOperations(session, { localReadRoots: [] }).read.readFile(path)).toString("utf8");
+}
+
+/** The last line of a command's output that parses as a JSON object (anything before it is stderr noise). */
+export function lastJsonLine(output: string): unknown {
+	for (const l of output.trim().split("\n").reverse()) {
+		if (!l.startsWith("{")) continue;
+		try {
+			return JSON.parse(l);
+		} catch {
+			/* keep looking */
+		}
+	}
+	return undefined;
 }
 
 /** Quote a string for bash. */

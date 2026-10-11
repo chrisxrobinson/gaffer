@@ -57,6 +57,8 @@ export interface SnapshotParams {
 	ft?: number;
 	/** Pending transfers the user declared, e.g. "Salah>Palmer" (FR-INP-04). */
 	pending?: string;
+	/** The team's saved preferences file, if there is one: the golden-path command passes it with --prefs. */
+	prefsPath?: string;
 	signal?: AbortSignal;
 }
 
@@ -349,7 +351,7 @@ export async function takeSnapshot(params: SnapshotParams, deps: SnapshotDeps): 
 		odds: { requested: oddsRequested, available: odds?.available ?? false, fixtures: odds?.fixtures.length ?? 0, reason: odds?.reason ?? null },
 		recentGws,
 		epNext: { gw: nextEv?.id ?? null, players: epPlayers, before_deadline: beforeDeadline },
-		runCommand: runCommand(written.dir, params),
+		runCommand: runCommand(written.dir, { ...params, hold: !finalise.allowed }),
 		derived,
 		bootstrap,
 		user,
@@ -382,10 +384,13 @@ export function epNextRecorded(store: SnapshotStore, seasonDir: string, gws: num
 }
 
 /** The golden-path command (ARCHITECTURE §2.2) for a snapshot, carrying the user's overrides. */
-export function runCommand(snapshotDir: string, params: Pick<SnapshotParams, "ft" | "pending">): string {
+export function runCommand(snapshotDir: string, params: Pick<SnapshotParams, "ft" | "pending" | "prefsPath"> & { hold?: boolean }): string {
 	let cmd = `python -m gaffer_lib run --snapshot ${shellQuote(snapshotDir)} --out /work/plan.json`;
 	if (params.ft !== undefined) cmd += ` --ft ${Math.trunc(params.ft)}`;
 	if (params.pending) cmd += ` --pending ${shellQuote(params.pending)}`;
+	if (params.prefsPath) cmd += ` --prefs ${shellQuote(params.prefsPath)}`;
+	// FR-DAT-05: transfers can't be finalised, so the plan is the line-up from the current squad.
+	if (params.hold) cmd += " --hold";
 	return cmd;
 }
 
@@ -579,7 +584,7 @@ export function render(d: SnapshotDetails, now: number): string {
 		L.push('Odds: not in this snapshot. Before planning transfers, call fpl_snapshot with include: ["odds"].');
 	}
 	L.push(`To plan (transfers, XI, captain, chips), run in the sandbox: ${d.run_command}`);
-	if (!d.finalise_transfers.allowed) L.push(`DO NOT FINALISE TRANSFERS: ${d.finalise_transfers.reason}`);
+	if (!d.finalise_transfers.allowed) L.push(`DO NOT FINALISE TRANSFERS: ${d.finalise_transfers.reason} The command above has --hold: it gives the line-up and captain from the current squad, and a recommendation with transfers will be refused.`);
 	if (d.warnings.length) {
 		L.push("");
 		L.push("Warnings:");

@@ -14,7 +14,7 @@ The brief asks for a browser UI that "looks and behaves like the Pi CLI". Pi off
 | Multi-user | One process per connection (ttyd spawns per WS). Auth is basic or header-based | Clean: one RPC process per user session behind real auth | — |
 | Streaming | Native terminal rendering | `message_update` deltas and `tool_execution_*` events | — |
 | Reconnect | `tmux new -A -s gaffer` re-attaches to a live TUI | `get_state`/`get_messages` plus respawn with `--session-id` | — |
-| Structured output | Rendered as TUI tables by `renderResult`; `/export` writes JSON | Real HTML tables and CSV/JSON download | — |
+| Structured output | Rendered as TUI tables by `renderResult`; `/export-rec` writes JSON | Real HTML tables and CSV/JSON download | — |
 | Mobile | Poor | Good | — |
 
 ## Decision

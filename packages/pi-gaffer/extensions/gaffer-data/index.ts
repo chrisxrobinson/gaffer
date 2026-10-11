@@ -8,9 +8,10 @@ import { dataDir, idSalt } from "../../src/config.ts";
 import { checkToolCall } from "../../src/guard.ts";
 import { sandboxDerive } from "../../src/derive.ts";
 import { FplClient } from "../../src/http.ts";
+import { prefsPath, readPrefs } from "../../src/prefs.ts";
 import { sharedSandboxSession } from "../../src/sandbox.ts";
 import { fplState, type SnapshotEntry } from "../../src/session.ts";
-import { takeSnapshot, type SnapshotDetails } from "../../src/snapshot.ts";
+import { hashTeamId, takeSnapshot, type SnapshotDetails } from "../../src/snapshot.ts";
 import { SnapshotStore } from "../../src/store.ts";
 
 export default function gafferData(pi: ExtensionAPI) {
@@ -42,8 +43,11 @@ export default function gafferData(pi: ExtensionAPI) {
 				// The /team --ft / --pending overrides apply to the team they were given for.
 				const own = teamId === state.teamId;
 				if (!teamId) throw new Error("No FPL team ID yet. Ask the user for it (the number in the URL of their FPL Points page), or they can run /team <id>.");
+				// Saved preferences constrain the plan (FR-INP-02): the golden-path command names their file.
+				const hash = hashTeamId(teamId, idSalt());
+				const prefs = readPrefs(dataDir(), hash) ? prefsPath(dataDir(), hash) : undefined;
 				const { text, details } = await takeSnapshot(
-					{ teamId, elementSummaries: params.element_summaries, include: params.include, forceFresh: params.force_fresh, ft: own ? state.ft : undefined, pending: own ? state.pending : undefined, signal },
+					{ teamId, elementSummaries: params.element_summaries, include: params.include, forceFresh: params.force_fresh, ft: own ? state.ft : undefined, pending: own ? state.pending : undefined, prefsPath: prefs, signal },
 					{ client: new FplClient(), store: new SnapshotStore(dataDir()), salt: idSalt(), derive: sandboxDerive(sharedSandboxSession()) },
 				);
 				const entry: SnapshotEntry = {
@@ -61,6 +65,7 @@ export default function gafferData(pi: ExtensionAPI) {
 					ft_source: details.free_transfers?.source ?? null,
 					pending_transfers: details.assumptions?.pending_transfers ?? [],
 					odds: details.odds,
+					finalise_transfers: details.finalise_transfers,
 					ep_next: details.ep_next,
 					endpoints: details.endpoints,
 				};

@@ -18,7 +18,7 @@ flowchart LR
   end
   subgraph gaffer["gaffer container (brain) — egress: LLM API, FPL, football-data"]
     T[ttyd + tmux] --> P[Pi 0.87.1 core loop<br/>unchanged]
-    P --- E1[gaffer-core ext<br/>prompt sections, tool allowlist,<br/>/team /prefs /export /usage,<br/>user_bash block, compaction, theme]
+    P --- E1[gaffer-core ext<br/>prompt sections, tool allowlist,<br/>/team /prefs /export-rec /usage,<br/>user_bash block, compaction, theme]
     P --- E2[gaffer-sandbox ext<br/>read/write/edit/bash overrides<br/>SandboxProvider]
     P --- E3[gaffer-data ext<br/>fpl_snapshot tool]
     P --- E4[gaffer-recommend ext<br/>submit_recommendation,<br/>set_preferences, renderers]
@@ -84,7 +84,7 @@ Five extensions. Each is small, single-purpose and justified:
 
 | Extension | Registers | Why Gaffer can't do without it |
 |---|---|---|
-| `gaffer-core` | Prompt `customPrompt` and sections; `setActiveTools`; `user_bash` block; `/team`, `/prefs`, `/export`, `/usage`, `/scorecard`; FPL compaction summary; theme | It is what turns the coding agent into an FPL agent |
+| `gaffer-core` | Prompt `customPrompt` and sections; `setActiveTools`; `user_bash` block; `/team`, `/prefs`, `/export-rec`, `/usage`, `/scorecard`; FPL compaction summary; theme | It is what turns the coding agent into an FPL agent |
 | `gaffer-sandbox` | Overrides of `bash`, `read`, `write` and `edit` that route to `sandboxd`; `SandboxProvider` (`compose`, `ecs`); lazy provision and idle release | Generated code must not run next to credentials ([ADR 0001](decisions/0001-sandbox.md)) |
 | `gaffer-data` | `fpl_snapshot` tool | The sandbox has no network, and freshness, retry and validation must be deterministic ([ADR 0002](decisions/0002-data-access.md)) |
 | `gaffer-recommend` | `submit_recommendation` (terminating), `set_preferences`, recommendation renderer | Output must be legal, recomputed and machine-readable, and preferences must outlive sessions ([ADR 0003](decisions/0003-analytics-split.md)) |
@@ -139,13 +139,13 @@ ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s 
 
 ### 2.1 Input
 - `/team <id>` sets the FPL team ID for the session. The raw ID is kept in session only; ledger and user files use its HMAC hash (NFR-PRIV-01).
-- Preferences come from `/prefs` or natural language, which the model persists via `set_preferences`:
-  - `risk`: `safe | balanced | aggressive`, with the objective of overall rank, a mini-league or a cup
+- Preferences come from `/prefs` or natural language, which the model persists via `set_preferences`. They are saved per team in `/data/users/<hmac>/prefs.json`, injected into the prompt, passed to the golden path with `--prefs` and enforced at submit:
+  - `risk`: `safe | balanced | aggressive`. It only breaks ties among plans within 0.5 of the solver's best (FR-REC-09); an objective other than overall points (a mini-league, a cup) is not built
   - `save_chips`: a list of chips
-  - `keep` / `avoid`: players
+  - `keep` / `avoid`: players, stored as id and name
   - `max_hits_per_gw`
-  - `horizon_weights`
-  - optional FT override and pending transfers, because neither is visible in public data (ADR 0002)
+  - *(not built: `horizon_weights`; no requirement asks for it)*
+- The FT override and pending transfers, which aren't visible in public data (ADR 0002), are session state set with `/team --ft` and `--pending`, not preferences.
 - A plain prompt such as "What should I do this week?" runs the default workflow. Prompt templates cover common intents: `/gw` for the full recommendation, `/whatif <text>` and `/explain <player>`.
 
 ### 2.2 The run
@@ -162,11 +162,13 @@ ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s 
    - picks between near-tied plans according to risk mode and preferences
    - decides whether a hit or chip is justified from the scenario deltas
    - explores in Python if something looks off (for example, a large gap between `ep_next` and Gaffer's xP)
-4. **Submit.** The model calls `submit_recommendation(json)`. The harness validates the schema, then runs `gaffer_lib validate` against the **same snapshot** and recomputes every number (ADR 0003). On errors, the model gets the list and up to 2 retries. On success, the tool:
-   - appends `gaffer.recommendation` to the session
+4. **Submit.** The model calls `submit_recommendation(json)`: its decisions and words, and optionally the figures it quoted. The harness validates the schema, reads the golden path's plan file from the sandbox (`/work/plan.json`), and runs `python -I -m gaffer_lib validate --request -` against the **same snapshot**, with the `--ft` and `--pending` that snapshot was taken with. The request (submission, plan file, saved preferences, the finalise flag) goes in on standard input. gaffer_lib checks the plan file against the snapshot, runs the rules, the preferences and the distance from the solver's best plan, and recomputes every number (ADR 0003). On errors, the model gets the list and up to 2 retries; after the third failure the run ends with a failure message and no plan. On success, the tool:
+   - appends `gaffer.validation` (the full request, so the gate can be replayed) and `gaffer.recommendation` to the session
    - appends to the ledger index
    - renders the recommendation in the TUI
    - terminates the run with no extra LLM turn (S1-6)
+
+   Pi checks a tool's arguments before the tool runs, so a submission that fails the schema never reaches the tool. The extension counts those through the `tool_execution_end` event and aborts the run at the third.
 
 ### 2.3 FPL domain coverage
 `gaffer_lib.rules` owns this. It is tested, and its parameters are read from the snapshot wherever the API exposes them.
@@ -205,31 +207,43 @@ The TypeBox definition lives in `packages/pi-gaffer/src/schema/recommendation.ts
       "rationale": "…", "confidence": "medium" }
   ],
   "hits": 0, "hit_cost": 0, "net_xp_gain_4gw": 5.9,
-  "captain": { "id": 430, "name": "…", "xp": 7.8, "p_start": 0.95, "p_haul": 0.31 },
-  "vice_captain": { "id": 99, "name": "…", "xp": 6.1 },
-  "starting_xi": [ /* 11 element ids */ ], "bench": [ /* GK, B1, B2, B3 */ ],
+  "captain": { "id": 430, "name": "…", "xp": 7.8, "p_start": 0.95 },
+  "vice_captain": { "id": 99, "name": "…", "xp": 6.1, "p_start": 0.9 },
+  "starting_xi": [ /* 11 element ids */ ], "bench": [ /* GK, then the auto-sub simulator's order */ ],
   "expected_points_gw": 58.4,
   "chip": { "play": null, "rationale": "…", "confidence": "high",
-            "scenarios": [ { "chip": "bboost", "gw": 9, "delta_xp": 3.2 } ] },
+            "scenarios": [ { "chip": "bboost", "gw": 9, "evaluated": true, "delta_xp": 3.2, "delta_xp_gw": 4.1 },
+                           { "chip": "wildcard", "gw": null, "evaluated": false, "reason": "…" } ] },
   "plan": [   // exactly 4 entries: this GW + 3
-    { "gw": 6, "transfers": ["351→99"], "chip": null, "captain": 430, "expected_points": 58.4, "note": "…" },
-    { "gw": 7, "transfers": [], "roll_ft": true, "chip": null, "captain": 430, "expected_points": 55.0, "note": "…" }
+    { "gw": 6, "transfers": [ { "out": { "id": 351, "name": "…" }, "in": { "id": 99, "name": "…" } } ], "roll_ft": false, "chip": null,
+      "captain": 430, "free_transfers": 2, "hits": 0, "hit_cost": 0, "expected_points": 58.4, "note": "…" },
+    { "gw": 7, "transfers": [], "roll_ft": true, "chip": null, "captain": 430, "free_transfers": 2, "hits": 0, "hit_cost": 0, "expected_points": 55.0, "note": "…" }
   ],
+  "xmins_overrides": [ { "player": 351, "name": "…", "gw": 6, "xmins": 0, "quote": "Hamstring injury - Expected back 24 Oct", "source": "news" } ],
+  "players": { "430": { "name": "…", "team": "MCI", "position": "FWD", "xp": 7.8, "p_start": 0.95 } },   // everyone mentioned
   "warnings": ["Derived FT count — confirm in app", "…price rise likely tonight"],
   "summary": "…",               // ≤ 120 words
   "confidence": { "overall": "medium", "drivers": ["minutes uncertainty: …", "top-2 plan gap 0.3 xP"] },
-  "validation": { "passed": true, "recomputed": true, "max_model_number_drift": 0.2 }
+  "validation": { "passed": true, "recomputed": true, "max_model_number_drift": 0.2, "numbers_checked": 7, "drift": [],
+                  "score": 305.39, "best_score": 305.39, "gap_to_best": 0.0, "margin": 1.12, "plans_compared": 3,
+                  "optimality_checked": true, "solver": { "status": "Optimal", "gap": 0.0008, "timed_out": false }, "attempts": 1 }
 }
 ```
+
+Differences from the first draft of this schema, each made when it was built (M4): `captain.p_haul` is gone (the model has no points distribution to compute it from); `plan[].transfers` are objects with names, like the top-level transfers, not `"351→99"` strings; `players` carries the names and xP a consumer or renderer needs; scenarios say whether they were evaluated and why not; `xmins_overrides` records the model's reading of team news (FR-REC-10); `validation` shows how the plan compares with the solver's best. Rationales are at most 60 words and the summary at most 120: both are patterns in the schema.
 
 **Confidence** is computed by the library, not asserted by the model:
 - **high:** the plan's margin over the next-best plan is ≥2 xP, every XI player has P(start) ≥0.85, and the snapshot is fresh
 - **low:** any key input is stale or assumed, the margin is <0.5, or a recommended player has P(start) <0.7
 - **medium:** everything else
 
-The model may lower confidence, but it can't raise it.
+The model may lower confidence, but it can't raise it. The margin is the difference between the plan's decayed score and the best other plan in the plan file with different moves this GW; `plan.score` is the solver's own objective evaluated on fixed decisions, so the gate computes it without solving.
 
-The **human-readable** form is the tool's `renderResult`. It shows transfer lines, the XI and bench, captain and vice, a chip box, the 4-GW table, then warnings and a summary. `/export` writes the JSON to `/data/exports/` and prints the path.
+Each decision has its own confidence, also by rule and also only lowerable:
+- **a transfer** is high when the player coming in has P(start) ≥0.85 and the move gains ≥2 decayed xP over the horizon on a fresh snapshot; low when the snapshot is stale, his P(start) is <0.7 or the gain isn't positive; medium otherwise
+- **the chip decision** is, when a chip is played, high if it adds ≥2 to the decayed score over the chip-free plan and low if it adds <0.5; when none is played, high if every available chip has an evaluated scenario and medium if any doesn't; low on a stale snapshot
+
+The **human-readable** form is the tool's `renderResult`. It shows transfer lines, the XI and bench, captain and vice, a chip box, the 4-GW table, then warnings and a summary. `/export-rec` writes the JSON to `/data/exports/<rec_id>.json` and prints the path. (Pi 0.87.1 has a built-in `/export` that exports the session as HTML; the TUI handles it before any extension command, so Gaffer's command can't have that name.)
 
 ### 2.5 Never touches the account
 Gaffer holds no FPL credentials. `fpl_snapshot` performs only GETs against an allowlist of paths. The sandbox has no network at all.

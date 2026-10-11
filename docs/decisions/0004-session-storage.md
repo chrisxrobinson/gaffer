@@ -21,12 +21,13 @@ Pi already writes an append-only JSONL session per conversation. Each entry is a
 - **Gaffer entries** (`customType` values):
   - `gaffer.snapshot`: snapshot path, content hash, freshness and the `stale` flag
   - `gaffer.recommendation`: the full validated JSON ([ARCHITECTURE §2.4](../ARCHITECTURE.md)), with `rec_id` (ULID), `team_id_hash`, `gw` and `model`
-  - `gaffer.validation`: validator verdict and errors, including failed attempts
+  - `gaffer.validation`: validator verdict and errors, including failed attempts. Each holds the request the gate was given (the submission, the golden path's plan file, the preferences, the `--ft`/`--pending` and the finalise flag), so `scripts/replay.ts` can rerun `gaffer_lib validate` for a `rec_id` and compare (NFR-OBS-01)
   - `gaffer.budget`: running cost and whether the cap was hit
 - **Derived, rebuildable files** (not a second source of truth):
   - `/data/ledger/recommendations.jsonl`: an index that makes scoring easy. It is appended at the same time as the custom entry and can be rebuilt by scanning the sessions.
   - `/data/ledger/outcomes.jsonl`: written by the evaluator after `data_checked`. It holds realised points of the recommended moves and of the user's actual moves, plus baselines. This is new information, not a copy.
   - `/data/users/<team_id_hash>/prefs.json`: preferences owned by the harness. They have to outlive sessions, and the sandbox is ephemeral.
+  - `/data/exports/<rec_id>.json`: a copy of a `gaffer.recommendation` entry, written by `/export-rec`.
 - The **admin centre reads these files**. It adds no parallel store ([ARCHITECTURE §9](../ARCHITECTURE.md)).
 - **Privacy:** team IDs are stored as `HMAC-SHA256(team_id, GAFFER_ID_SALT)` in ledger and user paths. The raw ID only appears in session transcripts, and those stay on the private volume.
 

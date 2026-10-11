@@ -36,6 +36,8 @@ export interface SnapshotEntry {
 	pending_transfers?: [number, number][];
 	/** The odds source's state in this snapshot (FR-DAT-09). */
 	odds?: { requested: boolean; available: boolean; fixtures: number; reason: string | null };
+	/** Whether transfers may be finalised on this snapshot (FR-DAT-05); the submit gate checks again at submit time. */
+	finalise_transfers?: { allowed: boolean; reason?: string };
 	/** The official ep_next this snapshot recorded (FR-DAT-10). */
 	ep_next?: { gw: number | null; players: number; before_deadline: boolean };
 	endpoints: unknown[];

@@ -46,7 +46,7 @@
 | FR-REC-02 | Recommend captain and vice | M | 1 | Both are in the XI, captain ≠ vice, and each has `xp` and `p_start`. |
 | FR-REC-03 | Recommend starting XI and bench order | M | 1 | The XI is a valid formation; the bench has 4 players with the GK first, ordered by the simulator's expected auto-sub value. |
 | FR-REC-04 | Chip advice for this GW with scenario evidence | M | 1 | `chip.play` is null or an available chip; `chip.scenarios` has ≥1 entry per available chip type over the next 6 GWs, or explains why not. |
-| FR-REC-05 | 4-GW rolling plan | M | 1 | `plan` has exactly 4 consecutive GWs starting at the next deadline GW, each passing the validator given the prior GW's state. |
+| FR-REC-05 | 4-GW rolling plan | M | 1 | `plan` has exactly 4 consecutive GWs starting at the next deadline GW (fewer only when the season has fewer left), each passing the validator given the prior GW's state. |
 | FR-REC-06 | A rationale and a confidence for each decision; confidence is computed by rules, not asserted | M | 1 | Rationale ≤ 60 words per item. A test fixture with a stale snapshot gives `confidence.overall = low` even if the model submits "high". |
 | FR-REC-07 | Every number in the output is recomputed by deterministic code at submit | M | 1 | A submission with a deliberately wrong `xp_gain` is corrected, and `validation.max_model_number_drift` reports the gap. |
 | FR-REC-08 | Invalid recommendations are rejected and returned to the model; at most 2 retries | M | 1 | A mocked model submitting 4 players from one club gets an error naming the club rule. After 3 failures the user sees a clear failure message, not an illegal plan. |
@@ -58,7 +58,7 @@
 |---|---|---|---|---|
 | FR-OUT-01 | Machine-readable output validated against `gaffer.recommendation/1` JSON Schema | M | 1 | Every `gaffer.recommendation` entry validates against `schemas/recommendation-1.json` in CI (ajv) over the eval suite. |
 | FR-OUT-02 | Human-readable rendering in the TUI | M | 1 | Screenshot test: the rendered result shows transfers, XI and bench, captain and vice, chip, the 4-GW table and warnings, at 100 columns without wrapping mid-table. |
-| FR-OUT-03 | `/export` writes the latest recommendation JSON to a file and prints the path | M | 1 | The file exists, validates against the schema, and is identical to the session entry. |
+| FR-OUT-03 | `/export-rec` writes the latest recommendation JSON to a file and prints the path (not `/export`: that is Pi's built-in session export, which the TUI handles before any extension command) | M | 1 | The file exists, validates against the schema, and is identical to the session entry. |
 | FR-UI-01 | Browser UI that looks and behaves like the Pi CLI | M | 1 | Opening `http://127.0.0.1:7681` shows the Pi TUI with the Gaffer theme; slash commands, history, Ctrl+C abort and Shift+Enter newline all work. |
 | FR-UI-02 | Streaming output | M | 1 | The first streamed token appears ≤ 5 s after submit (p95 over 20 runs). |
 | FR-UI-03 | Reconnect without losing a run | M | 1 | Closing the tab mid-run and reopening within 5 min shows the run still progressing or completed. |
