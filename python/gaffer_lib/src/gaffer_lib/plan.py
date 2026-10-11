@@ -54,6 +54,7 @@ BENCH_WEIGHTS = {"0": 0.03, "1": 0.21, "2": 0.06, "3": 0.002}
 VCAP_WEIGHT = 0.1
 FT_USE_PENALTY = 0.2
 ITB_VALUE = 0.08
+FT_VALUE_DEFAULT = 1.5  # the solver's `ft_value`, used for the FT states `ft_value_list` doesn't name (0 and 1)
 NO_TRANSFER_LAST_GWS = 2
 # Its player-pool filters, scaled from its 8-GW default horizon: expected minutes over the horizon,
 # the EV-per-price percentile below which a player is dropped, and the top-EV share always kept.
@@ -152,6 +153,59 @@ def best_xi(squad: Sequence[int], xp: Mapping[int, float], element_type: Mapping
     order = {t: i for i, t in enumerate(rules.squad_select)}
     xi.sort(key=lambda p: (order[element_type[p]], -xp.get(p, 0.0), p))
     return xi, bench
+
+
+def thread_state(steps: Sequence[Mapping], inputs: ModelInputs, state: TeamState) -> list[dict]:
+    """Free transfers, hits, bank and squad per step, threaded from `state` (which already has any
+    pending transfers applied, so the hits here are those of the plan's own transfers)."""
+    cost = lambda p: inputs.players[p].now_cost  # noqa: E731
+    squad, sell, bank, ft = list(state.squad), dict(state.sell), state.bank, state.free_transfers
+    out = []
+    for s in steps:
+        chip = s.get("chip")
+        before = (list(squad), dict(sell), bank)
+        for t in s["transfers"]:
+            o, i = t["out"], t["in"]
+            bank += sell.pop(o, cost(o)) - cost(i)
+            sell[i] = cost(i)  # a later sale assumes no price change, as validate does
+            squad = [i if x == o else x for x in squad]
+        n = len(s["transfers"])
+        out.append({"gw": s["gw"], "free_transfers": ft, "transfers": n, "hits": R.hits(ft, n, chip, inputs.rules),
+                    "bank": before[2] if chip == "freehit" else bank, "squad": list(squad)})
+        ft = R.next_free_transfers(ft, n, chip, inputs.rules)
+        if chip == "freehit":
+            squad, sell, bank = before
+    return out
+
+
+def score(steps: Sequence[Mapping], inputs: ModelInputs, proj: Projection, state: TeamState, *, decay: float = DECAY) -> float:
+    """The decayed objective of a plan: open-fpl-solver's own objective (dev/solver.py, `gw_total`)
+    evaluated on fixed decisions, so any plan can be compared with the solver's optimum without
+    solving again (FR-REC-09), and the comparison can be replayed exactly (NFR-OBS-01).
+
+    Per GW: the XI's xP, the captain's again (twice more under Triple Captain), the vice-captain's
+    at `VCAP_WEIGHT`, the bench at `BENCH_WEIGHTS` (all 15 in full under Bench Boost), minus hits,
+    plus the change in the value of banked free transfers, minus `FT_USE_PENALTY` per transfer,
+    plus `ITB_VALUE` per £1m in the bank; each GW weighted by `decay` to the power of its distance.
+    """
+    value = [0.0] * (inputs.rules.max_free_transfers + 1)
+    for s in range(len(value)):
+        value[s] = (value[s - 1] if s else 0.0) + FT_VALUE_LIST.get(str(s), FT_VALUE_DEFAULT)
+    weights = [BENCH_WEIGHTS[str(o)] for o in range(4)]
+    total, prev = 0.0, 0.0
+    for k, (s, th) in enumerate(zip(steps, thread_state(steps, inputs, state))):
+        gw, chip = s["gw"], s.get("chip")
+        x = lambda p: round(proj.xp[p][gw], 4)  # noqa: E731  the precision the solver is given
+        if chip == "bboost":
+            pts = sum(x(p) for p in list(s["xi"]) + list(s["bench"]))
+        else:
+            pts = sum(x(p) for p in s["xi"]) + sum(w * x(p) for w, p in zip(weights, s["bench"]))
+        pts += x(s["captain"]) * (2 if chip == "3xc" else 1) + VCAP_WEIGHT * x(s["vice_captain"])
+        counted = 0 if chip in R.TRANSFER_CHIPS else th["transfers"]
+        v = value[min(th["free_transfers"], len(value) - 1)]
+        total += decay**k * (pts - inputs.rules.hit_cost * th["hits"] + (v - prev) - FT_USE_PENALTY * counted + ITB_VALUE * th["bank"] / 10)
+        prev = v
+    return total
 
 
 def hold_plan(inputs: ModelInputs, proj: Projection, state: TeamState, info: SolveInfo, horizon: int) -> Plan:

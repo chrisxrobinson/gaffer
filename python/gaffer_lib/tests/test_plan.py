@@ -349,3 +349,55 @@ def test_xmins_overrides_change_the_plan_inputs(world):
     assert doc["xmins_overrides"] == [{"player": 426, "gw": 6, "xmins": 0.0}]
     assert all(426 not in s["xi"] for s in doc["plans"][0]["gws"][:1])
     assert doc["plans"][0]["validation"]["valid"]
+
+
+# --- the deterministic score (FR-REC-09) ------------------------------------------------------------
+
+
+def _cheap_swap(snap, inputs, n=0):
+    """(out, in): the squad's n-th goalkeeper for the cheapest goalkeeper of a club the squad doesn't use."""
+    _, st = state_for(snap, inputs)
+    out = [p for p in st.squad if inputs.players[p].element_type == 1][n]
+    clubs = {inputs.players[p].team for p in st.squad}
+    pool = sorted((d.now_cost, p) for p, d in inputs.players.items() if d.element_type == 1 and d.team not in clubs and p in inputs.players)
+    return out, pool[n][1]
+
+
+@needs_solver
+@pytest.mark.parametrize("kw", [{}, {"ft": 0}, {"ft": 5}, {"pending": True}], ids=["derived", "ft0", "ft5", "pending"])
+def test_score_equals_the_solver_objective(world, kw):
+    """`score` is the solver's objective on fixed decisions: for every plan the solver returns, the
+    two agree, so a plan's distance from the optimum can be recomputed without solving."""
+    snap, inputs, proj = world
+    if kw.get("pending"):
+        kw = {"pending": [list(_cheap_swap(snap, inputs))]}
+    _, st = state_for(snap, inputs, **kw)
+    plans = P.solve(inputs, proj, st, horizon=H, time_limit=30, alternatives=3)
+    assert len(plans) >= 2 and not plans[0].fallback
+    for pl in plans:
+        assert P.score(pl.steps, inputs, proj, st) == pytest.approx(pl.objective, abs=0.02)
+    assert max(P.score(p.steps, inputs, proj, st) for p in plans) == pytest.approx(P.score(plans[0].steps, inputs, proj, st), abs=P.MIP_ABS_GAP + 0.02)
+
+
+@needs_solver
+@pytest.mark.parametrize("chip", ["bboost", "3xc", "wildcard", "freehit"])
+def test_score_equals_the_solver_objective_with_a_chip(world, chip):
+    snap, inputs, proj = world
+    _, st = state_for(snap, inputs)
+    gw = proj.gws[1]
+    pl = P.solve(inputs, proj, st, horizon=H, time_limit=40, chip=(chip, gw))[0]
+    assert not pl.fallback and pl.steps[1]["chip"] == chip
+    assert P.score(pl.steps, inputs, proj, st) == pytest.approx(pl.objective, abs=0.05)
+
+
+def test_thread_state_counts_hits_and_reverts_a_free_hit(world):
+    snap, inputs, proj = world
+    _, st = state_for(snap, inputs, ft=1)
+    (a, g0), (b, g1) = _cheap_swap(snap, inputs, 0), _cheap_swap(snap, inputs, 1)
+    steps = [{"gw": 6, "transfers": [{"out": a, "in": g0}, {"out": b, "in": g1}], "chip": None},
+             {"gw": 7, "transfers": [{"out": g0, "in": a}], "chip": "freehit"},
+             {"gw": 8, "transfers": [], "chip": None}]
+    th = P.thread_state(steps, inputs, st)
+    assert [t["free_transfers"] for t in th] == [1, 1, 1]
+    assert [t["hits"] for t in th] == [1, 0, 0]
+    assert th[1]["bank"] == th[0]["bank"] and th[2]["squad"] == th[0]["squad"]
