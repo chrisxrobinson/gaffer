@@ -110,3 +110,35 @@ export function history() {
 export function transfers() {
 	return [] as Record<string, unknown>[];
 }
+
+/** event/{gw}/live: every player started and played 90 minutes; `explain` is the part the snapshot drops. */
+export function live(gw: number) {
+	return {
+		elements: (bootstrap().elements as { id: number }[]).map((e) => ({
+			id: e.id,
+			stats: { minutes: 90, starts: 1, goals_scored: 0, assists: 0, total_points: 2, expected_goals: "0.10", in_dreamteam: false },
+			explain: [{ fixture: gw, stats: [{ identifier: "minutes", points: 2, value: 90 }] }],
+		})),
+	};
+}
+
+/** football-data.co.uk files: a header with the columns Gaffer reads among others, then rows. */
+const FD_HEADER = "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG,FTR,Referee,HxG,AxG,B365H,B365D,B365A,AvgH,AvgD,AvgA,B365>2.5,B365<2.5,Avg>2.5,Avg<2.5";
+
+export function oddsFixturesCsv() {
+	return [
+		`﻿${FD_HEADER}`,
+		"E0,10/10/2026,12:30,Arsenal,Tottenham,,,,A Taylor,,,1.6,4.2,5.5,1.62,4.15,5.4,1.7,2.15,1.72,2.12",
+		'E0,10/10/2026,15:00,"Nott\'m Forest",Hull,,,,"Smith, J",,,2.1,3.4,3.6,2.08,3.45,3.65,2.0,1.8,2.02,1.79',
+		"E1,10/10/2026,15:00,Leicester,Norwich,,,,B Jones,,,2.0,3.5,3.7,2.0,3.5,3.7,1.9,1.9,1.9,1.9",
+		"",
+	].join("\r\n");
+}
+
+export function resultsCsv(season: "prev" | "current") {
+	const rows =
+		season === "prev"
+			? ["E0,15/08/2025,20:00,Liverpool,Bournemouth,4,2,H,A Taylor,,,1.3,6,8.5,1.3,5.9,8.6,1.4,3,1.42,2.9", "E0,16/08/2025,15:00,Spurs,Burnley,3,0,H,B Jones,,,1.4,5,7,1.41,4.9,7.1,1.5,2.6,1.52,2.55"]
+			: ["E0,21/08/2026,20:00,Arsenal,Coventry,3,0,H,T Bramall,1.88,0.2,1.2,7,13,1.19,6.77,14.19,1.57,2.38,1.55,2.38", "E0,10/10/2026,12:30,Arsenal,Tottenham,,,,A Taylor,,,1.6,4.2,5.5,1.62,4.15,5.4,1.7,2.15,1.72,2.12"];
+	return [FD_HEADER, ...rows, ""].join("\n");
+}

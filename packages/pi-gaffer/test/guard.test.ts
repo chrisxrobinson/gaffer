@@ -10,11 +10,12 @@ describe("checkFplRequest (FR-ACC-01)", () => {
 		"entry/123456/transfers/",
 		"entry/123456/event/5/picks/",
 		"element-summary/430/",
+		"event/5/live/",
 	])("allows GET %s", (path) => {
 		expect(checkFplRequest("GET", path)).toEqual({ ok: true });
 	});
 
-	it.each(["my-team/1/", "me/", "entry/1/../../my-team/1/", "accounts/login/", "transfers/", "leagues-classic/1/standings/", "entry/abc/"])(
+	it.each(["my-team/1/", "me/", "entry/1/../../my-team/1/", "accounts/login/", "transfers/", "leagues-classic/1/standings/", "entry/abc/", "event/5/", "event/x/live/"])(
 		"blocks GET %s",
 		(path) => {
 			const r = checkFplRequest("GET", path);

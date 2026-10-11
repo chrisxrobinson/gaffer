@@ -34,6 +34,10 @@ export interface SnapshotEntry {
 	free_transfers?: number | null;
 	ft_source?: "derived" | "user" | null;
 	pending_transfers?: [number, number][];
+	/** The odds source's state in this snapshot (FR-DAT-09). */
+	odds?: { requested: boolean; available: boolean; fixtures: number; reason: string | null };
+	/** The official ep_next this snapshot recorded (FR-DAT-10). */
+	ep_next?: { gw: number | null; players: number; before_deadline: boolean };
 	endpoints: unknown[];
 }
 

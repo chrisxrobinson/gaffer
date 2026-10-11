@@ -18,6 +18,7 @@ export class MockFpl {
 		"entry/1/transfers/": fx.transfers() as unknown,
 		"entry/1/event/5/picks/": fx.picks(5) as unknown,
 		"entry/1/event/4/picks/": fx.picks(4) as unknown,
+		...Object.fromEntries([1, 2, 3, 4, 5].map((gw) => [`event/${gw}/live/`, fx.live(gw) as unknown])),
 	} as Record<string, unknown>;
 
 	async start(): Promise<this> {

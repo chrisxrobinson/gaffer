@@ -206,6 +206,12 @@ Metadata pulled live from PyPI, npm and the GitHub API on 2026-09-27.
 ### Addendum (orchestrator verification, 2026-09-27)
 Re-tested A.7's edge-caching finding. `GET /api/entry/1/transfers/` → `age: 788439` (~9.1 days), `x-cache: MISS, HIT`; the same URL with `?_=1790543866` → `age: 0`, `x-cache: MISS, MISS`. `entry/1/history/` behaves the same (`age: 544353` vs `0`). **So a unique query parameter bypasses the CDN and returns fresh origin data.** Gaffer must use this for per-user endpoints, which are small and fetched once per request. It must not do it for `bootstrap-static` (1.8 MB), except for one forced refresh inside the deadline window.
 
+### Addendum (M3 build, 2026-10-01): football-data.co.uk
+- `https://www.football-data.co.uk/...` answers 302 to `https://football-data.co.uk/...`, which serves the files (200, `text/csv`, with `x-ws-ratelimit-limit: 1000`). Gaffer uses the bare host and refuses redirects.
+- `fixtures.csv` lists only the next few days of matches across all the site's leagues. On 2026-10-01, during the international break before GW6 (deadline 2026-10-10), it had 12 rows, all National League, and no Premier League row. So next-round odds exist only close to a deadline, and a plan made early in the week falls back to Dixon-Coles.
+- `mmz4281/2627/E0.csv` has match xG (`HxG`, `AxG`); the 2025/26 file and earlier ones do not. The pre-match price columns (`AvgH`, `Avg>2.5`, …) are separate from the closing ones (`AvgCH`, …).
+- Team names differ from FPL's ("Man United" / "Man Utd", "Tottenham" / "Spurs", "Hull" / "Hull City", "Coventry" / "Coventry City", "Ipswich" / "Ipswich Town"); `gaffer_lib.strength.team_key` joins them.
+
 ## Sources
 
 Live API calls (all 2026-09-27 ~21:10 UTC, via curl):

@@ -124,7 +124,8 @@ Cards   = −1 · yellow_rate · mins/90 − 3 · red_rate · mins/90
 
 - FPL publishes `ep_this` and `ep_next` per player in `bootstrap-static`. **The formula is undocumented.** It is widely described as form-driven and adjusted for availability (see Unconfirmed).
 - My check on the vaastav archive's `xP` column (the historical `ep_this`) for 2023/24 and 2024/25: it correlates about as strongly with the *previous* GW's points (r 0.68) as with the same GW's points (r 0.68–0.73). That fits a mostly form-based number.
-- For 2025/26 the `xP` column in that archive is **mostly zeros** (fewer than 5% of GWs populated), so it is unusable.
+- For 2025/26 the `xP` column in that archive is **mostly zeros**. *Checked in M3 (2026-10-01, commit `f9ed3e88`):* 11 of 38 GWs are populated (1–6, 8, 9, 24, 29, 38); 2023/24 has 37 and 2024/25 has 35.
+- *Also found in M3:* **the archive's `xP` for GW g was captured after GW g's matches and contains their points.** It correlates 0.89–0.93 with form over GW g−3…g against 0.78–0.82 with form over g−4…g−1, and a regression at GW10 gives `xP = 0.60·form_before + 0.42·points_this_GW` (2023/24). That explains the high same-GW correlation above. As a pre-deadline benchmark, only the *previous* GW's value is honest, and `gaffer_lib.backtest` uses that.
 - **Implication:** Gaffer should snapshot `ep_next` itself before each deadline and use it as a free benchmark to beat, not as a model.
 
 ---
@@ -179,6 +180,11 @@ The evidence is nuanced:
 - **People.** Originally by Sertalp Bilal; now maintained by Chris Musson (pyproject).
 - **Stack.** pandas plus **HiGHS via `highspy`** (≥1.11; HiGHS 1.15.1 installed). Requires Python ≥3.14 per `pyproject.toml`.
 - **Inputs.** It needs a projections CSV (Solio, FPL Review or "Mikkel" formats: `{gw}_Pts`, `{gw}_xMins`). **It does not produce projections itself.**
+- *Verified in M3 (commit `ec65f5e`, 2026-09-15):* `LICENSE` is Apache-2.0 and `requires-python` is `>=3.14`, as above. Three things the notes above missed:
+  - `prep_data` fetches `bootstrap-static` and `fixtures` from the live FPL API and reads the CSV from the repo's own `data/` folder, so it can't run without a network. `solve_multi_period_fpl(data, options)` can, given the same `data` dict, which is how `gaffer_lib.plan` calls it.
+  - The repo is not an installable package: the wheel it declares contains `dev`, `run` and `tests` but not the top-level `utils.py` and `paths.py` that `dev/solver.py` imports. The sandbox image vendors the source instead. Importing it needs `requests` and `fuzzywuzzy`.
+  - At run time it prints that commercial entities must obtain a separate commercial licence. Gaffer's use is personal and non-commercial; this belongs with NFR-SEC-06 before any commercial use.
+  - `data/comprehensive_settings.json` ships `weekly_hit_limit: 0` (no hits). Gaffer's baseline follows ARCHITECTURE §4 (hits allowed at 4 points) and leaves the limit to the user's `max_hits_per_gw`.
 
 **Formulation** (read from `dev/solver.py` and `data/comprehensive_settings.json`):
 - **Variables per player per GW:** squad, lineup, captain, vice-captain, bench order (4 slots), transfer_in, transfer_out, Free Hit squad; chip binaries per GW; FT state as integer 0–5 with one-hot `ft_state`.
@@ -370,7 +376,7 @@ The LLM proposes inputs and constraints (bans, locks, chip GWs); the solver deci
 
 - **Kovachev GW26 article body and method specifics for 2021/22:** member-only. Live Medium returned 403/Cloudflare and the Wayback copy has only the free intro. The 187K rank and "hybrid 144 vs Top-100 143" come from the snapshot header and a search snippet. Final 2021/22 rank is unverified because team ID 386960 now maps to a different manager in `/api/entry/386960/history/`.
 - **Official `ep_next` formula:** not published anywhere I could find (searched FPL help and API docs). The "form-based" description comes from third-party sites plus my correlation check.
-- **Timing of vaastav's `xP` column (pre- or post-deadline capture):** not documented in the repo README I saw. My correlation results are indicative only, and the 2025/26 column is mostly empty.
+- **Timing of vaastav's `xP` column (pre- or post-deadline capture):** not documented in the repo README I saw. *Resolved in M3:* the data show it is captured after the GW's matches (§2c).
 - **First-half chip deadline:** the PL article (via WebFetch summary) says 13:30 GMT Saturday 2 January, but the API's GW19 `deadline_time` is 2027-01-01T18:30Z. Re-check the API near the date; the API is authoritative.
 - **Official rules page** (`fantasy.premierleague.com/help/rules` and `/en/help/new`): JS-rendered and returned no content through fetch. Scoring was verified from the API and PL news articles instead.
 - **Top-10k / top-100k thresholds:** my sample of about 400 entries per season cannot resolve ranks above about 1%. Practitioner figures (FPL Oracle: top 10k ≈ 2,300–2,450) are unverified and, for 2025/26, look high relative to my top-1% band.
@@ -378,5 +384,5 @@ The LLM proposes inputs and constraints (bans, locks, chip GWs); the solver deci
 - **Bonello et al. selection method:** whether their top-0.5% result used real-time or hindsight team selection was not checked in the full paper.
 - **Solio and FPL Review internals** beyond their public descriptions (market weighting, bonus model, Massive Data Model features): proprietary.
 - **"Mikkel" free projections format** supported by the solver: the source and current availability of those projections was not checked.
-- **Solver runtimes:** measured on synthetic projections in preseason mode on one laptop. Real projections and an existing squad with FT state will differ.
+- **Solver runtimes:** measured on synthetic projections in preseason mode on one laptop. Real projections and an existing squad with FT state will differ. *Measured in M3:* horizon 6 with real projections, an existing squad and 3 FT takes 15–28 s on 2 vCPUs (about 165 players after the pool filters), and about 3.5 s to the first feasible plan.
 - **FBref / Understat:** reports say FBref lost Opta advanced stats in January 2026. Understat returned HTTP 200 today, but its terms and continued EPL coverage were not reviewed.

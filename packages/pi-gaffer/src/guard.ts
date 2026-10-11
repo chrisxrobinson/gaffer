@@ -14,6 +14,7 @@ const ALLOWED_PATHS = [
 	/^entry\/\d+\/transfers\/$/,
 	/^entry\/\d+\/event\/\d+\/picks\/$/,
 	/^element-summary\/\d+\/$/,
+	/^event\/\d+\/live\/$/,
 ];
 
 export type GuardResult = { ok: true } | { ok: false; reason: string };
@@ -25,6 +26,29 @@ export function checkFplRequest(method: string, path: string): GuardResult {
 	if (!ALLOWED_PATHS.some((re) => re.test(path))) {
 		return { ok: false, reason: `Gaffer is read-only: FPL path "${path}" is not on the public allowlist.` };
 	}
+	return { ok: true };
+}
+
+/**
+ * The one supplementary source (ADR 0002, FR-DAT-09): football-data.co.uk, GET only, and only the
+ * next-round odds file and the Premier League season files. No other host is on the allowlist.
+ */
+export const ODDS_HOST = "football-data.co.uk";
+const ALLOWED_ODDS_PATHS = [/^\/fixtures\.csv$/, /^\/mmz4281\/\d{4}\/E0\.csv$/];
+const LOOPBACK = new Set(["127.0.0.1", "localhost", "[::1]"]);
+
+export function checkOddsRequest(method: string, url: string): GuardResult {
+	if (method.toUpperCase() !== "GET") return { ok: false, reason: `Gaffer is read-only: ${method} requests to the odds source are not allowed.` };
+	let u: URL;
+	try {
+		u = new URL(url);
+	} catch {
+		return { ok: false, reason: `Gaffer is read-only: "${url}" is not a URL.` };
+	}
+	// Loopback is the mock server in tests; anything else must be the real host over HTTPS.
+	const official = u.protocol === "https:" && u.hostname === ODDS_HOST;
+	if (!official && !LOOPBACK.has(u.hostname)) return { ok: false, reason: `Gaffer is read-only: host "${u.hostname}" is not on the allowlist (odds come from ${ODDS_HOST} only).` };
+	if (u.search || !ALLOWED_ODDS_PATHS.some((re) => re.test(u.pathname))) return { ok: false, reason: `Gaffer is read-only: odds path "${u.pathname}${u.search}" is not on the allowlist.` };
 	return { ok: true };
 }
 

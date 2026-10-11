@@ -149,13 +149,14 @@ ttyd -i <egress IP> -W -m 1 … tmux -f /opt/gaffer/tmux.conf new-session -A -s 
 - A plain prompt such as "What should I do this week?" runs the default workflow. Prompt templates cover common intents: `/gw` for the full recommendation, `/whatif <text>` and `/explain <player>`.
 
 ### 2.2 The run
-1. **Snapshot.** The model calls `fpl_snapshot(team_id)`. The tool:
+1. **Snapshot.** The model calls `fpl_snapshot(team_id, include: ["odds"])`. The tool:
    - fetches with the freshness policy (ADR 0002); per-user endpoints are always fresh and cache-busted
+   - fetches the last six checked GWs' player stats, and the odds source when asked (ADR 0002); neither can fail the snapshot
    - validates schemas and invariants
    - writes an immutable snapshot
    - provisions the sandbox lazily and runs `python -m gaffer_lib derive` there to get squad, bank, selling prices, derived FT, chips remaining per half, GW state and deadline, applying the user's `/team --ft` and `--pending` overrides and recording `ft_source`. If the sandbox or derive fails, the summary falls back to the raw API values with FT unknown and a warning
-   - returns a summary of under 1.5k tokens: squad table, flags, staleness
-2. **Golden path.** The model runs `python -m gaffer_lib run --snapshot $S --prefs $P --out /work/plan.json`. That computes strength → xMins → xP → solver (horizon 6, 4 shown) → chip scenarios → captain EV. It prints a compact summary and the top 3 plans.
+   - returns a summary of under 1.5k tokens: squad table, flags, staleness, whether odds are in the snapshot, and the golden-path command for it (with the user's `--ft`/`--pending`)
+2. **Golden path.** The model runs `python -m gaffer_lib run --snapshot $S --prefs $P --out /work/plan.json`. That computes strength → xMins → xP → solver (horizon 6, 4 shown) → the next-best plans → chip scenarios → captain candidates, and checks every plan with `validate` against the same snapshot. It writes the full `gaffer.plan/1` JSON and prints a compact summary with the top 3 plans, the confidence and the warnings. The run is budgeted (50 s) to stay inside 60 s on the sandbox's 2 vCPUs: the main solve may use its 45 s limit, and the next-best plans and chip scenarios share what is left; a scenario that doesn't fit is reported as not evaluated.
 3. **Judgement.** Using skills, the model does four things:
    - checks news, `chance_of_playing` and `scout_risks`, and, if warranted, re-runs with structured `xmins_overrides` (quoting the source)
    - picks between near-tied plans according to risk mode and preferences
@@ -245,7 +246,8 @@ The full decision is in [ADR 0002](decisions/0002-data-access.md). Summary:
 - **Retries:** exponential backoff with full jitter (0.5 s base, 8 s cap, 4 tries).
 - **Downtime:** a 503 or non-JSON response means "game updating". The tool serves the last good snapshot with `stale: true`, and the recommendation carries a warning and confidence ≤ medium. Near the deadline, if per-user data can't be refreshed, Gaffer **refuses to finalise transfers** (it will still discuss them) and says why (FR-DAT-05).
 - **Validation:** TypeBox schemas for the consumed fields, plus invariants: 15 picks, 20 teams, one `is_next`, 8 chip definitions, 10 fixtures or a detected BGW/DGW. A failure is a hard error, never silent.
-- **Historical store:** every snapshot is immutable and content-hashed under `/data/snapshots/<season>/<gw>/`. Past seasons come from `vaastav/Fantasy-Premier-League` (licence unclear, used privately only). Pre-deadline `ep_next` is recorded by us, because the vaastav xP columns are unusable for 2025/26 (research 04).
+- **Historical store:** every snapshot is immutable and content-hashed under `/data/snapshots/<season>/<gw>/`. Past seasons come from `vaastav/Fantasy-Premier-League` (licence unclear, used privately only, fetched into a gitignored directory by `tools/fetch_history.py`). Pre-deadline `ep_next` is recorded by us (every snapshot carries it; the index remembers the latest pre-deadline snapshot per GW), because the vaastav xP column can't serve: it is populated for 11 of 38 GWs in 2025/26, and in every season its value for a GW was captured after that GW's matches and contains their points (BUILD.md, M3).
+- **Odds:** `include: ["odds"]` adds football-data.co.uk's next-round odds and the previous and current season's results as `odds.json`. When the source is down, the plan falls back to Dixon-Coles and says so.
 
 ---
 
@@ -259,13 +261,15 @@ The full decision is in [ADR 0003](decisions/0003-analytics-split.md).
 **Challenge to the starting view.** The brief treats chip timing and risk as pure skills. The research says both are hybrids. Chip decisions must be anchored on scenario solves: free chip placement in the MILP takes 114–300 s, while 5–20 fixed-chip solves take a few seconds each. Risk is EO arithmetic (code) plus a choice of objective (model). The optimiser and projections are a library the model calls, **not** Pi tools. That keeps the tool count at 7 while being just as reliable, because the final numbers are recomputed at submit.
 
 **Baseline model for the MVP** (research 04 §11):
-- odds-implied team λ for the next GW, from football-data.co.uk `fixtures.csv`
-- time-decayed Dixon-Coles for GW+2…+6
+- odds-implied team λ for the next GW, from football-data.co.uk `fixtures.csv`, blended 0.8 / 0.2 with the model
+- time-decayed Dixon-Coles (half-life one year, Gaussian priors, promoted teams starting at the relegated teams' strength) for GW+2…+6 and for any fixture without odds, fitted on the previous and current season's results and on match xG where available
 - rules + recency xMins
-- component xP including DefCon and bonus
-- open-fpl-solver with horizon 6, decay 0.9, default FT values (2: 2.0, 3: 1.6, 4: 1.3, 5: 1.1), hit cost 4, 45 s limit
+- component xP including DefCon and bonus, scored with `rules.Scoring`
+- open-fpl-solver (pinned commit) with horizon 6, decay 0.9, default FT values (2: 2.0, 3: 1.6, 4: 1.3, 5: 1.1), hit cost 4, 45 s limit, seeded with the no-transfer plan
 - chips via scenario solves
 - captain = argmax xP, vice from the solver
+
+Its constants were set from the literature before any backtest and have not been tuned on the seasons the backtest reports (§6.2).
 
 **Upgrade path:**
 1. Calibrate on 2024/25 and 2025/26.
@@ -281,7 +285,7 @@ Each stage ships only if it beats the previous stage in the backtest (§6).
 | Aspect | Value |
 |---|---|
 | Language/runtime | Python 3.14 (`python:3.14-slim`); open-fpl-solver requires ≥3.14 |
-| Preinstalled | `gaffer_lib`, `open-fpl-solver` (pinned commit), `highspy`, `numpy`, `pandas`, `scipy`, `pydantic`. No pip at runtime. |
+| Preinstalled | `gaffer_lib`, `highspy`, `numpy`, `pandas`, `scipy`, `pydantic`; `open-fpl-solver` vendored at a pinned commit under `/opt/open-fpl-solver` (checksum-verified source: it is not an installable package), with `requests` and `fuzzywuzzy`, which it imports. No pip at runtime. |
 | Limits | 2 vCPU, 2 GB RAM (4 GB on Fargate), pids 128 (commands get `RLIMIT_NPROC` 96), 120 s per command (solver calls run with a 45 s time limit), `/work` tmpfs 256 MB |
 | Filesystem | Read-only root; `/data` read-only; `/work` read-write and ephemeral |
 | Network | None: an `internal: true` network that reaches the harness only |
@@ -319,16 +323,18 @@ This section is how the theory in the brief gets tested. There are four layers, 
 - **Derivation check.** `derive` FT and selling prices are compared against at least 3 real accounts whose true values the owners read from the app (a manual fixture, refreshed each season).
 
 ### 6.2 Offline backtests of the deterministic pipeline (per library change)
-- **Replay:** `gaffer_lib.backtest` replays 2023/24–2025/26 GW by GW using only information available before each deadline. The sources are vaastav per-GW data plus Gaffer's own snapshots once they exist.
-- **Policies compared** from the same starting squad:
+- **Replay:** `gaffer_lib.backtest` replays 2023/24–2025/26 GW by GW using only information available before each deadline (stats, results and xG from fixtures that kicked off before it; the GW's own price and ownership). The sources are vaastav per-GW data and football-data.co.uk season files, plus Gaffer's own snapshots once they exist. Tests rewrite later GWs and check that no earlier decision changes.
+- **Policies compared** from the same starting squad (the most-owned legal £100m squad at GW1), with no chips, and scored on real points after auto-subs with hits deducted:
 
   | Policy | Description |
   |---|---|
-  | B0 no transfers | Hold, auto-captain the highest `ep_next` |
-  | B1 official xP greedy | 1 FT per week maximising `ep_next`, captain = max `ep_next` |
-  | B2 template | Move toward the highest-ownership XI |
+  | B0 no transfers | Hold, XI and captain by the highest official xP |
+  | B1 official xP greedy | 1 FT per week on the swap that gains most official xP, captain = max official xP |
+  | B2 template | 1 FT per week on the swap that gains most ownership; XI and captain by ownership |
   | G0 Gaffer baseline | Deterministic golden path, no LLM |
   | G1+ | Each upgrade stage |
+- **The official xP used by B0 and B1** is the value recorded for the *previous* GW, the last one that existed before the deadline. The archive's value for a GW was captured after its matches and contains their points, so using it would hand the baselines the result. Where the previous GW's value is missing (27 of 38 GWs in 2025/26), B1 can't be built: it holds, and the season is reported as blocked for the B1 comparison rather than counted.
+- **Limits of the replay,** which the output repeats: the fixture list for later GWs is the final one (results never are); the archive has no injury or suspension flags, so G0 runs without them; transfer rules are the current ones (bank up to 5) in every season; previous-season stats seed the model at each season's start.
 - **Metrics:**
   - season points and points per GW
   - equivalent rank band, using research 04's bands (for example, 2025/26 top 10% ≈ 2,160–2,170)
@@ -536,10 +542,11 @@ sequenceDiagram
 ## Appendix B — Key numbers and facts (verified 2026-09-27)
 - **FPL API:** no auth for the used endpoints; Fastly/Varnish/Google, not Cloudflare. `bootstrap-static` is 1.78 MB with `max-age=300`. `my-team` returns 403. Set-piece notes are at `team/set-piece-notes/`.
 - **Chips:** 8 (WC, FH, BB, TC × 2 halves, split at GW19/20). `max_extra_free_transfers` is 4. DefCon points are active. New fields: `price_change_*` and `scout_risks`.
-- **Solver** (open-fpl-solver + HiGHS, 667 players):
+- **Solver** (open-fpl-solver + HiGHS, 667 players), research measurements on synthetic projections from an empty squad:
   - 4 GW with no chips: 0.2 s
   - 8 GW with no chips: 10 s
   - 4 GW with free chips: 114 s
   - 8 GW with free chips: time limit
+- **Solver as built (M3, 2026-10-01):** real projections, an existing squad with 3 FT, horizon 6, about 165 players after the solver's pool filters, 2 vCPUs: 15–28 s to a proven plan; the first feasible plan takes about 3.5 s, which is why the solve is seeded with the no-transfer plan.
 - **Pi 0.87.1:** eight extension checks pass (S1). Skills only appear when `read` or `bash` is active. The SDK needs `bindExtensions()`.
 - **Fargate:** each task runs in its own VM, and only `CAP_SYS_PTRACE` can be added. ALB idle timeout is 60 s by default, up to 4000 s.
