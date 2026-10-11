@@ -375,6 +375,27 @@ def test_an_available_chip_is_scored_against_the_chip_free_plan(world, doc):
     assert mine["evaluated"] and mine["delta_xp"] == pytest.approx(cap, abs=0.02) and rec["chip"]["confidence"] == "high"
 
 
+def test_a_chip_planned_for_a_later_gw_follows_its_scenario(world, doc):
+    """The plan file's Triple Captain scenario is for GW7: submitting that plan scores what the
+    scenario scored, line-ups included, and the 4-GW plan shows the chip in its GW."""
+    snap = world[0]
+    sc = next(x for x in doc["chip_scenarios"] if x["chip"] == "3xc")
+    g0 = sc["gws"][0]
+    ids = lambda ts: [{"out": {"id": t["out"]}, "in": {"id": t["in"]}} for t in ts]  # noqa: E731
+    sub = {
+        "transfers": [{**t, "rationale": "As the scenario."} for t in ids(g0["transfers"])], "captain": {"id": g0["captain"]}, "vice_captain": {"id": g0["vice_captain"]},
+        "starting_xi": g0["xi"], "bench": g0["bench"], "chip": {"play": None, "rationale": "Triple Captain is worth more next GW."},
+        "plan": [{"gw": s["gw"], "transfers": ids(s["transfers"]), "chip": s["chip"], "captain": s["captain"]} for s in sc["gws"][:4]], "summary": "Hold the chip a week.",
+    }
+    out = recompute(snap, sub, doc)
+    assert out["valid"], out["errors"]
+    rec, v = out["recommendation"], out["validation"]
+    assert [p["chip"] for p in rec["plan"]] == [None, "3xc", None, None] and rec["chip"]["play"] is None
+    tc = next(x for x in rec["chip"]["scenarios"] if x["chip"] == "3xc")
+    assert v["score"] == pytest.approx(v["best_score"] + tc["delta_xp"], abs=0.02) and v["gap_to_best"] < 0
+    assert rec["plan"][1]["expected_points"] == pytest.approx(sc["gws"][1]["expected_points"], abs=0.011)
+
+
 # --- FR-INP-02: preferences ---------------------------------------------------------------------------
 
 

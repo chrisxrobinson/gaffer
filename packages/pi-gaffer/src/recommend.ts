@@ -16,9 +16,9 @@ import { randomBytes } from "node:crypto";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Compile } from "typebox/compile";
-import { gafferLibCommand } from "./derive.ts";
+import { gateCommand } from "./derive.ts";
 import { type Preferences, readPrefs } from "./prefs.ts";
-import { lastJsonLine, type SandboxSession, sandboxReadFile, sandboxRun, shellQuote } from "./sandbox.ts";
+import { lastJsonLine, type SandboxSession, sandboxReadFile, sandboxRun } from "./sandbox.ts";
 import { Recommendation, SCHEMA_ID, Submission } from "./schema/recommendation.ts";
 import type { SnapshotEntry } from "./session.ts";
 import { FINALISE_WINDOW_MS } from "./snapshot.ts";
@@ -67,13 +67,6 @@ export function ulid(now: number = Date.now(), random: Uint8Array = randomBytes(
 	let rand = "";
 	for (let i = 0; i < 16; i++, bits >>= 5n) rand = B32[Number(bits & 31n)] + rand;
 	return time + rand;
-}
-
-export function gateCommand(snapshotDir: string, opts: { ft: number | null; pending: [number, number][] }, lib: string = gafferLibCommand()): string {
-	let cmd = `${lib} validate --snapshot ${shellQuote(snapshotDir)} --request -`;
-	if (opts.ft !== null) cmd += ` --ft ${Math.trunc(opts.ft)}`;
-	if (opts.pending.length) cmd += ` --pending ${shellQuote(opts.pending.map(([o, i]) => `${Math.trunc(o)}>${Math.trunc(i)}`).join(","))}`;
-	return cmd;
 }
 
 /** Inside T−1h on stale data, transfers are discussed but not submitted (FR-DAT-05). */

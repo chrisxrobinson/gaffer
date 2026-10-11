@@ -217,10 +217,15 @@ def recompute(snap: Snapshot, submission: Mapping, plan_doc, *, prefs: Mapping |
         return result()
 
     # 3. The full plan over the horizon: XI and captain for the later GWs, and the GWs beyond those shown.
-    ev_plans = [d for d in plan_doc["plans"] if validate(snap, _proposal(d["gws"]), ft=ft, pending=pending)["valid"]]
+    legal = lambda d: validate(snap, _proposal(d["gws"]), ft=ft, pending=pending)["valid"]  # noqa: E731
+    ev_plans = [d for d in plan_doc["plans"] if legal(d)]
     if not ev_plans:
         errors.append(_violation("PLAN_NO_VALID_PLANS", "No plan in the plan file passes validation against this snapshot. Re-run the golden path and submit again."))
         return result()
+    # Chip scenarios are plans too: a submission that follows one takes its line-ups from it. They are
+    # not part of the comparison below (a chip always adds points; the question there is the transfers).
+    ev_scenarios = [x for x in plan_doc.get("chip_scenarios") or [] if x.get("evaluated") and x.get("gws") and legal(x)]
+    followable = ev_plans + ev_scenarios
     xp_at = lambda gw: {p: proj.xp[p][gw] for p in proj.xp}  # noqa: E731
     squad0 = step0["xi"] + step0["bench"]
     pp0 = {p: proj.p_play[p][gws[0]] for p in squad0}
@@ -229,7 +234,7 @@ def recompute(snap: Snapshot, submission: Mapping, plan_doc, *, prefs: Mapping |
     steps = [{**step0, "xi": sorted(step0["xi"], key=lambda p: (order[et[p]], -proj.xp[p][gws[0]], p)), "bench": bench0}]
     for k in range(1, shown):
         gw, squad = gws[k], threaded[k]["squad"]
-        match = next((d["gws"][k] for d in ev_plans if len(d["gws"]) > k and all(_key(d["gws"][j]) == _key(declared[j]) for j in range(k + 1))
+        match = next((d["gws"][k] for d in followable if len(d["gws"]) > k and all(_key(d["gws"][j]) == _key(declared[j]) for j in range(k + 1))
                       and sorted(d["gws"][k]["xi"] + d["gws"][k]["bench"]) == sorted(squad)), None)
         step = {**declared[k], **({x: match[x] for x in ("xi", "bench", "captain", "vice_captain")} if match else
                                   {x: v for x, v in P.hold_step(squad, gw, inputs, proj).items() if x in ("xi", "bench", "captain", "vice_captain")})}
@@ -243,7 +248,7 @@ def recompute(snap: Snapshot, submission: Mapping, plan_doc, *, prefs: Mapping |
         steps.append(step)
     if errors:
         return result()
-    tail = next((d["gws"] for d in ev_plans if len(d["gws"]) >= len(gws) and all(_key(d["gws"][j]) == _key(declared[j]) for j in range(shown))), None)
+    tail = next((d["gws"] for d in followable if len(d["gws"]) >= len(gws) and all(_key(d["gws"][j]) == _key(declared[j]) for j in range(shown))), None)
     squad = threaded[shown - 1]["next_squad"]
     for k in range(shown, len(gws)):
         steps.append({x: tail[k][x] for x in STEP_KEYS} if tail else P.hold_step(squad, gws[k], inputs, proj))
@@ -300,7 +305,7 @@ def recompute(snap: Snapshot, submission: Mapping, plan_doc, *, prefs: Mapping |
     for x in plan_doc.get("chip_scenarios") or []:
         entry = {"chip": x["chip"], "gw": x.get("gw"), "evaluated": False}
         if x.get("evaluated") and x.get("gws") and base_ok:
-            if validate(snap, _proposal(x["gws"]), ft=ft, pending=pending)["valid"]:
+            if any(x is y for y in ev_scenarios):
                 th = P.thread_state(x["gws"], inputs, state)
                 at = next(i for i, s in enumerate(x["gws"]) if s["gw"] == x["gw"])
                 entry.update(evaluated=True, delta_xp=round(P.score(x["gws"], inputs, proj, state) - base_score, 2),

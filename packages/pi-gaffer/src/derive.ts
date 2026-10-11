@@ -86,3 +86,14 @@ export function sandboxDerive(session: SandboxSession): DeriveFn {
 		return doc as Derived;
 	};
 }
+
+/**
+ * The submit gate's command (ADR 0003): `gaffer_lib validate --request -`, with the request on
+ * standard input and the `--ft`/`--pending` the snapshot was taken with.
+ */
+export function gateCommand(snapshotDir: string, opts: { ft: number | null; pending: [number, number][] }, lib: string = gafferLibCommand()): string {
+	let cmd = `${lib} validate --snapshot ${shellQuote(snapshotDir)} --request -`;
+	if (opts.ft !== null) cmd += ` --ft ${Math.trunc(opts.ft)}`;
+	if (opts.pending.length) cmd += ` --pending ${shellQuote(opts.pending.map(([o, i]) => `${Math.trunc(o)}>${Math.trunc(i)}`).join(","))}`;
+	return cmd;
+}
