@@ -9,7 +9,8 @@ and the official `ep_next`. The request carries what happened and what to score:
     {"gw": 7,
      "live": {"elements": [{"id": 1, "stats": {"minutes": 90, "total_points": 6}}, ...]},  # event/{gw}/live
      "lineups": {"recommended": {"xi": [...], "bench": [...], "captain": 1, "vice_captain": 2,
-                                 "chip": null, "hit_cost": 0}, ...},
+                                 "chip": null, "hit_cost": 0},
+                 "actual": {"picks": <entry/{id}/event/{gw}/picks>}, ...},
      "baselines": true,          # also score B0 and B1 from the snapshot's squad
      "ft": null, "pending": null, # the overrides the snapshot was taken with
      "xp": {"<player id>": 5.2}}  # Gaffer's xP for this GW, for the projection error
@@ -47,7 +48,46 @@ def live_points(live: Mapping) -> tuple[dict[int, float], dict[int, float]]:
     return pts, mins
 
 
+def deadline_lineup(picks_doc: Mapping, element_type: Mapping[int, int]) -> dict:
+    """A manager's line-up as it stood at the deadline, from `entry/{id}/event/{gw}/picks`.
+
+    FPL stores picks after the automatic substitutions: each sub swapped the two players' slots, and
+    the XI was then re-sorted by position type. So undo the swaps (latest first) and re-sort the XI
+    (GK, DEF, MID, FWD), as FPL requires at the deadline. The hit cost is the GW's transfer cost; only
+    Bench Boost and Triple Captain change how a line-up scores."""
+    picks = picks_doc["picks"]
+    types = {p["element"]: p.get("element_type") or element_type[p["element"]] for p in picks}
+    pos = {p["element"]: p["position"] for p in picks}
+    for sub in reversed(picks_doc.get("automatic_subs") or []):
+        pos[sub["element_in"]], pos[sub["element_out"]] = pos[sub["element_out"]], pos[sub["element_in"]]
+    xi = sorted((e for e in pos if pos[e] <= 11), key=lambda e: (types[e], pos[e]))
+    bench = sorted((e for e in pos if pos[e] > 11), key=lambda e: pos[e])
+    chip = picks_doc.get("active_chip")
+    history = picks_doc.get("entry_history") or {}
+    return {
+        "xi": xi, "bench": bench,
+        "captain": next(p["element"] for p in picks if p.get("is_captain")),
+        "vice_captain": next(p["element"] for p in picks if p.get("is_vice_captain")),
+        "chip": chip if chip in ("bboost", "3xc") else None, "played_chip": chip,
+        "hit_cost": int(history.get("event_transfers_cost") or 0),
+    }
+
+
 def score_lineup(lineup: Mapping, pts: Mapping[int, float], mins: Mapping[int, float], element_type: Mapping[int, int], rules: R.Rules) -> dict:
+    """Score a line-up ({xi, bench, captain, vice_captain, chip, hit_cost}), or a manager's real GW from
+    their picks ({"picks": <entry/{id}/event/{gw}/picks>}), which is also compared with FPL's own total."""
+    if "picks" in lineup:
+        doc = lineup["picks"]
+        # The picks carry each player's position, so a player the snapshot doesn't list still scores.
+        types = {**element_type, **{p["element"]: p["element_type"] for p in doc["picks"] if p.get("element_type")}}
+        out = score_lineup(deadline_lineup(doc, types), pts, mins, types, rules)
+        history = doc.get("entry_history") or {}
+        if "points" in history:
+            reported = float(history["points"]) - float(history.get("event_transfers_cost") or 0)
+            out["fpl_points"] = reported
+            out["matches_fpl"] = abs(reported - out["points"]) < 1e-9
+        out["chip"] = doc.get("active_chip")
+        return out
     s = R.lineup_points(lineup["xi"], lineup["bench"], lineup["captain"], lineup["vice_captain"], lineup.get("chip"),
                         pts, lambda p: mins.get(p, 0) > 0, element_type, rules, int(lineup.get("hit_cost") or 0))
     return {k: s[k] for k in ("points", "gross", "hit_cost", "chip", "autosubs", "armband", "multiplier", "captain_points", "bench_points")}

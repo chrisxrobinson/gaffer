@@ -80,3 +80,18 @@ def test_score_command_reads_the_request_on_stdin():
     assert r.returncode == 0, r.stdout + r.stderr
     out = json.loads(r.stdout.strip().splitlines()[-1])
     assert out["lineups"]["rec"]["points"] == 55 and out["baselines"]["B0"]["points"] == 62
+
+
+PICKS = json.loads((DATA / "picks-2026-27-gw6.json").read_text())
+
+
+def test_real_managers_gw6_points_are_reproduced_from_their_picks():
+    """51 public 2026/27 entries' GW6 picks (sampled from the overall league on 2026-10-16; entry ids
+    dropped): rebuilt to the deadline line-up, scored by lineup_points against event/6/live, minus the
+    transfer cost, each equals FPL's own `entry_history.points - event_transfers_cost`. The sample has
+    15 automatic subs, a Bench Boost, 4 Wildcards and 2 hits."""
+    assert sum(len(p["automatic_subs"]) for p in PICKS) >= 10 and any(p["active_chip"] == "bboost" for p in PICKS)
+    out = score(SNAP, {"gw": 6, "live": LIVE, "lineups": {str(i): {"picks": p} for i, p in enumerate(PICKS)}})["lineups"]
+    wrong = [(i, o["points"], o["fpl_points"]) for i, o in out.items() if not o["matches_fpl"]]
+    assert wrong == [], f"{len(wrong)}/{len(PICKS)} differ (index, ours, FPL's): {wrong[:5]}"
+    assert any(o["hit_cost"] > 0 for o in out.values()) and any(o["chip"] == "bboost" for o in out.values())
