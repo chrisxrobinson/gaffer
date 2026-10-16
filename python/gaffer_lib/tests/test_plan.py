@@ -303,7 +303,7 @@ def test_run_golden_path_end_to_end(tmp_path, capsys):
     text = capsys.readouterr().out
     assert code == 0
     doc = json.loads(out.read_text())
-    assert doc["schema"] == "gaffer.plan/1" and doc["gaffer_lib"] == "0.4.0" and doc["gw"] == 6
+    assert doc["schema"] == "gaffer.plan/1" and doc["gaffer_lib"] == "0.5.0" and doc["gw"] == 6
     assert doc["solver"]["commit"] == P.SOLVER_COMMIT and doc["solver"]["gap"] is not None
     assert 1 <= len(doc["plans"]) <= 3
     for p in doc["plans"]:

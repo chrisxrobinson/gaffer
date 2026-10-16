@@ -4,13 +4,16 @@
   validate --snapshot DIR --proposal FILE|- [--ft N] [--pending "OUT>IN,..."]
   validate --snapshot DIR --request FILE|- [--ft N] [--pending "OUT>IN,..."]
   run      --snapshot DIR [--prefs FILE] [--xmins FILE] [--hold] [--out FILE] [--ft N] [--pending ...] [--time-limit S] [--budget S] [--no-chips] [--json]
+  score    --snapshot DIR --request FILE|-
   backtest --seasons 2023-24,2024-25,2025-26 [--data DIR] [--policies B0,B1,B2,G0] [--out FILE]
 
 derive and validate print one JSON document on stdout. `validate --proposal` checks a plan against
 the rules; `validate --request` is the submit gate (ADR 0003): the request holds the model's
 submission, the golden path's plan and the user's preferences, and the answer is the rules check
 plus every number recomputed (gaffer_lib.recompute). run writes the full plan JSON to --out and
-prints a compact summary (the JSON itself with --json). backtest prints season points per policy.
+prints a compact summary (the JSON itself with --json). score scores line-ups made on a pre-deadline
+snapshot against the finished GW's official points, with the B0/B1 baselines (gaffer_lib.outcomes).
+backtest prints season points per policy.
 
 Exit status: 0 ok (validate: valid; run: the best plan passes validate), 1 rule violations,
 2 bad input or data.
@@ -48,6 +51,9 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--budget", type=float, default=None, help="time budget for the whole run in seconds (default 50)")
             p.add_argument("--no-chips", action="store_true", help="skip the chip scenario solves")
             p.add_argument("--json", action="store_true", help="print the plan JSON instead of the summary")
+    sc = sub.add_parser("score")
+    sc.add_argument("--snapshot", required=True, help="the pre-deadline snapshot the decisions were made on")
+    sc.add_argument("--request", required=True, help='score request JSON file, or - for stdin: {"gw", "live", "lineups", "baselines", "ft", "pending", "xp"}')
     bt = sub.add_parser("backtest")
     bt.add_argument("--seasons", required=True, help="comma-separated, e.g. 2023-24,2024-25,2025-26")
     bt.add_argument("--data", default="var/history", help="directory filled by tools/fetch_history.py")
@@ -62,7 +68,12 @@ def main(argv: list[str] | None = None) -> int:
         return backtest_main(args)
     try:
         snap = Snapshot(args.snapshot)
-        if args.cmd == "derive":
+        if args.cmd == "score":
+            from .outcomes import score  # noqa: PLC0415
+
+            text = sys.stdin.read() if args.request == "-" else open(args.request, encoding="utf-8").read()
+            out, code = score(snap, json.loads(text)), 0
+        elif args.cmd == "derive":
             out, code = derive(snap, ft=args.ft, pending=args.pending), 0
         elif args.cmd == "validate":
             src = args.proposal or args.request

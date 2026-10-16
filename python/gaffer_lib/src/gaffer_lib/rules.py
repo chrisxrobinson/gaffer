@@ -265,6 +265,45 @@ def automatic_subs(picks: Sequence[Pick], played: Callable[[int], bool], rules: 
     return subs
 
 
+# Captaincy multipliers (FPL rules, "Scoring" and "Chips"): the captain's points are doubled, or
+# tripled with Triple Captain; if the captain doesn't play, the vice-captain gets the same multiplier.
+CAPTAIN_MULTIPLIER = 2
+TRIPLE_CAPTAIN_MULTIPLIER = 3
+
+
+def lineup_points(
+    xi: Sequence[int], bench: Sequence[int], captain: int, vice_captain: int, chip: str | None,
+    points: Mapping[int, float], played: Callable[[int], bool], element_type: Mapping[int, int], rules: Rules, hit_cost: int = 0,
+) -> dict:
+    """A GW's points for a line-up, as FPL scores it once the GW is finished.
+
+    `xi` and `bench` are in pick order (the bench in auto-sub order, goalkeeper first); `points` are
+    each player's GW points (summed over a double GW's fixtures) and `played(p)` whether he played
+    any minutes. Starters who didn't play are replaced by `automatic_subs`; the captain's points are
+    multiplied (x3 with Triple Captain), or the vice-captain's if the captain didn't play, or nobody's
+    if neither did. With Bench Boost all 15 score, so the substitutions change nothing. `hit_cost`
+    is deducted from the total.
+    """
+    picks = [Pick(p, i + 1, element_type[p]) for i, p in enumerate(list(xi) + list(bench))]
+    subs = automatic_subs(picks, played, rules)
+    on_field = list(xi)
+    for out, into in subs:
+        on_field[on_field.index(out)] = into
+    counted = list(xi) + list(bench) if chip == "bboost" else on_field
+    armband = captain if played(captain) else vice_captain if played(vice_captain) else None
+    multiplier = TRIPLE_CAPTAIN_MULTIPLIER if chip == "3xc" else CAPTAIN_MULTIPLIER
+    if armband not in counted:
+        armband = None
+    gross = sum(points.get(p, 0.0) for p in counted) + ((multiplier - 1) * points.get(armband, 0.0) if armband is not None else 0.0)
+    return {
+        "points": gross - hit_cost, "gross": gross, "hit_cost": hit_cost, "chip": chip,
+        "autosubs": [[o, i] for o, i in subs], "counted": counted,
+        "armband": armband, "multiplier": multiplier if armband is not None else 1,
+        "captain_points": points.get(armband, 0.0) if armband is not None else 0.0,
+        "bench_points": sum(points.get(p, 0.0) for p in list(xi) + list(bench) if p not in on_field),
+    }
+
+
 # ---------------------------------------------------------------------------------------------------
 # Free transfers and hits (FR-RUL-04)
 
