@@ -29,6 +29,8 @@ function num(value: string | undefined, fallback: number): number {
 }
 
 export interface BudgetConfig {
+	/** USD per session above which the model is steered, once, to wrap up and submit (FR-BUD-02). */
+	soft: number;
 	/** USD per session. */
 	hard: number;
 	/** USD per UTC day, across all sessions. */
@@ -39,6 +41,7 @@ export interface BudgetConfig {
 
 export function budgetConfig(env: NodeJS.ProcessEnv = process.env): BudgetConfig {
 	return {
+		soft: num(env.GAFFER_BUDGET_SOFT, 0.75),
 		hard: num(env.GAFFER_BUDGET_HARD, 1.5),
 		daily: num(env.GAFFER_BUDGET_DAILY, 5),
 		maxTurns: num(env.GAFFER_MAX_TURNS, 40),

@@ -63,6 +63,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_PROVIDER` | `anthropic` | Pi provider |
 | `GAFFER_MODEL` | `claude-sonnet-5-5` | Model ID. Models newer than Pi 0.87.1's catalogue are declared in [`harness/models.json`](harness/models.json) |
 | `GAFFER_THINKING` | `medium` | Pi thinking level |
+| `GAFFER_BUDGET_SOFT` | `0.75` | USD per session. When a run crosses it, the model is told once to wrap up and submit |
 | `GAFFER_BUDGET_HARD` | `1.50` | USD per session. The run is stopped when it crosses this |
 | `GAFFER_BUDGET_DAILY` | `5` | USD per UTC day, across sessions. New prompts are refused once it's reached |
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
