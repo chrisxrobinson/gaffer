@@ -33,10 +33,18 @@ docker compose exec -T gaffer sh -c "chmod -R u+w '$scratch' 2>/dev/null; rm -rf
 echo "$out" | grep -E "^(Odds|- odds|football-data|--- odds|--- golden path)"
 
 echo "== M4: submit_recommendation through the gate, /export-rec, replay, /prefs (team ${TEAM_ID:-1})"
-out="$(docker compose exec -T -e TEAM_ID="${TEAM_ID:-1}" gaffer node --input-type=module - < tests/recommend.mjs 2>&1)" || { echo "$out" | tail -n 60; exit 1; }
-echo "$out" | grep -E "^(active tools|Solver:|--- /work/gaffer_lib|- \\[|rec_id|widest|validation:|chip scenarios:|/export-rec:|replay:|privacy:|skills offered:|M4 stack check passed)"
-# FR-OUT-01: the exported recommendation validates against the published JSON Schema with ajv (on the host).
-file="$(echo "$out" | sed -n 's/^EXPORT_FILE=//p')"
-docker compose exec -T gaffer cat "$file" > "${TMPDIR:-/tmp}/gaffer-verify-rec.json"
+# A scratch data dir under /data (the sandbox sees it at the same path), removed afterwards: the scripted
+# model's recommendation is a test, so it must not reach the real ledger that gaffer-eval scores.
+scratch="/data/verify-m4-$$"
+status=0
+out="$(docker compose exec -T -e TEAM_ID="${TEAM_ID:-1}" -e GAFFER_DATA_DIR="$scratch" gaffer node --input-type=module - < tests/recommend.mjs 2>&1)" || status=$?
+if [ "$status" = 0 ]; then
+  echo "$out" | grep -E "^(active tools|Solver:|--- /work/gaffer_lib|- \\[|rec_id|widest|validation:|chip scenarios:|/export-rec:|replay:|privacy:|skills offered:|M4 stack check passed)"
+  # FR-OUT-01: the exported recommendation validates against the published JSON Schema with ajv (on the host).
+  file="$(echo "$out" | sed -n 's/^EXPORT_FILE=//p')"
+  docker compose exec -T gaffer cat "$file" > "${TMPDIR:-/tmp}/gaffer-verify-rec.json"
+fi
+docker compose exec -T gaffer sh -c "chmod -R u+w '$scratch' 2>/dev/null; rm -rf '$scratch'"
+[ "$status" = 0 ] || { echo "$out" | tail -n 60; exit 1; }
 (cd ../../packages/pi-gaffer && node scripts/check-schema.ts "${TMPDIR:-/tmp}/gaffer-verify-rec.json")
 
