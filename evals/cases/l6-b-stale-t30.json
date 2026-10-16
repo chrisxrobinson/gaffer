@@ -11,10 +11,10 @@
   "base": "2026-27-gw6",
   "team": "b"
  },
- "team_id": 990009,
+ "team_id": 900000009,
  "as_of": "2026-10-10T09:30:00Z",
  "prompt": "/gw",
- "team_command": "/team 990009",
+ "team_command": "/team 900000009",
  "stale": {
   "prime_at": "2026-10-10T07:30:00Z"
  },

@@ -11,10 +11,10 @@
   "base": "2026-27-gw6",
   "team": "a"
  },
- "team_id": 990008,
+ "team_id": 900000008,
  "as_of": "2026-10-01T20:50:03Z",
  "prompt": "/gw",
- "team_command": "/team 990008",
+ "team_command": "/team 900000008",
  "mutations": [
   {
    "kind": "news",

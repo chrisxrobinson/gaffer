@@ -75,7 +75,8 @@ def test_eval_cases_identify_nobody():
             assert set(h) == {"current", "chips"} and {c["name"] for c in h["chips"]} <= {"wildcard", "freehit", "bboost", "3xc"}, f
     for f in sorted(EVALS.glob("*.json")):
         case = json.loads(f.read_text())
-        assert case["team_id"] >= 990000, f"{f}: eval teams have synthetic ids"
+        # Far above any real FPL entry id (about 13 million in 2026), so a synthetic team can never be someone's.
+        assert case["team_id"] >= 900_000_000, f"{f}: eval teams have synthetic ids"
         assert case["team_id"] not in SOURCE_TEAM_IDS
     # The shared files are public data about players and matches; still, no manager or team name.
     for f in sorted((EVALS / "data").rglob("*.json.gz")):

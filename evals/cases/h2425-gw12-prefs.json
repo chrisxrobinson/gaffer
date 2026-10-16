@@ -12,10 +12,10 @@
   "gw": 12,
   "started": 10
  },
- "team_id": 991008,
+ "team_id": 900001008,
  "as_of": "deadline-26h",
  "prompt": "/gw",
- "team_command": "/team 991008",
+ "team_command": "/team 900001008",
  "prefs": {
   "risk": "safe",
   "save_chips": [

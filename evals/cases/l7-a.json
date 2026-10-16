@@ -11,8 +11,8 @@
   "base": "2026-27-gw7",
   "team": "a"
  },
- "team_id": 990011,
+ "team_id": 900000011,
  "as_of": "2026-10-11T17:54:53Z",
  "prompt": "/gw",
- "team_command": "/team 990011"
+ "team_command": "/team 900000011"
 }

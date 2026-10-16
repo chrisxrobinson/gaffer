@@ -12,10 +12,10 @@
   "gw": 20,
   "started": 18
  },
- "team_id": 992007,
+ "team_id": 900002007,
  "as_of": "deadline-26h",
  "prompt": "/gw",
- "team_command": "/team 992007",
+ "team_command": "/team 900002007",
  "mutations": [
   {
    "kind": "news",
