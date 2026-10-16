@@ -146,6 +146,31 @@ describe("budget caps (FR-BUD-01)", () => {
 		writeFileSync(join(prior, "old.jsonl"), "");
 	});
 
+	it("the daily cap counts every session under GAFFER_SESSIONS_ROOT, not only the current session's directory", async () => {
+		const sibling = join(env.sessionsDir, "elsewhere");
+		const nested = join(env.sessionsDir, "evals", "run-1");
+		mkdirSync(sibling, { recursive: true });
+		mkdirSync(nested, { recursive: true });
+		const { dayCost: before } = await import("../src/budget.ts");
+		const others = before(env.sessionsDir, new Date()); // this file's earlier tests spend too
+		writeFileSync(
+			join(sibling, "headless.jsonl"),
+			`${JSON.stringify({ type: "message", timestamp: new Date().toISOString(), message: { role: "assistant", timestamp: Date.now(), usage: { cost: { total: 0.11 } } } })}\n`,
+		);
+		const { sessionsRoot } = await import("../src/config.ts");
+		const { dayCost } = await import("../src/budget.ts");
+		try {
+			expect(sessionsRoot(nested)).toBe(nested);
+			expect(dayCost(sessionsRoot(nested), new Date())).toBe(0); // a headless run in a subdirectory saw only itself
+			process.env.GAFFER_SESSIONS_ROOT = env.sessionsDir;
+			expect(sessionsRoot(nested)).toBe(env.sessionsDir);
+			expect(dayCost(sessionsRoot(nested), new Date()) - others).toBeCloseTo(0.11, 9);
+		} finally {
+			delete process.env.GAFFER_SESSIONS_ROOT;
+			writeFileSync(join(sibling, "headless.jsonl"), "");
+		}
+	});
+
 	it("caps a run at GAFFER_MAX_TURNS turns", async () => {
 		process.env.GAFFER_MAX_TURNS = "3";
 		const g = await startGaffer(env, { responses: bashLoop(10) });

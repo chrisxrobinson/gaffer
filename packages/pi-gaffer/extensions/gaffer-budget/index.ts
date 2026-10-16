@@ -4,7 +4,7 @@
  * once per session, to wrap up and submit (FR-BUD-02).
  */
 import type { ExtensionAPI, ExtensionContext, TurnEndEvent } from "@earendil-works/pi-coding-agent";
-import { budgetConfig } from "../../src/config.ts";
+import { budgetConfig, sessionsRoot } from "../../src/config.ts";
 import { dayCost, sessionCost, softCapSteered, steerText } from "../../src/budget.ts";
 
 export const STEER_TYPE = "gaffer.steer";
@@ -24,7 +24,7 @@ export default function gafferBudget(pi: ExtensionAPI) {
 		const cfg = budgetConfig();
 		const data = {
 			session_cost: round(sessionCost(ctx.sessionManager.getEntries())),
-			day_cost: round(dayCost(ctx.sessionManager.getSessionDir(), new Date())),
+			day_cost: round(dayCost(sessionsRoot(ctx.sessionManager.getSessionDir()), new Date())),
 			turn: turns,
 			soft: cfg.soft,
 			hard: cfg.hard,
@@ -46,7 +46,7 @@ export default function gafferBudget(pi: ExtensionAPI) {
 	pi.on("input", async (event, ctx) => {
 		if (event.source === "extension") return { action: "continue" };
 		const { daily } = budgetConfig();
-		const spent = dayCost(ctx.sessionManager.getSessionDir(), new Date());
+		const spent = dayCost(sessionsRoot(ctx.sessionManager.getSessionDir()), new Date());
 		if (spent < daily) return { action: "continue" };
 		record(ctx, "daily");
 		ctx.ui.notify(`Daily budget reached: $${spent.toFixed(2)} of $${daily.toFixed(2)} spent today (UTC). Gaffer will not start a new run until tomorrow, or raise GAFFER_BUDGET_DAILY.`, "error");
@@ -58,7 +58,7 @@ export default function gafferBudget(pi: ExtensionAPI) {
 		const cfg = budgetConfig();
 		const entries = ctx.sessionManager.getEntries();
 		const session = sessionCost(entries);
-		const day = dayCost(ctx.sessionManager.getSessionDir(), new Date());
+		const day = dayCost(sessionsRoot(ctx.sessionManager.getSessionDir()), new Date());
 		const capped = session >= cfg.hard ? "session" : day >= cfg.daily ? "daily" : turns >= cfg.maxTurns ? "turns" : false;
 		// FR-BUD-02: one steer per session, delivered before the model's next call. Not when the run is
 		// ending anyway (no tool calls, or the submission), where a steer would start another turn.

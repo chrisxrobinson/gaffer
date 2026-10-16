@@ -30,6 +30,15 @@ export function fplNow(env: NodeJS.ProcessEnv = process.env): number {
 	return Date.now() + (Number.isFinite(offset) ? offset : 0);
 }
 
+/**
+ * Where every session lives, for the daily cap and /usage's "today": GAFFER_SESSIONS_ROOT (the image
+ * sets /sessions), else the current session's own directory. Headless and eval runs keep their sessions
+ * in subdirectories of the root, and their spend counts against the same daily cap as the TUI's.
+ */
+export function sessionsRoot(sessionDir: string, env: NodeJS.ProcessEnv = process.env): string {
+	return env.GAFFER_SESSIONS_ROOT || sessionDir;
+}
+
 export function dataDir(env: NodeJS.ProcessEnv = process.env): string {
 	return env.GAFFER_DATA_DIR ?? "/data";
 }

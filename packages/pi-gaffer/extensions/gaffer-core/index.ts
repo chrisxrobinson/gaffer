@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { budgetConfig, dataDir, fplNow, GAFFER_TOOLS, idSalt } from "../../src/config.ts";
+import { budgetConfig, dataDir, fplNow, GAFFER_TOOLS, idSalt, sessionsRoot } from "../../src/config.ts";
 import { FplClient, FplNotFoundError } from "../../src/http.ts";
 import { readOutcomes, scorecard, scorecardLines } from "../../src/outcomes.ts";
 import { fplContextSection, GAFFER_PREAMBLE, userPreferencesSection } from "../../src/prompt.ts";
@@ -127,7 +127,7 @@ export default function gafferCore(pi: ExtensionAPI) {
 		handler: async (_args, ctx) => {
 			try {
 				const now = new Date();
-				const dir = ctx.sessionManager.getSessionDir();
+				const dir = sessionsRoot(ctx.sessionManager.getSessionDir());
 				const file = ctx.sessionManager.getSessionFile();
 				// This session from memory (Pi writes its file lazily), the others from disk.
 				const session = sessionUsage(ctx.sessionManager.getEntries() as never, file ?? "");

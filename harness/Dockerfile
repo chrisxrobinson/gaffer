@@ -33,6 +33,7 @@ ENV PI_CODING_AGENT_DIR=/opt/pi-agent \
     PI_OFFLINE=1 \
     PI_SKIP_VERSION_CHECK=1 \
     GAFFER_DATA_DIR=/data \
+    GAFFER_SESSIONS_ROOT=/sessions \
     GAFFER_ID_SALT_FILE=/run/secrets/gaffer_id_salt \
     SANDBOX_PROVIDER=compose \
     SANDBOX_URL=http://sandbox:8080 \
