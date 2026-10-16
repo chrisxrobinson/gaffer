@@ -74,6 +74,12 @@ export class SandboxSession {
 		return url;
 	}
 
+	/** Provision again, e.g. after a request to the sandbox failed to connect (ARCHITECTURE §10). */
+	async reprovision(): Promise<string> {
+		this.handle = undefined;
+		return this.url();
+	}
+
 	async release(): Promise<void> {
 		clearTimeout(this.idleTimer);
 		if (!this.handle) return;
@@ -107,17 +113,29 @@ export function createSandboxOperations(session: SandboxSession, opts: { localRe
 		return roots.some((r) => abs === r || abs.startsWith(r + sep));
 	};
 
+	// A request that can't reach the sandbox provisions it again and is tried once more (ARCHITECTURE §10:
+	// "the tool error is shown to the model, and a re-provision is tried once"). If that fails too, the
+	// error says the sandbox isn't reachable.
+	const request = async (path: string, init: RequestInit = {}): Promise<Response> => {
+		try {
+			return await fetch(`${await session.url()}${path}`, init);
+		} catch (e) {
+			if (init.signal?.aborted) throw e;
+			return fetch(`${await session.reprovision()}${path}`, init);
+		}
+	};
+
 	const readRemote = async (p: string): Promise<Buffer> => {
-		const r = await fetch(`${await session.url()}/files?path=${encodeURIComponent(p)}`);
+		const r = await request(`/files?path=${encodeURIComponent(p)}`);
 		if (!r.ok) throw fsError(r.status, p, await r.text());
 		return Buffer.from(await r.arrayBuffer());
 	};
 	const writeRemote = async (p: string, content: string): Promise<void> => {
-		const r = await fetch(`${await session.url()}/files?path=${encodeURIComponent(p)}`, { method: "PUT", body: content });
+		const r = await request(`/files?path=${encodeURIComponent(p)}`, { method: "PUT", body: content });
 		if (!r.ok) throw fsError(r.status, p, await r.text());
 	};
 	const accessRemote = (mode: "r" | "rw") => async (p: string): Promise<void> => {
-		const r = await fetch(`${await session.url()}/access?path=${encodeURIComponent(p)}&mode=${mode}`);
+		const r = await request(`/access?path=${encodeURIComponent(p)}&mode=${mode}`);
 		if (!r.ok) throw fsError(r.status, p, await r.text());
 	};
 
@@ -130,7 +148,7 @@ export function createSandboxOperations(session: SandboxSession, opts: { localRe
 				const timeout_s = Math.min(timeout ?? MAX_EXEC_TIMEOUT_S, MAX_EXEC_TIMEOUT_S);
 				let res: Response;
 				try {
-					res = await fetch(`${await session.url()}/exec`, {
+					res = await request("/exec", {
 						method: "POST",
 						headers: { "content-type": "application/json" },
 						body: JSON.stringify({ command, cwd, timeout_s, ...(stdin !== undefined && { stdin }) }),
