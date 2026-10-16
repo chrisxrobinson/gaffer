@@ -55,7 +55,10 @@ const remote = `/data/evals/results/${name}.jsonl`;
 console.log(`== running the suite with ${model}${real ? " (THIS COSTS MONEY)" : ""}`);
 const script = [
 	"set -eu",
-	real ? 'ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"; export ANTHROPIC_API_KEY' : "unset ANTHROPIC_API_KEY || true",
+	// The Anthropic key comes from the Compose secret; another provider's from the container's environment
+	// (docker-compose.yml passes OPENAI_API_KEY and GEMINI_API_KEY through). The faux model gets no key at all.
+	model.startsWith("anthropic/") ? 'ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"; export ANTHROPIC_API_KEY' : "unset ANTHROPIC_API_KEY || true",
+	real ? "" : "unset OPENAI_API_KEY GEMINI_API_KEY || true",
 	"cd /work",
 	`node /opt/evals/runner/run.ts --cases /data/evals/cases --model '${model}' --thinking '${values.thinking}' --out '${remote}' --sessions /sessions/evals --data /data/evals/runs --timeout '${values.timeout}'${values.only ? ` --only '${values.only}'` : ""}`,
 ].join("\n");

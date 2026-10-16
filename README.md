@@ -68,7 +68,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_BUDGET_DAILY` | `5` | USD per UTC day, across sessions. New prompts are refused once it's reached |
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
 
-To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and add that provider's key to the harness environment. `docker-compose.yml` only wires up the Anthropic key.
+To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in [`harness/models.json`](harness/models.json). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
 
 On a Linux host with gVisor installed, you can run the sandbox under `runsc`:
 
