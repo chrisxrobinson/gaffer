@@ -25,7 +25,9 @@ Pi already writes an append-only JSONL session per conversation. Each entry is a
   - `gaffer.budget`: running cost and whether the cap was hit
 - **Derived, rebuildable files** (not a second source of truth):
   - `/data/ledger/recommendations.jsonl`: an index that makes scoring easy. It is appended at the same time as the custom entry and can be rebuilt by scanning the sessions.
-  - `/data/ledger/outcomes.jsonl`: written by the evaluator after `data_checked`. It holds realised points of the recommended moves and of the user's actual moves, plus baselines. This is new information, not a copy.
+  - `/data/ledger/outcomes.jsonl`: written by the evaluator after `data_checked` (`gaffer.outcome/1`, `packages/pi-gaffer/src/outcomes.ts`). It holds realised points of the recommended moves and of the user's actual moves, plus baselines. This is new information, not a copy, but it is rebuildable: `gaffer-eval --rebuild` recomputes it from the ledger, the sessions, the snapshots and FPL's results.
+  - **Test rows:** a recommendation made by Pi's scripted faux provider (`model` "faux/…") tests the machinery and was never advice. It stays in the ledger (append-only) but is never scored or counted. Stack checks write to a scratch data directory and the eval suite to its own, so new test rows don't reach `/data/ledger`.
+  - `/data/admin/admin.html`: the admin report (ARCHITECTURE §9), rewritten by each `gaffer admin`.
   - `/data/users/<team_id_hash>/prefs.json`: preferences owned by the harness. They have to outlive sessions, and the sandbox is ephemeral.
   - `/data/exports/<rec_id>.json`: a copy of a `gaffer.recommendation` entry, written by `/export-rec`.
 - The **admin centre reads these files**. It adds no parallel store ([ARCHITECTURE §9](../ARCHITECTURE.md)).
