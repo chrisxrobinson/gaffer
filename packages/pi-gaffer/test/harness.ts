@@ -3,7 +3,7 @@
  * a real sandboxd (host python) and a mock FPL API. Mirrors the S1 spike's setup.
  */
 import { type ChildProcess, execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -12,6 +12,7 @@ import { createAgentSession, DefaultResourceLoader, type ExtensionAPI, type Exte
 import gafferBudget from "../extensions/gaffer-budget/index.ts";
 import gafferCore from "../extensions/gaffer-core/index.ts";
 import gafferData from "../extensions/gaffer-data/index.ts";
+import gafferRecommend from "../extensions/gaffer-recommend/index.ts";
 import gafferSandbox from "../extensions/gaffer-sandbox/index.ts";
 import { GAFFER_TOOLS } from "../src/config.ts";
 import { MockFpl } from "./mock-fpl.ts";
@@ -23,8 +24,8 @@ const GAFFER_LIB_SRC = resolve(import.meta.dirname, "../../../python/gaffer_lib/
  * How the host sandboxd runs gaffer_lib: the repo source on Python 3.14 (found with uv, a dev
  * prerequisite), since the host has no installed gaffer_lib. The image uses `python -m gaffer_lib`.
  */
-export function hostGafferLibCommand(): string {
-	let python = process.env.GAFFER_TEST_PYTHON;
+export function hostGafferLibCommand(opts: { analytics?: boolean } = {}): string {
+	let python = opts.analytics ? analyticsPython() : process.env.GAFFER_TEST_PYTHON;
 	if (!python) {
 		try {
 			python = execFileSync("uv", ["python", "find", "3.14"], { encoding: "utf8" }).trim();
@@ -33,6 +34,24 @@ export function hostGafferLibCommand(): string {
 		}
 	}
 	return `PYTHONPATH='${GAFFER_LIB_SRC}' '${python}' -m gaffer_lib`;
+}
+
+/**
+ * A Python 3.14 with the sandbox image's pinned numpy and scipy, for tests that run the model
+ * (`gaffer_lib run --hold`, `validate --request`). Built once with uv into node_modules/.cache;
+ * set GAFFER_TEST_ANALYTICS_PYTHON to use another interpreter. The solver is not needed.
+ */
+export function analyticsPython(): string {
+	if (process.env.GAFFER_TEST_ANALYTICS_PYTHON) return process.env.GAFFER_TEST_ANALYTICS_PYTHON;
+	const venv = resolve(import.meta.dirname, "../../../node_modules/.cache/gaffer-analytics-venv");
+	const python = join(venv, "bin", "python");
+	const marker = join(venv, ".gaffer-ready-numpy-2.5.3-scipy-1.18.1");
+	if (!existsSync(marker)) {
+		execFileSync("uv", ["venv", "--python", "3.14", "--allow-existing", venv], { stdio: "ignore" });
+		execFileSync("uv", ["pip", "install", "--python", python, "numpy==2.5.3", "scipy==1.18.1"], { stdio: "ignore" });
+		writeFileSync(marker, "");
+	}
+	return python;
 }
 
 async function freePort(): Promise<number> {
@@ -87,7 +106,7 @@ export interface Notification {
 	type?: string;
 }
 
-export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxResponseStep[]; skillsDir?: string; extra?: ExtensionFactory[]; cost?: { input: number; output: number }; bind?: boolean }) {
+export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxResponseStep[]; skillsDir?: string; promptsDir?: string; extra?: ExtensionFactory[]; cost?: { input: number; output: number }; bind?: boolean; tools?: string[] }) {
 	const faux = fauxProvider({
 		provider: "faux",
 		models: [{ id: "faux-1", cost: { input: opts.cost?.input ?? 0, output: opts.cost?.output ?? 0, cacheRead: 0, cacheWrite: 0 } }],
@@ -102,6 +121,7 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 		gafferCore,
 		gafferSandbox,
 		gafferData,
+		gafferRecommend,
 		gafferBudget,
 		...(opts.extra ?? []),
 	];
@@ -113,10 +133,11 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 		noExtensions: true,
 		noContextFiles: true,
 		additionalSkillPaths: opts.skillsDir ? [opts.skillsDir] : [],
+		additionalPromptTemplatePaths: opts.promptsDir ? [opts.promptsDir] : [],
 	} as never);
 	await loader.reload();
 	const sessionManager = SessionManager.create(cwd, env.sessionsDir);
-	const { session } = await createAgentSession({ cwd, agentDir, model: faux.getModel() as never, resourceLoader: loader, sessionManager, settingsManager, tools: GAFFER_TOOLS });
+	const { session } = await createAgentSession({ cwd, agentDir, model: faux.getModel() as never, resourceLoader: loader, sessionManager, settingsManager, tools: opts.tools ?? GAFFER_TOOLS });
 	const notifications: Notification[] = [];
 	// A plain object: Pi spreads the UI context ({...ui}), so a Proxy would lose its methods.
 	const noop = () => undefined;

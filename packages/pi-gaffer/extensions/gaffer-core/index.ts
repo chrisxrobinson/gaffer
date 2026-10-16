@@ -1,13 +1,19 @@
 /**
  * gaffer-core: turns the coding agent into an FPL agent (ARCHITECTURE §1).
  * Replaces the coding preamble while keeping skills, injects fpl_context and user_preferences
- * sections, restricts the active tools, blocks the user's `!` shell, and adds /team.
+ * sections, restricts the active tools, blocks the user's `!` shell, and adds /team, /prefs and
+ * /export-rec.
  */
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { dataDir, GAFFER_TOOLS, idSalt } from "../../src/config.ts";
 import { FplClient, FplNotFoundError } from "../../src/http.ts";
 import { fplContextSection, GAFFER_PREAMBLE, userPreferencesSection } from "../../src/prompt.ts";
-import { fplState, type TeamEntry } from "../../src/session.ts";
+import { DEFAULT_PREFS, describePrefs, parsePrefsArgs, readPrefs, writePrefs } from "../../src/prefs.ts";
+import type { Recommendation } from "../../src/schema/recommendation.ts";
+import { fplState, latestCustom, type TeamEntry } from "../../src/session.ts";
+import { savePreferences, sessionTeamHash } from "../../src/team-prefs.ts";
 import { hashTeamId } from "../../src/snapshot.ts";
 import { parseTeamArgs } from "../../src/team-args.ts";
 import { SnapshotStore } from "../../src/store.ts";
@@ -71,6 +77,46 @@ export default function gafferCore(pi: ExtensionAPI) {
 			const extra = [ft !== undefined ? `free transfers ${ft} (yours)` : "", pending ? `pending ${pending}` : ""].filter(Boolean).join("; ");
 			if (unreachable) ctx.ui.notify(`Team ID ${teamId} set${extra ? ` (${extra})` : ""}, but FPL could not be reached to confirm it (${unreachable}).`, "warning");
 			else ctx.ui.notify(`Team set: ${name ?? "?"} (ID ${teamId})${extra ? `; ${extra}` : ""}.`, "info");
+		},
+	});
+
+	pi.registerCommand("prefs", {
+		description: "Show or change your saved preferences: /prefs [risk=… save_chips=… keep=… avoid=… max_hits=…] | /prefs clear",
+		handler: async (args, ctx) => {
+			const parsed = parsePrefsArgs(args);
+			if ("error" in parsed) return ctx.ui.notify(parsed.error, "warning");
+			let hash: string | undefined;
+			try {
+				hash = sessionTeamHash(ctx);
+			} catch (e) {
+				return ctx.ui.notify((e as Error).message, "error");
+			}
+			if (!hash) return ctx.ui.notify("Set your team first with /team <id>: preferences are saved per team.", "warning");
+			try {
+				if ("show" in parsed) return ctx.ui.notify(`Your saved preferences:\n${describePrefs(readPrefs(dataDir(), hash))}`, "info");
+				const prefs = "clear" in parsed ? writePrefs(dataDir(), hash, DEFAULT_PREFS) : savePreferences(ctx, { ...parsed.patch, keep: parsed.keep, avoid: parsed.avoid }).prefs;
+				ctx.ui.notify(`Preferences saved:\n${describePrefs(prefs)}`, "info");
+			} catch (e) {
+				ctx.ui.notify(`Preferences not saved: ${(e as Error).message}`, "error");
+			}
+		},
+	});
+
+	// Not "/export": that is Pi's own built-in (session to HTML), which the TUI handles before any extension command.
+	pi.registerCommand("export-rec", {
+		description: "Write the latest recommendation's JSON to /data/exports/ and print the path",
+		handler: async (_args, ctx) => {
+			const rec = latestCustom<Recommendation>(ctx.sessionManager.getBranch(), "gaffer.recommendation");
+			if (!rec) return ctx.ui.notify("There is no recommendation in this session yet. Ask for one first (for example /gw).", "warning");
+			const dir = join(dataDir(), "exports");
+			const file = join(dir, `${rec.rec_id}.json`);
+			try {
+				mkdirSync(dir, { recursive: true });
+				writeFileSync(file, `${JSON.stringify(rec, null, 2)}\n`);
+			} catch (e) {
+				return ctx.ui.notify(`Export failed: ${(e as Error).message}`, "error");
+			}
+			ctx.ui.notify(`GW${rec.gw} recommendation ${rec.rec_id} exported to ${file}`, "info");
 		},
 	});
 }

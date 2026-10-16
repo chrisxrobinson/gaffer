@@ -40,10 +40,14 @@ ENV PI_CODING_AGENT_DIR=/opt/pi-agent \
     COLORTERM=truecolor \
     LANG=C.UTF-8
 
-# The Pi package: extensions, shared src and theme. Pi supplies its own packages and typebox to extensions.
+# The Pi package: extensions, shared src, skills, prompt templates and theme. Pi supplies its own
+# packages and typebox to extensions. scripts/ holds operator tools run with plain node (replay.ts).
 COPY packages/pi-gaffer/package.json /opt/pi-gaffer/package.json
 COPY packages/pi-gaffer/extensions /opt/pi-gaffer/extensions
 COPY packages/pi-gaffer/src /opt/pi-gaffer/src
+COPY packages/pi-gaffer/skills /opt/pi-gaffer/skills
+COPY packages/pi-gaffer/prompts /opt/pi-gaffer/prompts
+COPY packages/pi-gaffer/scripts /opt/pi-gaffer/scripts
 COPY packages/pi-gaffer/themes /opt/pi-gaffer/themes
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/

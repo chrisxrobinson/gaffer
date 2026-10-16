@@ -41,7 +41,7 @@ Runs on one machine with `docker compose up`, then `http://127.0.0.1:7681`. It h
 
 ### M4 — Recommendation end-to-end (target: before GW11)
 - **Scope:**
-  - `gaffer-recommend`: `submit_recommendation` with recompute and retries, `set_preferences`, renderer, `/export`, `/prefs`
+  - `gaffer-recommend`: `submit_recommendation` with recompute and retries, `set_preferences`, renderer, `/export-rec`, `/prefs`
   - the six skills
   - prompt templates
   - the schema and its JSON Schema export

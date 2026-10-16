@@ -13,7 +13,8 @@ gaffer/
 │   │   │   ├── gaffer-data/       #   fpl_snapshot tool: fetch, cache-bust, TTL, retry+jitter, validate, snapshot
 │   │   │   ├── gaffer-recommend/  #   submit_recommendation (validate + recompute + terminate), set_preferences, renderer
 │   │   │   └── gaffer-budget/     #   per-session/day cost caps, soft-cap steering
-│   │   ├── src/schema/            #   TypeBox schemas: recommendation/1, FPL response subsets, prefs
+│   │   ├── src/schema/            #   TypeBox schemas: recommendation/1 (with the submission and prefs), FPL response subsets
+│   │   ├── scripts/               #   export-schema.ts (→ schemas/recommendation-1.json), replay.ts (rec_id → rerun the gate, NFR-OBS-01)
 │   │   ├── skills/                #   SKILL.md directories (see list below)
 │   │   ├── prompts/               #   prompt templates: gw.md, whatif.md, explain.md
 │   │   ├── themes/gaffer.json     #   TUI theme
@@ -66,7 +67,7 @@ gaffer/
 ### Pi extensions (5)
 | Extension | Tools / commands / hooks | Justification |
 |---|---|---|
-| `gaffer-core` | `before_agent_start` (customPrompt, `fpl_context`, `user_preferences`), `session_start` (`setActiveTools`), `user_bash` (block), `session_before_compact` (FPL summary); `/team`, `/prefs`, `/export`, `/usage`, `/scorecard` | Turns the coding agent into an FPL agent |
+| `gaffer-core` | `before_agent_start` (customPrompt, `fpl_context`, `user_preferences`), `session_start` (`setActiveTools`), `user_bash` (block), `session_before_compact` (FPL summary); `/team`, `/prefs`, `/export-rec`, `/usage`, `/scorecard` | Turns the coding agent into an FPL agent |
 | `gaffer-sandbox` | Overrides `read`, `write`, `edit`, `bash`; `SandboxProvider` | Keeps generated code away from credentials |
 | `gaffer-data` | Tool `fpl_snapshot`; `tool_call` guard for read-only paths | The sandbox has no network; freshness and validation must be deterministic |
 | `gaffer-recommend` | Tools `submit_recommendation` (terminating) and `set_preferences`; result renderer | Legal, recomputed, machine-readable output; preferences outlive sessions |

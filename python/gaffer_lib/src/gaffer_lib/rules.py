@@ -168,7 +168,10 @@ class Violation:
         return d
 
 
-def check_squad(squad: Sequence[int], players: Mapping[int, Player], rules: Rules, *, cost: int | None = None, budget: int | None = None) -> list[Violation]:
+def check_squad(
+    squad: Sequence[int], players: Mapping[int, Player], rules: Rules, *, cost: int | None = None, budget: int | None = None,
+    team_names: Mapping[int, str] | None = None,
+) -> list[Violation]:
     """Check a 15-man squad: size, no duplicates, known players, position quotas, club limit, budget.
 
     `cost` is what the squad costs (selling prices for players kept, current prices for players
@@ -192,7 +195,8 @@ def check_squad(squad: Sequence[int], players: Mapping[int, Player], rules: Rule
     by_team = Counter(p.team for p in known)
     for team, n in sorted(by_team.items()):
         if n > rules.team_limit:
-            out.append(Violation("CLUB_LIMIT", f"{n} players from team {team}, the limit is {rules.team_limit}"))
+            club = f"{team_names[team]} (team {team})" if team_names and team in team_names else f"team {team}"
+            out.append(Violation("CLUB_LIMIT", f"{n} players from {club}, the limit is {rules.team_limit} per club"))
     if cost is not None and budget is not None and cost > budget:
         out.append(Violation("OVER_BUDGET", f"squad costs £{cost / 10:.1f}m, only £{budget / 10:.1f}m available"))
     return out

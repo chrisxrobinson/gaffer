@@ -38,6 +38,7 @@ def validate(snap: Snapshot, proposal: Mapping, *, ft: int | None = None, pendin
     rules = R.Rules.from_bootstrap(b)
     elements = {e["id"]: e for e in b["elements"]}
     players = {e["id"]: R.Player(e["id"], e["team"], e["element_type"]) for e in b["elements"]}
+    clubs = {t["id"]: t.get("name") or t["short_name"] for t in b["teams"]}
     state = derive(snap, ft=ft, pending=pending)
     steps = list(proposal["gws"]) if "gws" in proposal else [proposal]
     errors: list[R.Violation] = []
@@ -79,7 +80,7 @@ def validate(snap: Snapshot, proposal: Mapping, *, ft: int | None = None, pendin
             bank += sell.pop(o) - elements[i]["now_cost"]
             sell[i] = elements[i]["now_cost"]  # a later sale assumes no price change
             squad = [i if x == o else x for x in squad]
-        errors += [R.Violation(v.code, v.message, gw) for v in R.check_squad(squad, players, rules)]
+        errors += [R.Violation(v.code, v.message, gw) for v in R.check_squad(squad, players, rules, team_names=clubs)]
         if bank < 0:
             errors.append(R.Violation("OVER_BUDGET", f"GW{gw} transfers leave the bank at £{bank / 10:.1f}m", gw))
 

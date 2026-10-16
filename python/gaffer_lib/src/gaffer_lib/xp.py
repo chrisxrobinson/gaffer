@@ -204,6 +204,7 @@ class Projection:
     warnings: list[str] = field(default_factory=list)
     strength: TeamStrength | None = None
     overrides_applied: list = field(default_factory=list)
+    p_play: dict[int, dict[int, float]] = field(default_factory=dict)  # P(minutes > 0 in the GW): what an auto-sub depends on
 
     def total(self, player: int) -> float:
         return sum(self.xp.get(player, {}).values())
@@ -249,7 +250,7 @@ def project(inputs: ModelInputs, horizon: int = 6, xmins_overrides=None, *, stre
         rates = player_rates(p, priors)
         base = baseline(p, defaults)
         ov = overrides.get(pid, {})
-        xp_p, xm_p, ps_p, comp_p = {}, {}, {}, {}
+        xp_p, xm_p, ps_p, comp_p, pp_p = {}, {}, {}, {}, {}
         for k, gw in enumerate(gws):
             override = ov.get(gw, ov.get(None))
             if override is not None:
@@ -272,7 +273,8 @@ def project(inputs: ModelInputs, horizon: int = 6, xmins_overrides=None, *, stre
                     comps[c] = comps.get(c, 0.0) + v
             xp_p[gw], xm_p[gw], comp_p[gw] = total, xm, comps
             ps_p[gw] = mins.p_start if fixtures else 0.0
-        out.xp[pid], out.xmins[pid], out.p_start[pid], out.components[pid] = xp_p, xm_p, ps_p, comp_p
+            pp_p[gw] = 1.0 - (1.0 - mins.p_play) ** len(fixtures)
+        out.xp[pid], out.xmins[pid], out.p_start[pid], out.components[pid], out.p_play[pid] = xp_p, xm_p, ps_p, comp_p, pp_p
     out.overrides_applied = applied
     return out
 

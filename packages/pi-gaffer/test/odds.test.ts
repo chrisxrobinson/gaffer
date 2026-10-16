@@ -230,7 +230,7 @@ describe("takeSnapshot with the odds source, recent GW stats and ep_next", () =>
 
 	it('include: ["odds"] writes odds.json into the snapshot and reports it', async () => {
 		const { details, text } = await takeSnapshot({ teamId: 1, include: ["odds"] }, deps);
-		expect(details.odds).toEqual({ requested: true, available: true, fixtures: 2, reason: null });
+		expect(details.odds).toEqual({ requested: true, available: true, fixtures: 2, listed: 2, reason: null });
 		const file = read<OddsFile>(details.snapshot_id, "odds");
 		expect(file.fixtures.map((f) => `${f.home} v ${f.away}`)).toEqual(["Arsenal v Tottenham", "Nott'm Forest v Hull"]);
 		expect(text).toContain("Odds (football-data.co.uk): 2 Premier League fixture(s) priced.");
@@ -238,10 +238,21 @@ describe("takeSnapshot with the odds source, recent GW stats and ep_next", () =>
 		expect(read<{ files: string[] }>(details.snapshot_id, "manifest").files).toContain("odds.json");
 	});
 
+	it("between rounds the source still lists the earlier round: its fixtures don't count as priced for the next GW", async () => {
+		// Seen live on 2026-10-11: fixtures.csv held the ten GW6 matches of 10-12 October while GW7 (deadline 17 October) was next.
+		const next = "2026-10-17T10:00:00Z";
+		fpl.data["bootstrap-static/"] = fx.bootstrap({ nextDeadline: next });
+		const { details, text } = await takeSnapshot({ teamId: 1, include: ["odds"] }, { ...deps, now: () => Date.parse(next) - 6 * 24 * HOUR });
+		expect(details.odds).toEqual({ requested: true, available: true, fixtures: 0, listed: 2, reason: null });
+		expect(text).toContain("the source still lists an earlier round (2 fixture(s)); nothing is priced for GW6 yet");
+		expect(text).not.toMatch(/fixture\(s\) priced\./);
+		expect(read<OddsFile>(details.snapshot_id, "odds").fixtures).toHaveLength(2); // the file itself is stored as fetched
+	});
+
 	it("without include, no request goes to the odds host and the summary says how to get them", async () => {
 		const { details, text } = await takeSnapshot({ teamId: 1 }, deps);
 		expect(odds.hits).toHaveLength(0);
-		expect(details.odds).toEqual({ requested: false, available: false, fixtures: 0, reason: null });
+		expect(details.odds).toEqual({ requested: false, available: false, fixtures: 0, listed: 0, reason: null });
 		expect(read<{ files: string[] }>(details.snapshot_id, "manifest").files).not.toContain("odds.json");
 		expect(text).toContain('call fpl_snapshot with include: ["odds"]');
 	});
@@ -250,7 +261,7 @@ describe("takeSnapshot with the odds source, recent GW stats and ep_next", () =>
 		odds.down = true;
 		const { details, text } = await takeSnapshot({ teamId: 1, include: ["odds"] }, deps);
 		expect(details.stale).toBe(false); // FPL data is fine; only the odds are missing
-		expect(details.odds).toEqual({ requested: true, available: false, fixtures: 0, reason: "football-data.co.uk unavailable: HTTP 503" });
+		expect(details.odds).toEqual({ requested: true, available: false, fixtures: 0, listed: 0, reason: "football-data.co.uk unavailable: HTTP 503" });
 		// This is the file gaffer_lib reads: it then warns "odds unavailable — team strength from Dixon-Coles".
 		expect(read<OddsFile>(details.snapshot_id, "odds")).toEqual({
 			schema: "gaffer.odds/1", source: "football-data.co.uk", available: false, reason: "football-data.co.uk unavailable: HTTP 503", fixtures: [], results: {},

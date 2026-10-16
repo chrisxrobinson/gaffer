@@ -104,4 +104,5 @@ if (!/^Gaffer plan for GW\d+/m.test(run) || !/run_exit=0/.test(run) || /\[INVALI
 if (!(seconds <= GOLDEN_LIMIT_S)) fail(`the golden path took ${seconds} s (NFR-LAT-03 limit ${GOLDEN_LIMIT_S} s)`);
 if (!snap.odds.available && !/odds unavailable — team strength from Dixon-Coles/.test(run)) fail("odds were unavailable but the plan has no FR-DAT-09 warning");
 if (process.env.EXPECT && !new RegExp(process.env.EXPECT).test(run)) fail(`the run output does not match ${process.env.EXPECT}`);
-console.log(`\n--- golden path: ${seconds} s in the sandbox (limit ${GOLDEN_LIMIT_S} s); odds ${snap.odds.available ? `available, ${snap.odds.fixtures} PL fixture(s) priced` : `unavailable (${snap.odds.reason})`}`);
+const oddsUsed = !/odds unavailable — team strength from Dixon-Coles/.test(run);
+console.log(`\n--- golden path: ${seconds} s in the sandbox (limit ${GOLDEN_LIMIT_S} s); odds source ${snap.odds.available ? `reachable, ${snap.odds.fixtures} next-GW PL fixture(s) priced of ${snap.odds.listed ?? "?"} listed` : `unavailable (${snap.odds.reason})`}; next-GW odds ${oddsUsed ? "USED by the plan" : "not used by the plan (Dixon-Coles)"}`);

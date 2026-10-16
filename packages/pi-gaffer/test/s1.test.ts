@@ -9,6 +9,7 @@ import { fauxAssistantMessage, fauxText, fauxToolCall } from "@earendil-works/pi
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { GAFFER_TOOLS } from "../src/config.ts";
 import { type GafferTestEnv, startEnv, startGaffer } from "./harness.ts";
 
 let env: GafferTestEnv;
@@ -31,7 +32,8 @@ describe("S1 checks", () => {
 		const g = await startGaffer(env, {
 			responses: [fauxAssistantMessage(fauxToolCall("grep", { pattern: "x" })), fauxAssistantMessage(fauxToolCall("ls", {})), fauxAssistantMessage(fauxText("ok"))],
 		});
-		expect(g.session.getActiveToolNames().sort()).toEqual(["bash", "edit", "fpl_snapshot", "read", "write"]);
+		// ARCHITECTURE §1.2: exactly 7 tools, Pi's four (in the sandbox) and Gaffer's three.
+		expect(g.session.getActiveToolNames().sort()).toEqual(["bash", "edit", "fpl_snapshot", "read", "set_preferences", "submit_recommendation", "write"]);
 		await g.session.prompt("list files");
 		expect(g.toolResults.map((t) => [t.name, t.isError])).toEqual([
 			["grep", true],
@@ -98,21 +100,25 @@ describe("S1 checks", () => {
 	});
 
 	it("S1-6: a terminating tool ends the run on a structured result with no extra LLM turn", async () => {
-		const terminating = (pi: ExtensionAPI) =>
+		const terminating = (pi: ExtensionAPI) => {
+			// After gaffer-core's allowlist (extensions run in order), keep the double active.
+			pi.on("session_start", async () => pi.setActiveTools([...GAFFER_TOOLS, "finish"]));
 			pi.registerTool(
 				defineTool({
-					name: "submit_recommendation",
-					label: "Submit (test double)",
-					description: "Test double; the real tool lands in M4.",
+					name: "finish",
+					label: "Finish (test double)",
+					description: "A minimal terminating tool: the mechanism submit_recommendation relies on.",
 					parameters: Type.Object({ captain: Type.String() }),
 					async execute(_id, params) {
 						return { content: [{ type: "text", text: "saved" }], details: params, terminate: true };
 					},
 				}),
 			);
+		};
 		const g = await startGaffer(env, {
 			extra: [terminating],
-			responses: [fauxAssistantMessage(fauxToolCall("submit_recommendation", { captain: "Haaland" })), fauxAssistantMessage(fauxText("SHOULD NOT BE REACHED"))],
+			tools: [...GAFFER_TOOLS, "finish"],
+			responses: [fauxAssistantMessage(fauxToolCall("finish", { captain: "Haaland" })), fauxAssistantMessage(fauxText("SHOULD NOT BE REACHED"))],
 		});
 		await g.session.prompt("submit");
 		expect(g.faux.state.callCount).toBe(1);

@@ -1,7 +1,7 @@
 """The golden path (ADR 0003, ARCHITECTURE §2.2 step 2): one command from a snapshot to a full
 candidate plan.
 
-    python -m gaffer_lib run --snapshot DIR [--prefs FILE] --out /work/plan.json
+    python -m gaffer_lib run --snapshot DIR [--prefs FILE] [--xmins FILE] [--hold] --out /work/plan.json
 
 strength → minutes → xP → solver (horizon 6, 4 GWs shown) → next-best plans → chip scenarios →
 captain candidates, every plan checked by `validate` against the same snapshot. It writes the full
@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from . import __version__, plan as P, rules as R
 from .derive import DeriveError, derive, resolve_player
@@ -44,12 +44,37 @@ def load_prefs(path: str | None) -> dict:
     return prefs
 
 
+def load_xmins(path: str | None) -> list:
+    """`--xmins FILE`: a JSON list of `{"player": id, "gw": n or null, "xmins": 0-90, "quote": "...", "source": "news" | "user"}`,
+    the model's structured reading of team news (FR-REC-10). The quote is recorded with the plan."""
+    if not path:
+        return []
+    with open(path, encoding="utf-8") as f:
+        items = json.load(f)
+    if not isinstance(items, list) or not all(isinstance(x, dict) and "player" in x and "xmins" in x for x in items):
+        raise DeriveError('--xmins must be a JSON list of {"player": id, "gw": n, "xmins": minutes, "quote": "..."}')
+    return items
+
+
+def resolved_prefs(prefs: Mapping) -> dict:
+    """The preferences that constrain a plan, in a canonical form the gate can compare."""
+    return {"save_chips": sorted(prefs.get("save_chips", [])), "keep_ids": sorted(prefs.get("keep_ids", [])),
+            "avoid_ids": sorted(prefs.get("avoid_ids", [])), "max_hits_per_gw": prefs.get("max_hits_per_gw")}
+
+
+def transfer_numbers(out: int, in_: int, proj, shown: int, decay: float = P.DECAY) -> dict:
+    """FR-REC-01: the xP a transfer gains over the GWs shown, and over the horizon with decay."""
+    gain = lambda gws, d=1.0: sum((proj.xp[in_][g] - proj.xp[out][g]) * d**k for k, g in enumerate(gws))  # noqa: E731
+    return {"xp_gain_4gw": round(gain(proj.gws[:shown]), 2), "xp_gain_6gw_decayed": round(gain(proj.gws, decay), 2)}
+
+
 def _resolve_prefs(prefs: Mapping, elements: Mapping, teams: Mapping) -> dict:
     out = dict(prefs)
     for key, dest in (("keep", "keep_ids"), ("avoid", "avoid_ids")):
-        out[dest] = [resolve_player(str(x), elements, teams) for x in prefs.get(key, [])]
+        # A player is an id, a name, or `{"id": ..., "name": ...}` as set_preferences stores it.
+        out[dest] = [resolve_player(str(x["id"] if isinstance(x, Mapping) else x), elements, teams) for x in prefs.get(key) or []]
     chips = []
-    for c in prefs.get("save_chips", []):
+    for c in prefs.get("save_chips") or []:
         name = CHIP_ALIASES.get(str(c).strip().lower().replace(" ", "_"))
         if name is None:
             raise DeriveError(f"unknown chip in save_chips: {c!r}")
@@ -61,7 +86,11 @@ def _resolve_prefs(prefs: Mapping, elements: Mapping, teams: Mapping) -> dict:
 def golden_path(
     snap: Snapshot, prefs: Mapping | None = None, *, ft: int | None = None, pending=None, horizon: int = P.HORIZON, shown: int = P.SHOWN,
     time_limit: float = P.TIME_LIMIT_S, budget: float = P.TOTAL_BUDGET_S, alternatives: int = 3, chips: bool = True, threads: int | None = None,
+    xmins: Sequence | None = None, hold: bool = False,
 ) -> dict:
+    """`xmins`: structured minutes overrides (see `load_xmins`). `hold`: plan no transfers at all,
+    without solving: the best XI and captain from the current squad (used when transfers can't be
+    finalised, FR-DAT-05)."""
     t0 = time.perf_counter()
     timings: dict[str, float] = {}
     b = snap.bootstrap
@@ -78,16 +107,29 @@ def golden_path(
     state = P.TeamState.from_derived(derived, {i: e["now_cost"] for i, e in elements.items()})
 
     t = time.perf_counter()
-    proj = project(inputs, horizon, prefs.get("xmins_overrides"))
+    xmins = list(xmins or [])
+    proj = project(inputs, horizon, xmins or prefs.get("xmins_overrides"))
     timings["project_s"] = time.perf_counter() - t
 
     # The main solve gets its full limit; next-best plans are capped so chip scenarios keep a share.
     t = time.perf_counter()
     reserve = P.CHIP_RESERVE_S if chips else 0.0
-    plans = P.solve(inputs, proj, state, horizon=horizon, time_limit=min(time_limit, budget), alternatives=alternatives, prefs=prefs,
-                    threads=threads, alt_time_limit=min(ALTERNATIVE_LIMIT_S, time_limit), deadline=t0 + max(budget - reserve, 1.0))
+    if hold:
+        chips = False
+        plans = [P.hold_plan(inputs, proj, state, P.SolveInfo("Hold", None, 0.0, 0.0, None, False), len(proj.gws))]
+        plans[0].warnings = ["Hold requested (--hold): no transfers are planned and the solver was not run."]
+    else:
+        plans = P.solve(inputs, proj, state, horizon=horizon, time_limit=min(time_limit, budget), alternatives=alternatives, prefs=prefs,
+                        threads=threads, alt_time_limit=min(ALTERNATIVE_LIMIT_S, time_limit), deadline=t0 + max(budget - reserve, 1.0))
     timings["solve_s"] = time.perf_counter() - t
     best = plans[0]
+    # FR-REC-03: this GW's bench in the order the auto-sub simulator values most.
+    et = {pid: p.element_type for pid, p in inputs.players.items()}
+    gw0 = proj.gws[0]
+    for pl in plans:
+        s0 = pl.steps[0]
+        squad0 = s0["xi"] + s0["bench"]
+        s0["bench"] = P.order_bench(s0["xi"], s0["bench"], {p: proj.xp[p][gw0] for p in squad0}, {p: proj.p_play[p][gw0] for p in squad0}, et, inputs.rules)
 
     used = [{"name": c["name"], "event": c["used_in"]} for c in derived["chips"] if c["used_in"]]
     scenarios: list[dict] = []
@@ -111,14 +153,15 @@ def golden_path(
         gws_shown = [s["gw"] for s in pl.steps[:shown]]
         transfers = []
         for tr in first["transfers"]:
-            gain = lambda gws, d=1.0: sum((proj.xp[tr["in"]][g] - proj.xp[tr["out"]][g]) * d**k for k, g in enumerate(gws))  # noqa: E731
             transfers.append({
                 "out": {"id": tr["out"], "name": elements[tr["out"]]["web_name"], "sell_price": state.sell.get(tr["out"], elements[tr["out"]]["now_cost"]) / 10},
                 "in": {"id": tr["in"], "name": elements[tr["in"]]["web_name"], "price": elements[tr["in"]]["now_cost"] / 10},
-                "xp_gain_4gw": round(gain(gws_shown), 2), "xp_gain_6gw_decayed": round(gain(proj.gws[:horizon], P.DECAY), 2),
+                **transfer_numbers(tr["out"], tr["in"], proj, len(gws_shown)),
             })
         plan_docs.append({
             "rank": rank, "objective": None if pl.objective is None else round(pl.objective, 3),
+            # The same objective recomputed from the plan's decisions (plan.score): what the gate compares.
+            "score": round(P.score(pl.steps, inputs, proj, state), 3),
             "objective_vs_best": None if pl.objective is None or best.objective is None else round(pl.objective - best.objective, 3),
             "fallback": pl.fallback, "solver": pl.info.as_dict(), "transfers": transfers,
             "hits": first["hits"], "hit_cost": first["hit_cost"],
@@ -140,7 +183,7 @@ def golden_path(
         warnings.append("Derived FT count — confirm in app")
     if any(not d["validation"]["valid"] for d in plan_docs):
         warnings.append("A plan failed validation against the snapshot; see plans[].validation.errors.")
-    referenced = {p for d in plan_docs for s in d["gws"] for p in s["xi"] + s["bench"] + [t["out"] for t in s["transfers"]]}
+    referenced = {p for d in plan_docs + [x for x in scenarios if x.get("gws")] for s in d["gws"] for p in s["xi"] + s["bench"] + [t["out"] for t in s["transfers"]]}
     timings["total_s"] = time.perf_counter() - t0
     return {
         "schema": SCHEMA, "gaffer_lib": __version__, "solver": {"name": "open-fpl-solver", "commit": P.SOLVER_COMMIT, **best.info.as_dict()},
@@ -149,7 +192,8 @@ def golden_path(
                      "budget_s": budget, "ft_value_list": P.FT_VALUE_LIST, "bench_weights": P.BENCH_WEIGHTS, "chips_in_plan": False},
         "assumptions": {**derived["assumptions"], "bank": state.bank / 10, "free_transfers_at_start": state.free_transfers},
         "preferences": {k: prefs[k] for k in ("risk", "save_chips", "keep", "avoid", "max_hits_per_gw") if k in prefs},
-        "xmins_overrides": proj.overrides_applied,
+        "prefs_resolved": resolved_prefs(prefs), "hold": hold,
+        "xmins_overrides": proj.overrides_applied, "xmins_input": xmins,
         "plans": plan_docs,
         "chip_scenarios": scenarios,
         "captain": captains,
@@ -196,7 +240,7 @@ def render_summary(doc: Mapping, out_path: str | None = None) -> str:
         if d["rank"] == 1:
             first = d["gws"][0]
             L.append(f"  XI GW{doc['gw']}: " + ", ".join(f"{name(p)} {pl[str(p)]['xp'][0]:.1f}" for p in first["xi"]))
-            L.append("  Bench (GK, then order): " + ", ".join(f"{name(p)} {pl[str(p)]['xp'][0]:.1f}" for p in first["bench"]))
+            L.append("  Bench (GK, then auto-sub order): " + ", ".join(f"{name(p)} {pl[str(p)]['xp'][0]:.1f}" for p in first["bench"]))
     if doc["chip_scenarios"]:
         L.append("")
         L.append("Chip scenarios (forced in one GW, against plan 1 with no chip):")
@@ -213,6 +257,8 @@ def render_summary(doc: Mapping, out_path: str | None = None) -> str:
     if "correlation" in e:
         gaps = ", ".join(f"{g['name']} {g['xp']:.1f} vs {g['ep_next']}" for g in e["largest_gaps"][:4])
         L.append(f"xP vs official ep_next (GW{e['gw']}, {e['players']} players): r {e['correlation']}, mean gap {e['mean_abs_gap']}; largest: {gaps}")
+    if doc.get("xmins_input"):
+        L.append("Minutes overrides applied: " + "; ".join(f"{pl[str(x['player'])]['name'] if str(x['player']) in pl else x['player']} {x['xmins']:g} min" + (f" in GW{x['gw']}" if x.get("gw") else "") for x in doc["xmins_input"]))
     if doc["warnings"]:
         L.append("")
         L.append("Warnings:")

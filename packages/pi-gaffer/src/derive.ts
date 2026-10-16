@@ -2,7 +2,7 @@
  * Derived team state (ARCHITECTURE §2.2): fpl_snapshot runs `python -m gaffer_lib derive` in the
  * sandbox against the snapshot it just wrote, so the rules have one implementation (ADR 0002).
  */
-import { type SandboxSession, sandboxRun, shellQuote } from "./sandbox.ts";
+import { lastJsonLine, type SandboxSession, sandboxRun, shellQuote } from "./sandbox.ts";
 
 export interface DerivedPlayer {
 	id: number;
@@ -59,9 +59,14 @@ export class DeriveInputError extends Error {
 	override name = "DeriveInputError";
 }
 
-/** How to invoke gaffer_lib in the sandbox. Tests on a host sandboxd point this at the repo source. */
+/**
+ * How the harness invokes gaffer_lib in the sandbox. `-I` (isolated mode) keeps the working
+ * directory and PYTHON* variables off the import path: /work is writable by the model's code, and
+ * a `gaffer_lib` package left there must not be what derive and the submit gate run.
+ * Tests on a host sandboxd point this at the repo source.
+ */
 export function gafferLibCommand(env: NodeJS.ProcessEnv = process.env): string {
-	return env.GAFFER_LIB_CMD ?? "python -m gaffer_lib";
+	return env.GAFFER_LIB_CMD ?? "python -I -m gaffer_lib";
 }
 
 export function deriveCommand(snapshotDir: string, opts: DeriveOptions, lib = gafferLibCommand()): string {
@@ -74,21 +79,21 @@ export function deriveCommand(snapshotDir: string, opts: DeriveOptions, lib = ga
 export function sandboxDerive(session: SandboxSession): DeriveFn {
 	return async (snapshotDir, opts) => {
 		const { exitCode, output } = await sandboxRun(session, deriveCommand(snapshotDir, opts), { timeoutS: 60, signal: opts.signal });
-		// The JSON document is the last line that parses; anything before it is stderr noise.
-		const lines = output.trim().split("\n").reverse();
-		let doc: unknown;
-		for (const l of lines) {
-			if (!l.startsWith("{")) continue;
-			try {
-				doc = JSON.parse(l);
-				break;
-			} catch {
-				/* keep looking */
-			}
-		}
+		const doc = lastJsonLine(output);
 		const err = (doc as { error?: string } | undefined)?.error;
 		if (exitCode === 2 && err) throw new DeriveInputError(err.replace(/^DeriveError: /, ""));
 		if (exitCode !== 0 || !doc || err) throw new Error(`gaffer_lib derive failed (exit ${exitCode}): ${err ?? output.trim().slice(-300)}`);
 		return doc as Derived;
 	};
+}
+
+/**
+ * The submit gate's command (ADR 0003): `gaffer_lib validate --request -`, with the request on
+ * standard input and the `--ft`/`--pending` the snapshot was taken with.
+ */
+export function gateCommand(snapshotDir: string, opts: { ft: number | null; pending: [number, number][] }, lib: string = gafferLibCommand()): string {
+	let cmd = `${lib} validate --snapshot ${shellQuote(snapshotDir)} --request -`;
+	if (opts.ft !== null) cmd += ` --ft ${Math.trunc(opts.ft)}`;
+	if (opts.pending.length) cmd += ` --pending ${shellQuote(opts.pending.map(([o, i]) => `${Math.trunc(o)}>${Math.trunc(i)}`).join(","))}`;
+	return cmd;
 }

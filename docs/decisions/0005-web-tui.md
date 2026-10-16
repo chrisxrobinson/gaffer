@@ -14,7 +14,7 @@ The brief asks for a browser UI that "looks and behaves like the Pi CLI". Pi off
 | Multi-user | One process per connection (ttyd spawns per WS). Auth is basic or header-based | Clean: one RPC process per user session behind real auth | — |
 | Streaming | Native terminal rendering | `message_update` deltas and `tool_execution_*` events | — |
 | Reconnect | `tmux new -A -s gaffer` re-attaches to a live TUI | `get_state`/`get_messages` plus respawn with `--session-id` | — |
-| Structured output | Rendered as TUI tables by `renderResult`; `/export` writes JSON | Real HTML tables and CSV/JSON download | — |
+| Structured output | Rendered as TUI tables by `renderResult`; `/export-rec` writes JSON | Real HTML tables and CSV/JSON download | — |
 | Mobile | Poor | Good | — |
 
 ## Decision
@@ -25,6 +25,7 @@ The brief asks for a browser UI that "looks and behaves like the Pi CLI". Pi off
   - Pi starts with `--tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences`, and all four built-ins are routed to the sandbox ([ADR 0001](0001-sandbox.md)).
   - tmux is only there so a run survives a browser disconnect. Its escape routes to a shell are removed with a config that sets `set -g prefix None` and `unbind-key -a`, plus `set -g status off`. Even if a shell were reached, the harness container holds only the LLM key and the data volume. Because the port is localhost-only and single-user, the residual risk is accepted.
   - xterm.js 6.0 has no stable Kitty keyboard protocol, so ttyd gets a keymap for Shift+Enter.
+  - *Correction (M4):* Pi runs with `--tui-mode fullscreen`. In its regular mode Pi leaves scrolling to the terminal's scrollback, and M1 kept the browser terminal on its normal screen (a tmux `terminal-overrides` entry removing `smcup`/`rmcup`) so that the wheel scrolled xterm.js's own buffer. That buffer only receives what tmux happens to scroll off line by line: when Pi draws a tall block at once, the lines above the window never reach the browser. A recommendation is about 60 lines, so in a 55-row window its header and transfer table could not be scrolled to, although tmux's own history held them. In fullscreen mode Pi keeps the transcript itself and scrolls it (wheel, PageUp/PageDown, Home/End, with a scrollbar), nothing depends on tmux relaying scrollback, and a reconnect or a container restart shows the whole transcript again. The override is removed. tmux's own mouse handling and copy-mode stay off; Pi's mouse requests pass through to the browser terminal.
 - **Cloud single-user (phase 2):** the same, behind ALB OIDC auth (Cognito or another IdP). ttyd uses `-H X-Amzn-Oidc-Identity` as its auth-proxy header, and the ALB idle timeout is set to 3600 s.
 - **Multi-user (phase 3): Option B.**
   - A `gaffer-web` bridge authenticates users and spawns one `pi --mode rpc --session-dir /sessions/<tenant>` per session, each with its own sandbox.
