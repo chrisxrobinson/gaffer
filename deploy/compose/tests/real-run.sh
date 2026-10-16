@@ -7,7 +7,8 @@
 set -eu
 cd "$(dirname "$0")/.."
 name="$1"; prompt="$2"
-docker compose exec -T -e RUN_NAME="$name" -e PROMPT="$prompt" gaffer sh -c '
+# GAFFER_BUDGET_SOFT=0.02 ./tests/real-run.sh ... crosses the soft cap on purpose (FR-BUD-02); the report counts the steers.
+docker compose exec -T -e RUN_NAME="$name" -e PROMPT="$prompt" -e GAFFER_BUDGET_SOFT="${GAFFER_BUDGET_SOFT:-0.75}" gaffer sh -c '
   ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"; export ANTHROPIC_API_KEY
   dir=/sessions/m4-live/$RUN_NAME; mkdir -p "$dir"; cd /work
   pi --session-dir "$dir" --no-context-files --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
