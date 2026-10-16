@@ -1,14 +1,15 @@
 /**
  * gaffer-core: turns the coding agent into an FPL agent (ARCHITECTURE §1).
  * Replaces the coding preamble while keeping skills, injects fpl_context and user_preferences
- * sections, restricts the active tools, blocks the user's `!` shell, and adds /team, /prefs and
- * /export-rec.
+ * sections, restricts the active tools, blocks the user's `!` shell, and adds /team, /prefs,
+ * /export-rec, /usage and /scorecard.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { dataDir, GAFFER_TOOLS, idSalt } from "../../src/config.ts";
+import { budgetConfig, dataDir, GAFFER_TOOLS, idSalt } from "../../src/config.ts";
 import { FplClient, FplNotFoundError } from "../../src/http.ts";
+import { readOutcomes, scorecard, scorecardLines } from "../../src/outcomes.ts";
 import { fplContextSection, GAFFER_PREAMBLE, userPreferencesSection } from "../../src/prompt.ts";
 import { DEFAULT_PREFS, describePrefs, parsePrefsArgs, readPrefs, writePrefs } from "../../src/prefs.ts";
 import type { Recommendation } from "../../src/schema/recommendation.ts";
@@ -17,6 +18,7 @@ import { savePreferences, sessionTeamHash } from "../../src/team-prefs.ts";
 import { hashTeamId } from "../../src/snapshot.ts";
 import { parseTeamArgs } from "../../src/team-args.ts";
 import { SnapshotStore } from "../../src/store.ts";
+import { dayTotals, scanSessions, sessionUsage, usageLines } from "../../src/usage.ts";
 
 export const USER_SHELL_BLOCKED = "Shell commands are disabled in Gaffer: the harness holds credentials. Ask Gaffer instead; its code runs in the sandbox.";
 
@@ -117,6 +119,43 @@ export default function gafferCore(pi: ExtensionAPI) {
 				return ctx.ui.notify(`Export failed: ${(e as Error).message}`, "error");
 			}
 			ctx.ui.notify(`GW${rec.gw} recommendation ${rec.rec_id} exported to ${file}`, "info");
+		},
+	});
+
+	pi.registerCommand("usage", {
+		description: "Tokens, cost, tools and latency for this session, and today's spend against the caps",
+		handler: async (_args, ctx) => {
+			try {
+				const now = new Date();
+				const dir = ctx.sessionManager.getSessionDir();
+				const file = ctx.sessionManager.getSessionFile();
+				// This session from memory (Pi writes its file lazily), the others from disk.
+				const session = sessionUsage(ctx.sessionManager.getEntries() as never, file ?? "");
+				const others = scanSessions(dir).filter((s) => !file || join(dir, s.file) !== file);
+				const day = now.toISOString().slice(0, 10);
+				const t = dayTotals([...others, session], now);
+				ctx.ui.notify(usageLines(session, { day, ...t }, budgetConfig()).join("\n"), "info");
+			} catch (e) {
+				ctx.ui.notify(`Usage could not be read: ${(e as Error).message}`, "error");
+			}
+		},
+	});
+
+	pi.registerCommand("scorecard", {
+		description: "Season to date: Gaffer's recommendations vs your actual points vs the B0/B1 baselines",
+		handler: async (_args, ctx) => {
+			let hash: string | undefined;
+			try {
+				hash = sessionTeamHash(ctx);
+			} catch (e) {
+				return ctx.ui.notify((e as Error).message, "error");
+			}
+			if (!hash) return ctx.ui.notify("Set your team first with /team <id>: the scorecard is per team.", "warning");
+			try {
+				ctx.ui.notify(scorecardLines(scorecard(readOutcomes(dataDir()), hash)).join("\n"), "info");
+			} catch (e) {
+				ctx.ui.notify(`The scorecard could not be read: ${(e as Error).message}`, "error");
+			}
 		},
 	});
 }
