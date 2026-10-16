@@ -1,5 +1,6 @@
 packages:
   - packages/*
+  - evals
 
 # No dependency needs its install script; deny explicitly (pnpm fails on unreviewed builds).
 allowBuilds:

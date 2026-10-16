@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2526-gw36-dgw",
+ "title": "2025/26 GW36: two clubs play twice",
+ "tags": [
+  "history",
+  "dgw"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2025-26",
+  "gw": 36,
+  "started": 34
+ },
+ "team_id": 992005,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 992005"
+}

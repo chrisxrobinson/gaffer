@@ -1,0 +1,18 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l6-c-after-wildcard",
+ "title": "GW6 2026/27, team C: Wildcard played in GW5",
+ "tags": [
+  "live",
+  "after-wildcard"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw6",
+  "team": "c"
+ },
+ "team_id": 990003,
+ "as_of": "2026-10-01T20:50:03Z",
+ "prompt": "/gw",
+ "team_command": "/team 990003"
+}

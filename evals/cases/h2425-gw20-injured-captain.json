@@ -1,0 +1,28 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw20-injured-captain",
+ "title": "2024/25 GW20: the squad's best player by ep_next is ruled out (he did not play)",
+ "tags": [
+  "history",
+  "injured-captain"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 20,
+  "started": 18
+ },
+ "team_id": 991007,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 991007",
+ "mutations": [
+  {
+   "kind": "news",
+   "player": "@top_ep_absent_squad",
+   "status": "i",
+   "chance": 0,
+   "news": "Knee injury - Expected back in 3 weeks"
+  }
+ ]
+}

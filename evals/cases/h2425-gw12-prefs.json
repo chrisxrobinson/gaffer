@@ -1,0 +1,30 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw12-prefs",
+ "title": "2024/25 GW12 with saved preferences: safe risk, save Bench Boost, keep the second-best player, at most one hit",
+ "tags": [
+  "history",
+  "preferences"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 12,
+  "started": 10
+ },
+ "team_id": 991008,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 991008",
+ "prefs": {
+  "risk": "safe",
+  "save_chips": [
+   "bboost"
+  ],
+  "keep": [
+   "@second_ep_squad"
+  ],
+  "avoid": [],
+  "max_hits_per_gw": 1
+ }
+}

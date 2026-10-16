@@ -1,0 +1,28 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2526-gw14-injured-captain",
+ "title": "2025/26 GW14: the squad's best player by ep_next is ruled out (he did not play)",
+ "tags": [
+  "history",
+  "injured-captain"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2025-26",
+  "gw": 14,
+  "started": 12
+ },
+ "team_id": 992008,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 992008",
+ "mutations": [
+  {
+   "kind": "news",
+   "player": "@top_ep_absent_squad",
+   "status": "i",
+   "chance": 0,
+   "news": "Ankle injury - Expected back mid-December"
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw10-5ft",
+ "title": "2024/25 GW10: five free transfers banked",
+ "tags": [
+  "history",
+  "5ft"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 10,
+  "started": 5
+ },
+ "team_id": 991006,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 991006"
+}

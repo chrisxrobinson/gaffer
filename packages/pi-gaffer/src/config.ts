@@ -19,6 +19,17 @@ export function idSalt(env: NodeJS.ProcessEnv = process.env): string {
 	return salt;
 }
 
+/**
+ * The time Gaffer uses for FPL decisions: deadlines, cache lifetimes, the finalise window and the gate's
+ * "deadline passed" check. It is the real time unless GAFFER_CLOCK_OFFSET_MS is set, which only the
+ * eval runner does, so a past GW's frozen data can be replayed as if before its deadline
+ * (ARCHITECTURE §6.3). Costs and the daily cap always use the real date.
+ */
+export function fplNow(env: NodeJS.ProcessEnv = process.env): number {
+	const offset = Number(env.GAFFER_CLOCK_OFFSET_MS ?? 0);
+	return Date.now() + (Number.isFinite(offset) ? offset : 0);
+}
+
 export function dataDir(env: NodeJS.ProcessEnv = process.env): string {
 	return env.GAFFER_DATA_DIR ?? "/data";
 }

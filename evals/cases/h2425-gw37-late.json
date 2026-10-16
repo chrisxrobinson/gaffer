@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw37-late",
+ "title": "2024/25 GW37: two GWs left, so a two-GW plan",
+ "tags": [
+  "history",
+  "season-end"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 37,
+  "started": 35
+ },
+ "team_id": 991010,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 991010"
+}

@@ -1,0 +1,17 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l6-b-words",
+ "title": "GW6 2026/27, team B, the team given in words rather than /team",
+ "tags": [
+  "live",
+  "natural-language"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw6",
+  "team": "b"
+ },
+ "team_id": 990002,
+ "as_of": "2026-10-01T20:50:03Z",
+ "prompt": "My FPL team ID is 990002. What should I do this week? Give me your full recommendation."
+}

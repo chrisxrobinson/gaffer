@@ -1,0 +1,25 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l6-b-stale-t30",
+ "title": "GW6 2026/27, team B, 30 minutes before the deadline with FPL updating: no transfers can be finalised (FR-DAT-05)",
+ "tags": [
+  "live",
+  "stale"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw6",
+  "team": "b"
+ },
+ "team_id": 990009,
+ "as_of": "2026-10-10T09:30:00Z",
+ "prompt": "/gw",
+ "team_command": "/team 990009",
+ "stale": {
+  "prime_at": "2026-10-10T07:30:00Z"
+ },
+ "expect": {
+  "no_transfers": true,
+  "confidence": "low"
+ }
+}

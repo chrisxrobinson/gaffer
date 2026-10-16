@@ -1,0 +1,32 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l6-b-prefs",
+ "title": "GW6 2026/27, team B with saved preferences: save Wildcard and Free Hit, keep the best player, avoid the best non-squad player, no hits",
+ "tags": [
+  "live",
+  "preferences"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw6",
+  "team": "b"
+ },
+ "team_id": 990006,
+ "as_of": "2026-10-01T20:50:03Z",
+ "prompt": "/gw",
+ "team_command": "/team 990006",
+ "prefs": {
+  "risk": "balanced",
+  "save_chips": [
+   "wildcard",
+   "freehit"
+  ],
+  "keep": [
+   "@top_ep_squad"
+  ],
+  "avoid": [
+   "@top_ep_not_squad"
+  ],
+  "max_hits_per_gw": 0
+ }
+}

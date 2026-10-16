@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw3-early",
+ "title": "2024/25 GW3: early season, two GWs of data",
+ "tags": [
+  "history",
+  "early-season"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 3,
+  "started": 2
+ },
+ "team_id": 991009,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 991009"
+}
