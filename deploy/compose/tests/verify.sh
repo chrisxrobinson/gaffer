@@ -48,3 +48,6 @@ docker compose exec -T gaffer sh -c "chmod -R u+w '$scratch' 2>/dev/null; rm -rf
 [ "$status" = 0 ] || { echo "$out" | tail -n 60; exit 1; }
 (cd ../../packages/pi-gaffer && node scripts/check-schema.ts "${TMPDIR:-/tmp}/gaffer-verify-rec.json")
 
+
+echo "== M5: gaffer admin, gaffer-eval (one-shot) and the privacy of everything they write"
+docker compose exec -T gaffer node --input-type=module - < tests/m5.mjs
