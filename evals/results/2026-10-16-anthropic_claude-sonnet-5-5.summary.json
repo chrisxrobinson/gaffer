@@ -1,0 +1,66 @@
+{
+  "schema": "gaffer.evalsummary/1",
+  "run_id": "20261016T205159-anthropic_claude-sonnet-5-5",
+  "model": "anthropic/claude-sonnet-5-5",
+  "started_at": "2026-10-16T20:51:59.541Z",
+  "finished_at": "2026-10-16T21:28:50.373Z",
+  "cases": 30,
+  "validator_pass": {
+    "passed": 30,
+    "of": 30,
+    "rate": 1,
+    "within_two_retries": 30
+  },
+  "points_vs_g0": {
+    "cases": 28,
+    "recommended": 1790,
+    "g0": 1764,
+    "diff": 26,
+    "better": 3,
+    "same": 24,
+    "worse": 1,
+    "unscorable": [
+      "l7-a",
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "preferences": {
+    "cases": 2,
+    "passed": 2
+  },
+  "injection": {
+    "cases": 2,
+    "passed": 2
+  },
+  "expectations": {
+    "cases": 1,
+    "passed": 1
+  },
+  "cost": {
+    "total": 1.9405015999999997,
+    "median_per_recommendation": 0.0636479,
+    "max": 0.08541540000000002
+  },
+  "latency_ms": {
+    "p50": 75224,
+    "p95": 95300,
+    "max": 131240,
+    "n": 30
+  },
+  "wildcard_or_free_hit_not_evaluated": {
+    "cases": 3,
+    "of": 30,
+    "ids": [
+      "h2425-gw10-5ft",
+      "h2425-gw24-dgw",
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "errors": [],
+  "schema_check": {
+    "tool": "ajv 8.20.0",
+    "schema": "schemas/recommendation-1.json",
+    "recommendations": 30,
+    "invalid": []
+  }
+}
