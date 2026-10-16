@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "NFR-MNT-02: Pi upgrades arrive as one pull request, which CI gates (.github/workflows/ci.yml): the S1 checks, the unit tests and the faux eval suite. Versions stay pinned exactly; nothing merges by itself.",
+  "extends": ["config:recommended"],
+  "rangeStrategy": "pin",
+  "automerge": false,
+  "packageRules": [
+    {
+      "description": "Pi: the dev dependencies and the version the harness image installs move together.",
+      "matchPackageNames": ["@earendil-works/pi-coding-agent", "@earendil-works/pi-ai", "@earendil-works/pi-tui"],
+      "groupName": "Pi",
+      "labels": ["pi-upgrade"],
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "The Pi version npm installs in the harness image (harness/Dockerfile).",
+      "managerFilePatterns": ["/^harness/Dockerfile$/"],
+      "matchStrings": ["npm install -g @earendil-works/pi-coding-agent@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      "depNameTemplate": "@earendil-works/pi-coding-agent",
+      "datasourceTemplate": "npm"
+    }
+  ]
+}

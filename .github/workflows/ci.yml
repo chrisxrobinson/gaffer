@@ -1,0 +1,77 @@
+# NFR-MNT-02: every push and pull request, including Renovate's Pi upgrades, runs the S1 checks (as
+# vitest tests), the unit tests, the Python suites, and the eval suite with the scripted faux model
+# through the real stack. No secrets: the faux model needs no API key, and CI is never given one.
+name: ci
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+
+env:
+  PNPM: npx --yes pnpm@12.6.0
+  SOLVER_COMMIT: ec65f5e2b2be34441cb4b2a9efafea1ec0fe3b79
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.21.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: 0.6.6
+      - run: uv python install 3.14
+      - run: $PNPM install --frozen-lockfile
+      # vitest: the S1 extension checks (test/s1.test.ts), unit and extension tests, the eval graders.
+      - run: $PNPM test
+      - name: sandboxd
+        run: uv run --no-project --with pytest==9.1.1 pytest sandbox/tests
+      - name: open-fpl-solver at the pinned commit (the planner tests need it)
+        run: |
+          git clone --quiet https://github.com/solioanalytics/open-fpl-solver "$RUNNER_TEMP/open-fpl-solver"
+          git -C "$RUNNER_TEMP/open-fpl-solver" checkout --quiet "$SOLVER_COMMIT"
+      - name: gaffer_lib
+        env:
+          PYTHONPATH: python/gaffer_lib/src
+        run: |
+          GAFFER_SOLVER_DIR="$RUNNER_TEMP/open-fpl-solver" uv run --no-project --python 3.14 \
+            --with pytest==9.1.1 --with hypothesis==6.168.3 --with numpy==2.5.3 --with pandas==3.0.6 --with scipy==1.18.1 \
+            --with highspy==1.15.1 --with requests==2.34.2 --with fuzzywuzzy==0.18.0 pytest python/gaffer_lib/tests
+
+  eval-faux:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.21.0
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: 0.6.6
+      - run: uv python install 3.14
+      - run: $PNPM install --frozen-lockfile
+      # The history cases are built from third-party archives that are never committed: fetch them once
+      # per change of the fetch script and keep them in the cache.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: var/history
+          key: history-${{ hashFiles('tools/fetch_history.py') }}
+      - run: uv run --no-project --python 3.14 python tools/fetch_history.py
+      - name: the stack (no API key)
+        working-directory: deploy/compose
+        run: |
+          ./init-secrets.sh
+          docker compose up -d --build --wait
+      - name: pnpm eval --model faux
+        run: $PNPM eval --model faux
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: eval-results
+          path: evals/results/
