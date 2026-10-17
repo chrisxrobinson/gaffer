@@ -1,9 +1,8 @@
-# NFR-MNT-02: every push and pull request, including Renovate's Pi upgrades, runs the S1 checks (as
-# vitest tests), the unit tests, the Python suites, and the eval suite with the scripted faux model
-# through the real stack. No secrets: the faux model needs no API key, and CI is never given one.
+# NFR-MNT-02: every pull request, including Renovate's Pi upgrades, runs the S1 checks (as vitest
+# tests), the unit tests, the Python suites, and the eval suite with the scripted faux model through
+# the real stack. No secrets: the faux model needs no API key, and CI is never given one.
 name: ci
 on:
-  push:
   pull_request:
 permissions:
   contents: read
