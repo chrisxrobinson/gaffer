@@ -1,0 +1,101 @@
+{
+  "label": "A-0.87.1-r1",
+  "variant": "A",
+  "pi": "0.87.1",
+  "model_compat": {
+    "forceAdaptiveThinking": true,
+    "supportsStrictTools": true
+  },
+  "team_id": "synthetic",
+  "prompts": [
+    {
+      "prompt": 1,
+      "requests_from": 0
+    },
+    {
+      "prompt": 2,
+      "requests_from": 2
+    },
+    {
+      "prompt": 3,
+      "requests_from": 3
+    }
+  ],
+  "requests": [
+    {
+      "system_chars": 5911,
+      "system_has_fpl_context": true,
+      "system_now": "2026-10-17T14:44:50.616Z",
+      "messages": 1,
+      "roles": "u",
+      "mid_conversation_system_messages": [],
+      "tools": 2
+    },
+    {
+      "system_chars": 5911,
+      "system_has_fpl_context": true,
+      "system_now": "2026-10-17T14:44:50.616Z",
+      "messages": 3,
+      "roles": "uau",
+      "mid_conversation_system_messages": [],
+      "tools": 2
+    },
+    {
+      "system_chars": 5911,
+      "system_has_fpl_context": true,
+      "system_now": "2026-10-17T14:44:56.274Z",
+      "messages": 5,
+      "roles": "uauau",
+      "mid_conversation_system_messages": [],
+      "tools": 2
+    },
+    {
+      "system_chars": 5911,
+      "system_has_fpl_context": true,
+      "system_now": "2026-10-17T14:44:57.917Z",
+      "messages": 7,
+      "roles": "uauauau",
+      "mid_conversation_system_messages": [],
+      "tools": 2
+    }
+  ],
+  "calls": [
+    {
+      "input": 4,
+      "cacheRead": 665,
+      "cacheWrite": 2390,
+      "output": 56,
+      "cost": 0.006609500000000001,
+      "thinking_blocks": 0,
+      "thinking_chars": 0
+    },
+    {
+      "input": 2,
+      "cacheRead": 3055,
+      "cacheWrite": 1076,
+      "output": 566,
+      "cost": 0.0086595,
+      "thinking_blocks": 0,
+      "thinking_chars": 0
+    },
+    {
+      "input": 4,
+      "cacheRead": 665,
+      "cacheWrite": 4056,
+      "output": 82,
+      "cost": 0.0110345,
+      "thinking_blocks": 0,
+      "thinking_chars": 0
+    },
+    {
+      "input": 4,
+      "cacheRead": 665,
+      "cacheWrite": 4165,
+      "output": 75,
+      "cost": 0.011237,
+      "thinking_blocks": 0,
+      "thinking_chars": 0
+    }
+  ],
+  "total_cost": 0.037540500000000004
+}

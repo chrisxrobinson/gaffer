@@ -1,0 +1,4 @@
+node_modules/
+sessions/
+# copied in from ../s6.ts before a run (see README)
+v*/s6.ts
