@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw15-bgw",
+ "title": "2024/25 GW15: two clubs blank",
+ "tags": [
+  "history",
+  "bgw"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 15,
+  "started": 13
+ },
+ "team_id": 900001001,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 900001001"
+}

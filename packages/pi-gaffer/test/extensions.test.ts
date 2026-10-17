@@ -12,6 +12,7 @@ beforeAll(async () => {
 });
 afterAll(() => env.stop());
 afterEach(() => {
+	delete process.env.GAFFER_BUDGET_SOFT;
 	delete process.env.GAFFER_BUDGET_HARD;
 	delete process.env.GAFFER_BUDGET_DAILY;
 	delete process.env.GAFFER_MAX_TURNS;
@@ -145,6 +146,31 @@ describe("budget caps (FR-BUD-01)", () => {
 		writeFileSync(join(prior, "old.jsonl"), "");
 	});
 
+	it("the daily cap counts every session under GAFFER_SESSIONS_ROOT, not only the current session's directory", async () => {
+		const sibling = join(env.sessionsDir, "elsewhere");
+		const nested = join(env.sessionsDir, "evals", "run-1");
+		mkdirSync(sibling, { recursive: true });
+		mkdirSync(nested, { recursive: true });
+		const { dayCost: before } = await import("../src/budget.ts");
+		const others = before(env.sessionsDir, new Date()); // this file's earlier tests spend too
+		writeFileSync(
+			join(sibling, "headless.jsonl"),
+			`${JSON.stringify({ type: "message", timestamp: new Date().toISOString(), message: { role: "assistant", timestamp: Date.now(), usage: { cost: { total: 0.11 } } } })}\n`,
+		);
+		const { sessionsRoot } = await import("../src/config.ts");
+		const { dayCost } = await import("../src/budget.ts");
+		try {
+			expect(sessionsRoot(nested)).toBe(nested);
+			expect(dayCost(sessionsRoot(nested), new Date())).toBe(0); // a headless run in a subdirectory saw only itself
+			process.env.GAFFER_SESSIONS_ROOT = env.sessionsDir;
+			expect(sessionsRoot(nested)).toBe(env.sessionsDir);
+			expect(dayCost(sessionsRoot(nested), new Date()) - others).toBeCloseTo(0.11, 9);
+		} finally {
+			delete process.env.GAFFER_SESSIONS_ROOT;
+			writeFileSync(join(sibling, "headless.jsonl"), "");
+		}
+	});
+
 	it("caps a run at GAFFER_MAX_TURNS turns", async () => {
 		process.env.GAFFER_MAX_TURNS = "3";
 		const g = await startGaffer(env, { responses: bashLoop(10) });
@@ -152,5 +178,63 @@ describe("budget caps (FR-BUD-01)", () => {
 		expect(g.faux.state.callCount).toBe(3);
 		expect(g.sessionEntries().filter((e) => e.customType === "gaffer.budget").at(-1).data.capped).toBe("turns");
 		g.session.dispose();
+	}, 30_000);
+});
+
+describe("soft-cap steering (FR-BUD-02)", () => {
+	const steers = (g: Awaited<ReturnType<typeof startGaffer>>) => g.sessionEntries().filter((e) => e.customType === "gaffer.steer");
+	const contextText = (ctx: { messages: { content?: unknown }[] }) => JSON.stringify(ctx.messages);
+
+	it("a run that crosses GAFFER_BUDGET_SOFT gets one steer message, not two, before its next model call", async () => {
+		process.env.GAFFER_BUDGET_SOFT = "0.05";
+		const contexts: string[] = [];
+		const seen = (step: ReturnType<typeof fauxAssistantMessage>) => (ctx: { messages: { content?: unknown }[] }) => {
+			contexts.push(contextText(ctx));
+			return step;
+		};
+		const g = await startGaffer(env, { extra: [costPerMessage(0.02)], responses: [...bashLoop(6).map(seen), seen(fauxAssistantMessage(fauxText("done")))] });
+		await g.session.prompt("go");
+		expect(g.faux.state.callCount).toBe(7); // the run is steered, not stopped
+		const s = steers(g);
+		expect(s).toHaveLength(1);
+		expect(s[0].content).toMatch(/\$0\.06, past the \$0\.05 soft cap \(GAFFER_BUDGET_SOFT\).*submit_recommendation/);
+		// $0.02, $0.04, $0.06 ≥ $0.05: crossed at the third call, so calls 1-3 didn't see it and the fourth did.
+		expect(contexts.map((c) => c.includes("soft cap"))).toEqual([false, false, false, true, true, true, true]);
+		const budget = g.sessionEntries().filter((e) => e.customType === "gaffer.budget").map((e) => e.data);
+		expect(budget.filter((d) => d.steered)).toEqual([expect.objectContaining({ turn: 3, soft: 0.05, capped: false, steered: true })]);
+		expect(budget.every((d) => d.capped === false)).toBe(true);
+		g.session.dispose();
+	}, 30_000);
+
+	it("does not steer again in a later run of the same session", async () => {
+		process.env.GAFFER_BUDGET_SOFT = "0.03";
+		const g = await startGaffer(env, { extra: [costPerMessage(0.02)], responses: [...bashLoop(3), fauxAssistantMessage(fauxText("done")), ...bashLoop(3), fauxAssistantMessage(fauxText("done again"))] });
+		await g.session.prompt("go");
+		await g.session.prompt("and again");
+		expect(g.faux.state.callCount).toBe(8);
+		expect(steers(g)).toHaveLength(1);
+		g.session.dispose();
+	}, 30_000);
+
+	it("does not steer on the turn that ends the run, so it adds no model call", async () => {
+		process.env.GAFFER_BUDGET_SOFT = "0.03";
+		const g = await startGaffer(env, { extra: [costPerMessage(0.02)], responses: [...bashLoop(1), fauxAssistantMessage(fauxText("done")), fauxAssistantMessage(fauxText("SHOULD NOT BE CALLED"))] });
+		await g.session.prompt("go");
+		expect(g.faux.state.callCount).toBe(2);
+		expect(steers(g)).toHaveLength(0);
+		g.session.dispose();
+	}, 30_000);
+
+	it("the hard cap still stops the run; GAFFER_BUDGET_SOFT defaults to $0.75", async () => {
+		process.env.GAFFER_BUDGET_SOFT = "0.03";
+		process.env.GAFFER_BUDGET_HARD = "0.07";
+		const g = await startGaffer(env, { extra: [costPerMessage(0.02)], responses: bashLoop(10) });
+		await g.session.prompt("go");
+		expect(g.faux.state.callCount).toBe(4); // steered at $0.04, stopped at $0.08
+		expect(steers(g)).toHaveLength(1);
+		g.session.dispose();
+		delete process.env.GAFFER_BUDGET_SOFT;
+		const { budgetConfig } = await import("../src/config.ts");
+		expect(budgetConfig().soft).toBe(0.75);
 	}, 30_000);
 });

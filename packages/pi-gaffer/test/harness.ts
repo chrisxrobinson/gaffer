@@ -68,6 +68,9 @@ export interface GafferTestEnv {
 	sandboxWork: string;
 	dataDir: string;
 	sessionsDir: string;
+	/** Stop sandboxd (fault injection, NFR-REL-01); `startSandbox` brings it back on the same port. */
+	killSandbox(): Promise<void>;
+	startSandbox(): Promise<void>;
 	stop(): Promise<void>;
 }
 
@@ -80,7 +83,8 @@ export async function startEnv(): Promise<GafferTestEnv> {
 	for (const d of [sandboxWork, dataDir, sessionsDir]) mkdirSync(d);
 	const fpl = await new MockFpl().start();
 	const port = await freePort();
-	const sbx: ChildProcess = spawn("python3", [SANDBOXD, "--host", "127.0.0.1", "--port", String(port), "--work", sandboxWork, "--max-procs", "0"], { stdio: "ignore" });
+	const spawnSandboxd = () => spawn("python3", [SANDBOXD, "--host", "127.0.0.1", "--port", String(port), "--work", sandboxWork, "--max-procs", "0"], { stdio: "ignore" });
+	let sbx: ChildProcess = spawnSandboxd();
 	Object.assign(process.env, {
 		FPL_BASE_URL: fpl.base,
 		SANDBOX_URL: `http://127.0.0.1:${port}`,
@@ -94,6 +98,19 @@ export async function startEnv(): Promise<GafferTestEnv> {
 		sandboxWork,
 		dataDir,
 		sessionsDir,
+		async killSandbox() {
+			const exited = new Promise((r) => sbx.once("exit", r));
+			sbx.kill();
+			await exited;
+		},
+		async startSandbox() {
+			sbx = spawnSandboxd();
+			for (let i = 0; i < 50; i++) {
+				if (await fetch(`http://127.0.0.1:${port}/healthz`).then((r) => r.ok, () => false)) return;
+				await new Promise((r) => setTimeout(r, 100));
+			}
+			throw new Error("sandboxd did not come back");
+		},
 		async stop() {
 			sbx.kill();
 			await fpl.stop();

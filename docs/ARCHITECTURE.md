@@ -360,24 +360,30 @@ This section is how the theory in the brief gets tested. There are four layers, 
   - Each upgrade must beat its predecessor by ≥1% of season points, or be rejected.
 
 ### 6.3 LLM-in-the-loop evals (per model, prompt or skill change)
-- **Suite:** about 30 fixed cases (team × GW snapshots), including DGW/BGW weeks, injured-captain weeks, 5-FT banks, a stale-data case, and a prompt-injection case (malicious text in a player's `news`).
-- **Harness:** the full Gaffer runs headless via the SDK, with `bindExtensions()` called.
-- **Graded in code:**
+- **Suite:** 30 fixed cases (team × GW snapshots) in `evals/cases`, including DGW/BGW weeks, injured-captain weeks, 5-FT banks, a stale-data case, prompt-injection cases (malicious text in a player's `news`) and preference cases.
+- **Where a case's data comes from,** and how it gets realised points (a case needs a finished GW):
+  - **Live 2026/27:** Gaffer's own pre-deadline snapshots, which exist from GW6. `evals/build/extract_live.py` turns them into small fixtures with every id stripped (`evals/cases/data`, committed; no bookmaker prices) and gives each case a synthetic team id. A case is scored on its GW's `event/{gw}/live` once the GW is finished and data-checked; until then it is graded on everything but points.
+  - **History (2024/25, 2025/26):** no Gaffer snapshot exists, and 2026/27 has had no blank or double GW yet. `evals/build/build_cases.py` rebuilds a pre-deadline view from vaastav's per-fixture archive and football-data.co.uk's season files (fetched into gitignored `var/history`, never committed), with the backtest's cut-off (§6.2): stats, results and xG only from matches before the deadline, that GW's prices, and the previous GW's official xP as `ep_next`. The team is synthetic: the most-owned legal £100m squad at a chosen GW, held since, so its free transfers are set by that GW and every chip is unplayed. Realised points are the archive's official `total_points` and minutes for the GW. What a history case can't have: news and availability flags (a case may add them), FPL's own deadline (taken as 90 minutes before the first kick-off), purchase prices (the team joined after GW1, so Gaffer sells at the current price, as it does live), and the fixture list as it stood.
+  - The builder materialises every case (both kinds) into gitignored `var/evals/cases/<id>`: the upstream responses, the resolved case and the result.
+- **Harness:** the full Gaffer runs headless via the SDK, with `bindExtensions()` called (`evals/runner/run.ts`), one fresh session per case, inside the harness container (the installed package, the real sandbox and solver). A stand-in for the FPL API and football-data.co.uk serves the case, so `fpl_snapshot` runs unchanged. Gaffer's FPL clock is set to the case's time (`GAFFER_CLOCK_OFFSET_MS`, set only by the runner: deadlines, cache lifetimes and the finalise window follow it; costs and the daily cap use the real date). `pnpm eval [--model faux|<provider>/<model>]` builds the cases, runs the suite in the stack and copies the results back. The scripted `faux` model plays the golden path for free, which is what CI runs.
+- **Graded in code** (`evals/runner/graders.ts`):
   - validator pass rate (target 100% within 2 retries)
-  - realised points of the recommendation against G0 on the same case, to check the LLM adds value over the deterministic path
+  - realised points of the recommendation against G0 on the same case, to check the LLM adds value over the deterministic path. G0 is plan 1 of the golden path on the same snapshot: the run's own plan file, or a separate run without the model's minutes overrides. Both are scored by `gaffer_lib score` (the same arithmetic as §6.4)
   - adherence to preferences
-  - cost and latency
+  - cost and latency, from the session log (§9)
   - injection resistance (no action taken on injected instructions)
-- **Recorded:** results go to `evals/results/<date>-<model>.jsonl`. This suite is also what qualifies a model swap (ADR 0008).
+  - the case's own expectations (the stale case: no transfers, low confidence), and which chip scenarios went unevaluated
+- **Recorded:** results go to `evals/results/<date>-<model>.jsonl`, one line per case and a summary line, with `.summary.json` alongside; every recommendation is checked against `schemas/recommendation-1.json` with ajv (FR-OUT-01). This suite is also what qualifies a model swap (ADR 0008).
 
 ### 6.4 Live tracking (every GW, automatic)
-- **Trigger:** `gaffer-eval` (a script run by cron or a scheduled Fargate task) runs after `data_checked` flips.
-- **For every ledgered recommendation** it computes:
-  - (a) the realised points of Gaffer's recommended XI, captain and chip
-  - (b) the user's actual points, from the public `entry` endpoints
-  - (c) the B0/B1 counterfactuals from the same pre-deadline squad
+- **Trigger:** `gaffer-eval` (`tools/gaffer-eval`) is a one-shot command that does nothing until FPL marks a GW finished and `data_checked`, and is idempotent, so whatever runs it can run it often. What runs it in phase 1 is not decided (the same question as FR-DAT-10's pre-deadline snapshot): cron on the host, a Compose service that loops, or a scheduled `docker compose run`. In phase 2 it is a scheduled Fargate task.
+- **For every ledgered recommendation** of a checked GW it computes, on the pre-deadline snapshot the recommendation was made on:
+  - (a) the realised points of Gaffer's recommended XI, captain and chip, after auto-subs, minus its hits
+  - (b) the user's actual points, from the public `entry` endpoints (`entry_history.points − event_transfers_cost`), and the same recomputed from their picks as a check
+  - (c) the B0/B1 counterfactuals from the same pre-deadline squad, with the `ep_next` it recorded
   - (d) the projection error of Gaffer's xP against official `ep_next` (both recorded pre-deadline)
-- **Output:** these are appended to `/data/ledger/outcomes.jsonl`, and a `/usage`-style `/scorecard` command shows the season to date.
+  - All of it is `python -m gaffer_lib score` in the sandbox (`rules.lineup_points`, the backtest's policies): no scoring in TypeScript.
+- **Output:** `/data/ledger/outcomes.jsonl`, rewritten whole and sorted, with no timestamps of its own, so the same inputs give the same bytes; `--rebuild` rescores from scratch. Recommendations from the scripted test model (`model` "faux/…") are never scored. The last recommendation per team before each deadline is marked `counted`; `/scorecard` shows the season to date from the counted rows.
 
 ### 6.5 Autoresearch (phase 2+, offline)
 - **Loop:** a scripted loop of separate Pi sessions, not sub-agents. The agent proposes a `gaffer_lib` change, runs the 6.2 backtest on seasons A and B, and keeps the change only if it improves them **and** does not regress on held-out season C.
@@ -428,7 +434,7 @@ flowchart TB
 | Auth | Localhost bind | ALB OIDC (Cognito or IdP) | oauth2-proxy |
 | Egress | Harness: default | Harness: NAT, with an optional allowlist via Network Firewall later | Host firewall |
 
-**Config** is all environment variables: `GAFFER_PROVIDER`, `GAFFER_MODEL`, `GAFFER_THINKING`, `GAFFER_BUDGET_{SOFT,HARD,DAILY}`, `GAFFER_ID_SALT`, `SANDBOX_PROVIDER=compose|ecs`, `SANDBOX_URL`, `PI_TELEMETRY=0`.
+**Config** is all environment variables: `GAFFER_PROVIDER`, `GAFFER_MODEL`, `GAFFER_THINKING`, `GAFFER_BUDGET_{SOFT,HARD,DAILY}`, `GAFFER_SESSIONS_ROOT` (the directory the daily cap sums), `GAFFER_ID_SALT`, `SANDBOX_PROVIDER=compose|ecs`, `SANDBOX_URL`, `PI_TELEMETRY=0`. The eval runner alone sets `GAFFER_CLOCK_OFFSET_MS` (§6.3).
 
 **Scaling path and multi-user seams** are identified here but not built:
 
@@ -457,15 +463,15 @@ Tool calls are content blocks with name and args; tool results are `toolResult` 
 |---|---|
 | Sessions, runs, recommendations | Pi JSONL + `gaffer.recommendation` entries |
 | Tokens and cost per session and per model | Sum of assistant `usage` (already there) |
-| Cost per **tool** | Attributed as the cost of the assistant turn that issued the call. Nested model calls inside tools must report usage in tool results (Pi convention); Gaffer tools make none |
-| Latency (turn, tool, end-to-end) | Differences between entry/message timestamps. Tool latency = `toolResult.timestamp − assistant(toolCall).timestamp`. Run latency = user message → `gaffer.recommendation` |
-| Errors | `toolResult.isError`, `stopReason: "error"`, and `gaffer.validation` failures |
+| Cost per **tool** | Attributed as the cost of the assistant turn that issued the call, split evenly when it issued several, so per-tool costs add up to the session's ("(text)" for turns that call no tool). Nested model calls inside tools must report usage in tool results (Pi convention); Gaffer tools make none |
+| Latency (turn, tool, end-to-end) | An assistant message's own `timestamp` is when it started and its entry's when it was written. Model call = entry − message time. Tool latency = `toolResult.timestamp − ` the calling assistant **entry**'s timestamp (the message's own timestamp would include the model's time). Run latency = user message → `gaffer.recommendation` |
+| Errors | `toolResult.isError`, `stopReason: "error"`, and `gaffer.validation` failures. Texts are cut to their first line with digits masked, so no team id reaches the report |
 | Data-source health | `gaffer.snapshot` entries carry per-endpoint status, latency, retries, `stale` and the CDN `age` header. Aggregated per source |
 | Budget events | `gaffer.budget` entries |
 | Recommendation quality | `/data/ledger/outcomes.jsonl` (§6.4) |
 
 **Delivery by phase:**
-- **Phase 1:** `gaffer admin` is a Node script in the harness image. It scans `/sessions` and `/data/ledger` and writes a static `admin.html` with tables and sparklines. `/usage` is a TUI summary for the current session and day, and `/scorecard` shows the season-to-date results.
+- **Phase 1:** `gaffer admin` (`tools/gaffer-admin`) is a Node script in the harness image. It scans `/sessions` and `/data/ledger` and writes a static `admin.html` (default `/data/admin/admin.html`; no script, no external resource) with tables and sparklines, and prints its totals. `/usage` is a TUI summary for the current session and day, and `/scorecard` shows the season-to-date results. Both read the same code as the report (`src/usage.ts`, `src/outcomes.ts`).
 - **Phase 2:** the same page is served read-only by the harness behind the same OIDC.
 - **Phase 3:** queries move to the Postgres index, and optional OpenTelemetry export (GenAI semconv, still "Development" status) comes from a `gaffer-otel` extension on `turn_end` and `tool_result`.
 
@@ -495,7 +501,7 @@ IDs and acceptance tests are in [REQUIREMENTS.md](REQUIREMENTS.md).
 - **Failure behaviour:**
   - **FPL down or updating:** serve the last snapshot with `stale`, lower confidence, and refuse to finalise transfers inside T−1h when per-user data is stale.
   - **football-data down:** fall back to Dixon-Coles.
-  - **Sandbox down:** the tool error is shown to the model, and a re-provision is tried once.
+  - **Sandbox down:** the tool error is shown to the model, and a re-provision is tried once (a request that can't connect provisions again and is retried once).
   - **LLM down:** Pi auto-retries, then the user sees an error, and the session log is intact.
   - **Solver timeout:** return the best incumbent found with its gap, and cap confidence at "medium".
 

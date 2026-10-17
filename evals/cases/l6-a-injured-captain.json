@@ -1,0 +1,27 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l6-a-injured-captain",
+ "title": "GW6 2026/27, team A: the squad's best player by ep_next is ruled out (he did not play GW6)",
+ "tags": [
+  "live",
+  "injured-captain"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw6",
+  "team": "a"
+ },
+ "team_id": 900000008,
+ "as_of": "2026-10-01T20:50:03Z",
+ "prompt": "/gw",
+ "team_command": "/team 900000008",
+ "mutations": [
+  {
+   "kind": "news",
+   "player": "@top_ep_absent_squad",
+   "status": "i",
+   "chance": 0,
+   "news": "Hamstring injury - Expected back 25 Oct"
+  }
+ ]
+}

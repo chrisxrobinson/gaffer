@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2526-gw31-bgw",
+ "title": "2025/26 GW31: four clubs blank",
+ "tags": [
+  "history",
+  "bgw"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2025-26",
+  "gw": 31,
+  "started": 29
+ },
+ "team_id": 900002002,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 900002002"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2526-gw8-5ft",
+ "title": "2025/26 GW8: five free transfers banked",
+ "tags": [
+  "history",
+  "5ft"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2025-26",
+  "gw": 8,
+  "started": 3
+ },
+ "team_id": 900002006,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 900002006"
+}

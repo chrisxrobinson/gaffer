@@ -33,6 +33,7 @@ ENV PI_CODING_AGENT_DIR=/opt/pi-agent \
     PI_OFFLINE=1 \
     PI_SKIP_VERSION_CHECK=1 \
     GAFFER_DATA_DIR=/data \
+    GAFFER_SESSIONS_ROOT=/sessions \
     GAFFER_ID_SALT_FILE=/run/secrets/gaffer_id_salt \
     SANDBOX_PROVIDER=compose \
     SANDBOX_URL=http://sandbox:8080 \
@@ -49,6 +50,20 @@ COPY packages/pi-gaffer/skills /opt/pi-gaffer/skills
 COPY packages/pi-gaffer/prompts /opt/pi-gaffer/prompts
 COPY packages/pi-gaffer/scripts /opt/pi-gaffer/scripts
 COPY packages/pi-gaffer/themes /opt/pi-gaffer/themes
+# Operator tools (gaffer admin, gaffer-eval) and the eval runner, run with plain node. They import the
+# package's src/ by the repository's relative path (../../packages/pi-gaffer/src), so /opt/packages/pi-gaffer
+# points at the installed package; /opt/node_modules exposes the Pi packages they import.
+COPY tools/package.json /opt/tools/package.json
+COPY tools/gaffer-admin /opt/tools/gaffer-admin
+COPY tools/gaffer-eval /opt/tools/gaffer-eval
+COPY evals/package.json /opt/evals/package.json
+COPY evals/runner /opt/evals/runner
+RUN set -eu; P=/usr/local/lib/node_modules/@earendil-works/pi-coding-agent; \
+    mkdir -p /opt/packages /opt/node_modules/@earendil-works; \
+    ln -s /opt/pi-gaffer /opt/packages/pi-gaffer; \
+    ln -s "$P" /opt/node_modules/@earendil-works/pi-coding-agent; \
+    ln -s "$P/node_modules/@earendil-works/pi-ai" /opt/node_modules/@earendil-works/pi-ai; \
+    ln -s "$P/node_modules/typebox" /opt/node_modules/typebox
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/
 # Models newer than Pi 0.87.1's bundled catalogue (claude-sonnet-5-5), added by configuration (ADR 0008).

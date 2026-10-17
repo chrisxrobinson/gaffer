@@ -1,9 +1,12 @@
 /** Spend accounting from Pi's per-message usage (ADR 0008). */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { BudgetConfig } from "./config.ts";
 
 interface EntryLike {
 	type: string;
+	customType?: string;
+	data?: unknown;
 	timestamp?: string;
 	message?: { role?: string; timestamp?: number; usage?: { cost?: { total?: number } } };
 }
@@ -47,4 +50,18 @@ export function dayCost(dir: string, day: Date): number {
 		}
 	}
 	return sum;
+}
+
+/** Whether this session has already been steered at the soft cap (recorded in a gaffer.budget entry). */
+export function softCapSteered(entries: readonly EntryLike[]): boolean {
+	return entries.some((e) => e.type === "custom" && e.customType === "gaffer.budget" && (e.data as { steered?: boolean } | undefined)?.steered === true);
+}
+
+/** The steer message the model gets once the session passes GAFFER_BUDGET_SOFT (FR-BUD-02, ADR 0008). */
+export function steerText(session: number, cfg: Pick<BudgetConfig, "soft" | "hard">): string {
+	return (
+		`Gaffer budget note: this session has cost $${session.toFixed(2)}, past the $${cfg.soft.toFixed(2)} soft cap (GAFFER_BUDGET_SOFT). ` +
+		"Wrap up now. If you have the golden path's plan, submit the recommendation with submit_recommendation as your next step; " +
+		`if you can't, tell the user briefly where you got to. The run is stopped at $${cfg.hard.toFixed(2)}.`
+	);
 }

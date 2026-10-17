@@ -4,6 +4,7 @@ import pytest
 from conftest import load_json, real_bootstrap_rules_part
 
 from gaffer_lib import rules
+from gaffer_lib.outcomes import deadline_lineup
 
 R = rules.Rules.from_bootstrap(real_bootstrap_rules_part())
 GK, DEF, MID, FWD = 1, 2, 3, 4
@@ -87,16 +88,10 @@ def test_subs_are_made_in_bench_boost_weeks_too():
 
 
 def unsub(record):
-    """The deadline line-up. The API's picks are stored after auto-subs: each sub swaps the two
-    players' slots, and the XI is then re-sorted by position type. So undo the swaps (latest first)
-    and re-sort the XI (GK, DEF, MID, FWD), as FPL requires at the deadline."""
-    pos = {p["element"]: p["position"] for p in record["picks"]}
+    """The deadline line-up, rebuilt by gaffer_lib.outcomes.deadline_lineup from the stored picks."""
     types = {p["element"]: p["element_type"] for p in record["picks"]}
-    for s in reversed(record["automatic_subs"]):
-        pos[s["element_in"]], pos[s["element_out"]] = pos[s["element_out"]], pos[s["element_in"]]
-    xi = sorted((e for e in pos if pos[e] <= 11), key=lambda e: (types[e], pos[e]))
-    pos.update({e: i + 1 for i, e in enumerate(xi)})
-    return [rules.Pick(e, pos[e], types[e]) for e in pos]
+    lu = deadline_lineup({**record, "picks": [dict(p, is_captain=i == 0, is_vice_captain=i == 1) for i, p in enumerate(record["picks"])]}, types)
+    return [rules.Pick(e, i + 1, types[e]) for i, e in enumerate(lu["xi"] + lu["bench"])]
 
 
 RECORDS = load_json("autosubs-2026-27.json.gz")

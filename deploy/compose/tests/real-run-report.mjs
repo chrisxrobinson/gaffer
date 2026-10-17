@@ -42,7 +42,10 @@ else console.log(`run length: ${((Math.max(...t) - Math.min(...t)) / 1000).toFix
 const validations = entries.filter((e) => e.customType === "gaffer.validation").map((e) => e.data);
 for (const v of validations) console.log(`gaffer.validation attempt ${v.attempt}: ${v.passed ? "passed" : `FAILED (${v.stage}) ${v.errors.map((e) => `[${e.code}] ${e.message}`).join(" | ").slice(0, 600)}`}`);
 const budget = entries.filter((e) => e.customType === "gaffer.budget").at(-1)?.data;
-if (budget) console.log(`gaffer.budget: session $${budget.session_cost}, capped ${budget.capped}`);
+if (budget) console.log(`gaffer.budget: session $${budget.session_cost}, soft cap $${budget.soft}, capped ${budget.capped}`);
+const steers = entries.filter((e) => e.customType === "gaffer.steer");
+const steeredAt = entries.filter((e) => e.customType === "gaffer.budget" && e.data.steered).map((e) => `turn ${e.data.turn} at $${e.data.session_cost}`);
+console.log(`soft-cap steers: ${steers.length}${steeredAt.length ? ` (${steeredAt.join("; ")})` : ""}${steers[0] ? `: «${String(steers[0].content).slice(0, 160)}»` : ""}`);
 if (rec) {
 	console.log(`\nRECOMMENDATION ${rec.rec_id}: GW${rec.gw}, snapshot ${rec.snapshot.id}, confidence ${rec.confidence.overall}`);
 	console.log(`transfers: ${rec.transfers.map((x) => `${x.out.name}→${x.in.name} (+${x.xp_gain_4gw}/4GW, ${x.confidence})`).join("; ") || "none"}; hits ${rec.hits}; net ${rec.net_xp_gain_4gw}`);

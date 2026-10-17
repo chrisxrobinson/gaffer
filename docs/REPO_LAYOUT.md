@@ -30,13 +30,16 @@ gaffer/
 │   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks)
 │   ├── aws/                       #   Phase 2 IaC: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager
 │   └── generic/                   #   Caddy + oauth2-proxy compose override for Hetzner/Fly-style hosts
-├── evals/
-│   ├── cases/                     #   ~30 fixed team×GW cases (snapshot refs + expectations)
-│   ├── runner/                    #   SDK-based headless runner (calls bindExtensions), code graders
+├── evals/                         # A workspace package: `pnpm eval` (runner/cli.ts)
+│   ├── cases/                     #   30 fixed team×GW cases (*.json); data/: id-free fixtures of Gaffer's own 2026/27 snapshots
+│   ├── build/                     #   extract_live.py (snapshots → cases/data), build_cases.py (cases → gitignored var/evals)
+│   ├── runner/                    #   SDK-based headless runner (calls bindExtensions), stand-in FPL API, faux policy, code graders
 │   └── results/                   #   dated results JSONL (gitignored except summaries)
-├── tools/
+├── tools/                         # Operator scripts, plain node, also in the harness image (/opt/tools)
 │   ├── gaffer-admin/              #   scans /sessions + /data → admin.html
 │   └── gaffer-eval/               #   post-data_checked live tracker → /data/ledger/outcomes.jsonl
+├── .github/workflows/ci.yml       # CI: vitest (with the S1 checks), the Python suites, the stack and `pnpm eval --model faux`
+├── renovate.json                  # Pi upgrades as one gated pull request (NFR-MNT-02)
 ├── schemas/                       # Exported JSON Schemas (recommendation-1.json) for consumers
 ├── spikes/                        # Throwaway design spikes (S1 lives here); never imported
 ├── docs/                          # Research, ADRs, architecture, requirements, roadmap

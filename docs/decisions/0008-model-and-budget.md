@@ -25,9 +25,9 @@
 - **Cost estimate per recommendation** (Sonnet 5, about 12 turns, heavy prompt caching): about 250k cache-read, 40k cache-write, 20k uncached input and 15k output tokens, which comes to **≈ $0.35**. The target is under $0.50 median.
 - **Hard caps** are enforced by the `gaffer-budget` extension:
   - On each `turn_end`, it sums `usage.cost.total` over every assistant message in the session file (all branches: spend on an abandoned branch is still spend) and appends a `gaffer.budget` entry.
-  - Above `GAFFER_BUDGET_SOFT` (default $0.75), it adds a steering message telling the model to wrap up and submit.
+  - Above `GAFFER_BUDGET_SOFT` (default $0.75), it adds a steering message telling the model to wrap up and submit: once per session (recorded as `steered` in that turn's `gaffer.budget` entry), delivered before the model's next call, and not on a turn that ends the run (no tool calls, or the submission), where a steer would start another model call.
   - Above `GAFFER_BUDGET_HARD` (default $1.50 per session), it calls `ctx.abort()` and emits a partial-result notice.
-  - A daily cap (`GAFFER_BUDGET_DAILY`, default $5) is checked against the day's (UTC) session files in the `input` event, which can refuse a prompt before any LLM call (`before_agent_start` can't cancel a run), and again on each `turn_end`.
+  - A daily cap (`GAFFER_BUDGET_DAILY`, default $5) is checked against the day's (UTC) session files in the `input` event, which can refuse a prompt before any LLM call (`before_agent_start` can't cancel a run), and again on each `turn_end`. It sums every session under `GAFFER_SESSIONS_ROOT` (the image sets `/sessions`), so headless and eval runs, which keep their sessions in subdirectories, share the cap with the TUI.
   - Separately, turns are capped at 40 per run (`GAFFER_MAX_TURNS`).
 - **Price drift:** a `GAFFER_PRICE_OVERRIDES` JSON lets an operator correct catalogue prices through `registerProvider` overrides without upgrading Pi.
 

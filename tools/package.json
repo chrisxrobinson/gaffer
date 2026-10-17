@@ -1,0 +1,6 @@
+{
+  "name": "gaffer-tools",
+  "private": true,
+  "type": "module",
+  "description": "Operator scripts run with plain node: gaffer admin and gaffer-eval (REPO_LAYOUT)"
+}

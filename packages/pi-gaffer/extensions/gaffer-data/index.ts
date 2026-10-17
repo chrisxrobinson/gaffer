@@ -4,7 +4,7 @@
  */
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { dataDir, idSalt } from "../../src/config.ts";
+import { dataDir, fplNow, idSalt } from "../../src/config.ts";
 import { checkToolCall } from "../../src/guard.ts";
 import { sandboxDerive } from "../../src/derive.ts";
 import { FplClient } from "../../src/http.ts";
@@ -48,7 +48,7 @@ export default function gafferData(pi: ExtensionAPI) {
 				const prefs = readPrefs(dataDir(), hash) ? prefsPath(dataDir(), hash) : undefined;
 				const { text, details } = await takeSnapshot(
 					{ teamId, elementSummaries: params.element_summaries, include: params.include, forceFresh: params.force_fresh, ft: own ? state.ft : undefined, pending: own ? state.pending : undefined, prefsPath: prefs, signal },
-					{ client: new FplClient(), store: new SnapshotStore(dataDir()), salt: idSalt(), derive: sandboxDerive(sharedSandboxSession()) },
+					{ client: new FplClient(), store: new SnapshotStore(dataDir()), salt: idSalt(), derive: sandboxDerive(sharedSandboxSession()), now: () => fplNow() },
 				);
 				const entry: SnapshotEntry = {
 					snapshot_id: details.snapshot_id,

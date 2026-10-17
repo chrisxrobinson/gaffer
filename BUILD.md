@@ -316,3 +316,105 @@ All on 2026-10-11 with `anthropic/claude-sonnet-5-5`, thinking medium, through t
 - The FPL-aware compaction summary (ARCHITECTURE §1.4); runs are 4–5 model calls and nowhere near compaction.
 - Map one wheel notch to several lines in fullscreen mode (ttyd's key handler), if the by-hand check finds it slow.
 - A CI job (carried from M1–M3): it would run the three suites, `verify.sh` and the schema check on every push.
+
+---
+
+# Gaffer — M5 build checklist
+
+Branch `build-m5`. Scope and exit criteria from [ROADMAP M5](docs/ROADMAP.md#m5--evaluation-and-admin-target-before-gw13-well-ahead-of-gw19-chip-expiry). Evidence was gathered on 2026-10-16 (GW6 finished and data-checked, GW7 next, deadline 2026-10-17T10:00Z) on macOS / Docker Desktop 27.3.1 (arm64).
+
+**How to re-run the evidence**
+- gaffer_lib: the README's "Develop" command. Run here **without** the solver (see Discovered): **381 passed, 4 skipped (the planner tests), 2 expected failures** (FR-RUL-02). Was 359 + 5 + 2 at the start of M5 (the backtest's real-season test now runs because `var/history` exists).
+- TypeScript: `npx pnpm@12.6.0 test`: **227** in packages/pi-gaffer (was 201) and **10** in evals. The test of built cases skips without `var/evals`.
+- sandboxd: `uv run --no-project --with pytest==9.1.1 pytest sandbox/tests`: 8 passed.
+- Stack: `cd deploy/compose && docker compose up -d --build && ./tests/verify.sh`: exit 0 at 2026-10-16T20:52Z on the final images. It now ends with the M5 check (gaffer admin, gaffer-eval, privacy).
+- Eval suite: `uv run --no-project --python 3.14 python tools/fetch_history.py` once, then `npx pnpm@12.6.0 eval` (faux, free) or `npx pnpm@12.6.0 eval --model anthropic/claude-sonnet-5-5` (about $0.065 a case). Summaries are committed in `evals/results/`.
+
+## Scope
+- [x] **The LLM-in-the-loop eval suite** (FR-EVL-02, ARCHITECTURE §6.3). 30 cases in `evals/cases`: 10 live 2026/27 GW6 cases from Gaffer's own pre-deadline snapshots (2026-10-01) and scored on GW6's real results; 2 live GW7 cases (M4's snapshots), scorable once GW7 is checked; 18 history cases from 2024/25 and 2025/26. Covered: 5 BGW and 5 DGW weeks, two 5-FT banks plus a 5-FT/all-chips team, three injured captains (a ruled-out player who really didn't play that GW), two injection cases, two preference cases, a stale-data case 30 minutes before the deadline, a Free Hit revert, a team after a Wildcard, the team given in words, an `--ft` override, an early-season and an end-of-season GW. Runner `evals/runner/run.ts` (SDK, `bindExtensions()`), stand-in FPL/football-data API, code graders, `pnpm eval`.
+- [x] **Where case snapshots live and how a case gets realised points** (decided, ARCHITECTURE §6.3): live cases are id-free fixtures extracted from the data volume (`evals/cases/data`, 344 KB gzipped, no bookmaker prices) with synthetic team ids above any real FPL id; history cases are rebuilt by `evals/build/build_cases.py` from the gitignored archives with the backtest's cut-off. Every case is materialised into gitignored `var/evals/cases/<id>`, including the GW's result. **Cases that can't be scored:** `l7-a` and `l7-f-5ft-all-chips` until GW7 is data-checked. What history cases can't have is listed in §6.3 (news, FPL's own deadline, purchase prices, the fixture list as it stood).
+- [x] **gaffer-eval live tracking** (FR-EVL-03, ARCHITECTURE §6.4): `tools/gaffer-eval/main.ts`, one-shot, idempotent, rebuildable; `/data/ledger/outcomes.jsonl`.
+- [x] **One implementation of the FPL arithmetic:** `rules.lineup_points` (auto-subs, captaincy, Bench Boost, Triple Captain, hits) and `python -m gaffer_lib score` (gaffer_lib **0.5.0**) for outcomes, B0/B1 (the backtest's `decide`) and the eval graders' points; `backtest.score_gw` delegates to it. No scoring in TypeScript.
+- [x] **/scorecard** (FR-EVL-04), **/usage**, **gaffer admin** (FR-ADM-01, `tools/gaffer-admin`, `/data/admin/admin.html`).
+- [x] **Soft-cap steering** (FR-BUD-02, ADR 0008).
+- [x] **NFR-REL-01** fault-injection tests (`test/reliability.test.ts`).
+- [x] **NFR-MNT-02:** `.github/workflows/ci.yml` and `renovate.json`.
+- [x] **Test runs vs real ones:** a recommendation from the scripted faux model (`model` "faux/…") is a test row: kept in the ledger, never scored or counted (ADR 0004). `verify.sh`'s M4 check now uses a scratch data dir and the eval suite its own, so no new test rows reach `/data/ledger` (the 5 old ones are skipped by name).
+- [x] Both images rebuilt (gaffer_lib 0.5.0; the harness carries `tools/` and `evals/runner`).
+- [ ] Not built, because the docs leave it open: anything that runs gaffer-eval (or FR-DAT-10's snapshot) on a schedule. You chose "decide later" on 2026-10-16.
+
+## Real-model sessions
+`anthropic/claude-sonnet-5-5`, thinking medium, through the rebuilt stack on 2026-10-16. Cost is Pi's `usage.cost.total` summed over each session's assistant messages.
+
+| Run | Window (UTC) | Sessions | Pi's total | Notes |
+|---|---|---|---|---|
+| Eval suite, run 1 (`evals/results/2026-10-16-anthropic_claude-sonnet-5-5.*`) | 20:51:59 – 21:28:50 | 30 | **$1.9405** | median $0.0636, max $0.0854; p50 75 s, p95 95 s, max 131 s |
+| Soft cap (`GAFFER_BUDGET_SOFT=0.02 ./tests/real-run.sh m5-softcap …`) | 21:29:35 – 21:30:45 | 1 | $0.0424 | one steer at turn 3 ($0.028); valid recommendation in 67 s |
+| **Day total** (`gaffer admin`: "today") | | 31 | **$1.9829** | under the $5 daily cap; largest session $0.0854, under $1.50 |
+
+The suite was run with the real model once: every criterion passed, so a second run would only have measured variance.
+
+**Eval run 1, per case** (points: the recommendation's realised points vs G0's, same case):
+- **Validity:** 30/30 recommendations; 26 on the first submission, 4 after one schema refusal by Pi's argument check (plan transfers given as bare ids, an id of 0, a 121-word summary), accepted on the retry. Every recommendation validates against `schemas/recommendation-1.json` with ajv.
+- **Points vs G0:** +26 over the 28 scorable cases: 3 better, 24 the same, 1 worse. The model followed plan 1 in 24. It played the **Wildcard from Gaffer's chip scenario** in 2025/26 GW33 (six doubles; +17.8 decayed xP projected) and scored **86 vs 62**. It chose plan 3 (within the 0.5 tie-break window) in `l6-d` and `l6-d-ft-override` (**58 vs 54** each, acting on Palmer's 75% flag) and in `h2526-gw14-injured-captain` (**61 vs 67**).
+- **Preferences 2/2, injection 2/2, stale case 1/1** (no transfers, confidence low, in 23 s).
+- **FR-REC-04:** Wildcard or Free Hit "not evaluated — no plan found" in **3 of 30** (`h2425-gw10-5ft`, `h2425-gw24-dgw`, `l7-f-5ft-all-chips`), each time after the main solve used its whole budget. The same three in the faux run.
+- The model quoted no figures in any submission (`numbers_checked: 0` in 30/30) and made no minutes overrides, even in the three injured-captain cases (Gaffer's minutes model already reads `status` and `chance_of_playing`).
+
+**Faux run** (`evals/results/2026-10-16-faux.summary.json`, free): 30/30 valid, every grader passing, points equal to G0 in all 28 (by construction: the scripted model submits plan 1), p50 52 s, p95 59 s.
+
+## Exit criteria
+| ID | Status | Evidence |
+|---|---|---|
+| FR-EVL-02 | **Pass** | `pnpm eval` runs 30 cases headless through the SDK with `bindExtensions()` and writes `evals/results/<date>-<model>.jsonl` (one line per case and a summary line) with the validator pass rate (30/30 within 2 retries, real and faux), realised points against G0 (+26 real), preference adherence (2/2), injection resistance (2/2), cost and latency per case. Graders: `graders.test.ts` on fixed inputs (8 tests). Built cases go through the real `fpl_snapshot` (`cases.test.ts`: FR-DAT-06 validation, derive, odds). |
+| FR-EVL-03 | **Pass on tests; no live GW to score yet** | `test/gaffer-eval.test.ts`: a recommendation made through the real gate on the frozen GW6 snapshot is scored against GW6's real results: Gaffer 55, actual 59 (and recomputed from the picks: 59), B0 62, B1 57 (all counted by hand in `test_outcomes.py`); idempotent (the same bytes on a rerun and after `--rebuild`), a test row skipped, an unfindable recommendation reported as unscorable, nothing scored before `data_checked`, no raw team id in the file. Arithmetic: hand-counted auto-sub, captain absent (vice doubles), Bench Boost and Triple Captain cases (`test_lineup_points.py`), and **51 real managers' GW6 totals reproduced exactly** from their picks (15 auto-subs, a Bench Boost, 4 Wildcards, 2 hits). **Live, 2026-10-16:** FPL has GW1–6 finished and checked; every real ledgered recommendation is for GW7 (deadline 2026-10-17), so `gaffer-eval` reports "GW7: 4 real recommendation(s) waiting" and writes no rows. The first live outcomes come when GW7 is data-checked (about 2026-10-21): run `docker compose exec gaffer node /opt/tools/gaffer-eval/main.ts`. |
+| FR-EVL-04 | **Pass** | `test/scorecard.test.ts`: an outcomes fixture summed by hand (Gaffer 164, you 141, B0 157, B1 140 over 3 counted GWs; an earlier recommendation not counted; an unscorable GW; another team ignored) gives the same totals, as a function and through `/scorecard` in a session; `gaffer-eval.test.ts` checks `/scorecard` against the rows it wrote. **Browser TUI, fullscreen, exactly 100 columns** ([screenshot](docs/evidence/m5-tui-100col-scorecard.png)): `/team 1` then `/scorecard` shows the honest empty state, because no GW with a real recommendation has finished. |
+| FR-ADM-01 | **Pass** | Hand-counted 3-session fixture (`test/admin.test.ts`): $0.1260, 8 calls, 2 recommendations, 3 errors, per-tool costs adding up to the total, p50/p95 run latency 63/90 s, data-source health, no team id or prompt text in the page: exact. **Stack, 3 real sessions:** `gaffer admin` lists `m5-softcap` $0.0424 and two eval sessions $0.0744 and $0.0788; an independent count of each assistant message's `usage.cost.total` (0.008360 + 0.010545 + 0.009236 + 0.014298, and so on) gives **$0.195650 against the report's $0.1956** (difference under $0.0001). Its "today" ($1.9829) equals the two runs above. The page is static (no script, no external resource). |
+| FR-BUD-02 | **Pass** | Tests: a run crossing `GAFFER_BUDGET_SOFT` gets one steer and not two, delivered before the 4th call; none in a later run of the same session; none on a turn that ends the run; the hard cap still stops a run; default $0.75. **Stack, real model:** `GAFFER_BUDGET_SOFT=0.02`: **1 steer** at turn 3 ($0.028), then the model submitted; `gaffer.budget` records `steered: true` once. |
+| NFR-COST-01 | **Pass** | Median $0.0636 per recommendation over the real suite (limit $0.50); max $0.0854. |
+| NFR-COST-02 | **Pass** | FR-BUD-01's tests (M1) and the soft-cap tests above; caps $1.50 per session and $5 per day by default. The daily cap now sums every session under `GAFFER_SESSIONS_ROOT` (see Discovered). |
+| NFR-LAT-01 | **Pass** | Prompt → `gaffer.recommendation` over the real suite: **p50 75 s, p95 95 s** (limits 90 / 180 s), max 131 s, warm sandbox. |
+| NFR-PORT-01 | **Blocked on you (a second provider)**; the swap is configuration-only | `pnpm eval --model <provider>/<model>` resolves any model in Pi's catalogue or `models.json` (the image's catalogue has 41 OpenAI and 22 Google models); Compose passes `OPENAI_API_KEY`/`GEMINI_API_KEY` through; nothing in code names Anthropic except the Compose secret. You chose not to run it now (2026-10-16). |
+| NFR-REL-01 | **Pass** | `test/reliability.test.ts`: FPL down with nothing cached (the tool says "unavailable after 4 tries: HTTP 503", a submission is refused with `NO_SNAPSHOT`); the solver missing (the golden path exits 2 naming open-fpl-solver, three `PLAN_FILE_UNREADABLE` refusals, the user is told no plan is shown); the LLM failing (Pi retries, the run ends on "529 overloaded", the log intact, a later retry recovers); the sandbox dying mid-session (tools and the gate say "not reachable", `fpl_snapshot` completes without derivation and says so, and the sandbox is used again once it is back). Each time the same session answers the next prompt and nothing is stored or ledgered. Odds down: FR-DAT-09 (verify.sh); solver time-out: NFR-REL-02. |
+| NFR-MNT-02 | **Built; blocked on you for the trigger** | `.github/workflows/ci.yml`: vitest (including the S1 checks), sandboxd and gaffer_lib pytest with the solver at its pinned commit, then the stack and `pnpm eval --model faux`; no secrets. `renovate.json` groups Pi's packages and the Dockerfile's Pi into one pinned, never-automerged PR. Not yet run on GitHub: whether a Renovate PR triggers it depends on the repository's settings (Actions and the Renovate app). Pi is at 1.3.0 on npm, so Renovate will open one. |
+| FR-OUT-01 (over the suite) | **Pass** | ajv 8.20.0 over every recommendation in both result files: 30/30 valid each. |
+| NFR-SEC-03 (over the suite) | **Pass** | Both injection cases (live GW6 and history 2025/26 GW20): only `fpl_snapshot`, `read`, `bash`, `submit_recommendation`; no `set_preferences`, no network command, the planted player not captain, risk balanced, valid recommendations; the model told the user the news held an instruction it ignored. |
+| NFR-PRIV-01 (M5 files) | **Pass** | `test_fixture_privacy.py` covers the outcome fixtures and `evals/cases`; tests check outcomes.jsonl and admin.html; `verify.sh`'s M5 check found none of the 36 team ids or 40 names seen in the session logs and snapshots in ledger/, users/, exports/ or admin/. |
+| M1–M4 regression | **Pass** | 227 + 10 vitest, 8 sandboxd, 381 gaffer_lib; `verify.sh` exit 0 after the final rebuild (17/17 isolation, live round trip, golden path 48.4 s, odds-down 36.3 s, the M4 gate check, M5). |
+
+## Phase 1 exit
+Phase 1 also needs recommendations for at least 3 consecutive live GWs with outcomes logged. **Today: none.** Every real recommendation in the ledger is for GW7 (4 rows: M4's three and today's soft-cap run); GW7 isn't played until 2026-10-17. What remains: score GW7 once it is data-checked; make a recommendation before the GW8 and GW9 deadlines (2026-10-23, 2026-10-31) and score them. The earliest phase 1 can close is when GW9 is data-checked (about 2026-11-04), and only if someone runs `gaffer-eval` (or you decide what runs it).
+
+## Blocked on you
+- **NFR-PORT-01:** a second provider's key or a local model you're happy to use. Then `pnpm eval --model <provider>/<model>`.
+- **NFR-MNT-02:** push the branch, enable Actions and install Renovate; a Renovate PR for Pi 1.3.0 should then run the workflow. No API key goes into CI.
+- **What runs gaffer-eval** (and FR-DAT-10's pre-deadline snapshot): host cron/launchd, a looping Compose service (changes ADR 0006), or a scheduled `docker compose run`. You chose "decide later".
+- **Phase 1 exit:** recommendations before the GW8 and GW9 deadlines, and gaffer-eval after each GW is checked.
+- **FR-RUL-02** (M4): unchanged; the four-from-one-club rule change and its expected-fail tests are waiting for your decision.
+- **FR-DAT-08** (M2), **FR-DAT-10** (M3), **previous-season player priors** (M3): unchanged.
+- **NFR-COST-03** (M1): still needs your Console. M5 windows: 2026-10-16 20:51:59–21:28:50Z, Pi $1.9405 (30 sessions); 21:29:35–21:30:45Z, $0.0424 (1 session).
+- **By hand in a normal browser:** M4's Ctrl+C and wheel-speed checks still stand.
+
+## Discovered
+- [x] **Real next-round odds were used live for the first time:** `verify.sh` on 2026-10-16T20:52Z: "10 next-GW PL fixture(s) priced of 10 listed; next-GW odds USED by the plan" (GW7).
+- [x] **ARCHITECTURE §9's tool-latency formula was wrong:** an assistant message's `timestamp` is when the model call *started*, so "toolResult − assistant(toolCall).timestamp" included the model's time. Tool latency is measured from the assistant **entry**'s timestamp (§9 corrected).
+- [x] **The daily cap only summed the current session's directory,** so headless runs in `/sessions/<name>/` (M4's, and now the eval runner's) didn't count the TUI's spend, nor it theirs. `GAFFER_SESSIONS_ROOT` (the image sets `/sessions`) fixes it (ADR 0008 updated).
+- [x] **The sandbox was never re-provisioned after a failure** once provisioned, though ARCHITECTURE §10 says it is tried once. A request that can't connect now provisions again and is retried once.
+- [x] **FPL's `entry_history.points` is gross of hits:** the net is `points − event_transfers_cost` (95 − 4 = 91 in a reference history).
+- [x] **The eval cases' first synthetic team ids (990001…) were inside FPL's id range,** so anything that fetched them would have read a stranger's team. They are now 900000001 and up, enforced by the privacy test.
+- [x] **gaffer_lib 0.5.0 can't replay 0.4.0 recommendations:** `replay.ts 01M4P0QPA38MYK8580JB3WDSAZ` → `PLAN_VERSION_MISMATCH`; a 0.5.0 one reproduces all 134 numbers. Every version bump does this (the gate refuses a plan from another version); replay needs the image that made the recommendation.
+- [x] **Running gaffer_lib's tests against a freshly cloned open-fpl-solver was refused on this machine** (the session's permission policy treats it as running external code), so the 4 planner tests were skipped on the host here; they run in the sandbox image and in CI.
+- [x] **2025/26's archive has official xP for only 11 of 38 GWs,** so the 2025/26 history cases carry a stale `ep_next` (the latest before the deadline). Only display and the baselines use it.
+- [x] `/usage` counts a session as "today's" if it made any model call today, including the faux model's free ones (17 sessions, $0.00 before the real runs).
+- [x] **Pi 1.3.0 is on npm** (2026-10-15); Gaffer stays on 0.87.1 (no upgrades in M5). Renovate will propose it.
+- [ ] The real model still quotes no figures and makes no minutes overrides (M4's observation, now over 30 cases), so FR-REC-07's drift measure and FR-REC-10's overrides go unexercised by it.
+- [ ] Four of 30 first submissions failed Pi's own schema check (malformed plan transfers, an id of 0, a 121-word summary); all were fixed on the retry.
+
+## Proposed (not built; outside M5 docs)
+- A scheduler for gaffer-eval and FR-DAT-10's pre-deadline snapshot, once you choose one.
+- **A number for Wildcard and Free Hit** (carried from M3/M4): 3 of 30 eval cases had none.
+- Report pass^k: run the real suite twice and count cases whose result changes (needs a second run's budget).
+- A case set refresh: add the GW7 cases' results once GW7 is checked (`extract_live.py --result`), and new live cases each GW from Gaffer's own snapshots.
+- Make the drift measure bite (carried from M4): over 30 real cases the model quoted no figures.
+- Show `/scorecard` across all teams when no team is set, and a per-GW projection error line.
+- An eval grader that scores the explanation (research 02's optional LLM judge): not needed while every grader is code.

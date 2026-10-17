@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "h2425-gw34-bgw",
+ "title": "2024/25 GW34: four clubs blank",
+ "tags": [
+  "history",
+  "bgw"
+ ],
+ "source": {
+  "kind": "history",
+  "season": "2024-25",
+  "gw": 34,
+  "started": 32
+ },
+ "team_id": 900001005,
+ "as_of": "deadline-26h",
+ "prompt": "/gw",
+ "team_command": "/team 900001005"
+}

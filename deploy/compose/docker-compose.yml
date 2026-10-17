@@ -17,8 +17,12 @@ services:
       GAFFER_PROVIDER: ${GAFFER_PROVIDER:-anthropic}
       GAFFER_MODEL: ${GAFFER_MODEL:-claude-sonnet-5-5}
       GAFFER_THINKING: ${GAFFER_THINKING:-medium}
+      GAFFER_BUDGET_SOFT: ${GAFFER_BUDGET_SOFT:-0.75}
       GAFFER_BUDGET_HARD: ${GAFFER_BUDGET_HARD:-1.50}
       GAFFER_BUDGET_DAILY: ${GAFFER_BUDGET_DAILY:-5}
+      # Another provider's key, for GAFFER_PROVIDER/GAFFER_MODEL or `pnpm eval --model` (NFR-PORT-01). Empty unless set on the host.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       SANDBOX_PROVIDER: compose
       SANDBOX_URL: http://sandbox:8080
     secrets: [anthropic_api_key, gaffer_id_salt]

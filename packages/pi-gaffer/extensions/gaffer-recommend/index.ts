@@ -9,7 +9,7 @@
  */
 import { defineTool, type ExtensionAPI, type ExtensionContext, type Theme, VERSION } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
-import { dataDir } from "../../src/config.ts";
+import { dataDir, fplNow } from "../../src/config.ts";
 import { describePrefs } from "../../src/prefs.ts";
 import { appendLedger, type GateError, MAX_ATTEMPTS, rejectionText, runGate } from "../../src/recommend.ts";
 import { failureLines, type Paint, recommendationLines, type SubmitFailure, wrap } from "../../src/render.ts";
@@ -89,6 +89,7 @@ export default function gafferRecommend(pi: ExtensionAPI) {
 					dataDir: dataDir(),
 					model: ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : "unknown",
 					piVersion: VERSION,
+					now: () => fplNow(),
 					signal,
 				});
 				if (outcome.ok) {

@@ -1,0 +1,17 @@
+{
+  "name": "gaffer-evals",
+  "private": true,
+  "type": "module",
+  "description": "The LLM-in-the-loop eval suite (FR-EVL-02, ARCHITECTURE §6.3): cases, a headless SDK runner and code graders",
+  "scripts": {
+    "eval": "node runner/cli.ts",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "0.87.1",
+    "@earendil-works/pi-coding-agent": "0.87.1",
+    "@types/node": "24.19.0",
+    "ajv": "8.20.0",
+    "vitest": "5.0.2"
+  }
+}

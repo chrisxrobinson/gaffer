@@ -1,0 +1,20 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l7-f-5ft-all-chips",
+ "title": "GW7 2026/27, team F: 5 free transfers and all eight chips",
+ "tags": [
+  "live",
+  "5ft",
+  "all-chips",
+  "unfinished"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw7",
+  "team": "f"
+ },
+ "team_id": 900000012,
+ "as_of": "2026-10-11T17:54:53Z",
+ "prompt": "/gw",
+ "team_command": "/team 900000012"
+}

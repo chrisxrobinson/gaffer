@@ -2,7 +2,7 @@
 
 A Fantasy Premier League advisor built as a [Pi](https://pi.dev) package. Pi's agent loop runs unchanged. Everything FPL-specific lives in Gaffer's extensions, skills and theme, a tested Python library, and a sandbox with no network where the model's code runs. You use it through the Pi terminal UI in your browser.
 
-**Status: ROADMAP milestone M4.** Gaffer loads your team from the public FPL API and recommends what to do for the next gameweek: transfers, starting XI and bench, captain and vice-captain, chip, and a plan for the next four gameweeks. Its model (bookmaker odds and a Dixon-Coles team model, expected minutes, component expected points) feeds an optimiser; the language model reads the team news, chooses between the optimiser's plans and explains the choice. Nothing is shown as a recommendation until deterministic code has checked it against FPL's rules and your preferences and recomputed every number in it. Evaluation and the admin report arrive in M5. See [docs/ROADMAP.md](docs/ROADMAP.md) and [BUILD.md](BUILD.md).
+**Status: ROADMAP milestone M5.** Gaffer loads your team from the public FPL API and recommends what to do for the next gameweek: transfers, starting XI and bench, captain and vice-captain, chip, and a plan for the next four gameweeks. Its model (bookmaker odds and a Dixon-Coles team model, expected minutes, component expected points) feeds an optimiser; the language model reads the team news, chooses between the optimiser's plans and explains the choice. Nothing is shown as a recommendation until deterministic code has checked it against FPL's rules and your preferences and recomputed every number in it. Once a GW is finished, Gaffer can score its recommendations against what you actually scored and two simple baselines (`/scorecard`), and a static admin report shows sessions, cost, latency, errors and data-source health. A 30-case eval suite tests the whole agent. See [docs/ROADMAP.md](docs/ROADMAP.md) and [BUILD.md](BUILD.md).
 
 Gaffer is read-only. It never logs in to FPL and never changes your team.
 
@@ -38,12 +38,31 @@ Commands:
 | `/explain <player>` | Explains the projection for one player |
 | `/prefs` | Shows your saved preferences. `/prefs risk=safe save_chips=wildcard,freehit keep=<player ids> avoid=<player ids> max_hits=1` changes them; `/prefs clear` resets them |
 | `/export-rec` | Writes the latest recommendation's JSON to `/data/exports/<rec_id>.json` and prints the path |
+| `/usage` | This session's model calls, tokens, cost, tools and run time, and today's spend against the caps |
+| `/scorecard` | Season to date for your team: Gaffer's recommended line-ups vs your actual points vs the B0/B1 baselines, once GWs have been scored |
 
 Preferences are saved per team and survive restarts. You can also state them in words ("save my wildcard", "keep Haaland", "no hits") and Gaffer saves them. They constrain the optimiser and are enforced when a recommendation is validated: a saved chip isn't played, a kept player isn't sold. Risk mode (`safe`, `balanced`, `aggressive`) only breaks ties between plans within half a point of the best; Gaffer always maximises expected points.
 
 The exported JSON follows [`schemas/recommendation-1.json`](schemas/recommendation-1.json). To copy an export out of the container: `docker compose exec gaffer cat /data/exports/<rec_id>.json > rec.json`.
 
 `/export` (without `-rec`) is Pi's own command: it exports the whole conversation as HTML. Text after a template command such as `/gw` is parsed like a shell command line, so an apostrophe is taken as a quote mark and dropped ("can't" arrives as "cant").
+
+### Scoring past GWs and the admin report
+
+Once FPL marks a GW finished and its data checked, score every recommendation made for it:
+
+```bash
+docker compose exec gaffer node /opt/tools/gaffer-eval/main.ts
+```
+
+It writes `/data/ledger/outcomes.jsonl`: for each recommendation, the points its XI, captain and chip would have scored (after automatic substitutions, minus its hits), your actual points, and two baselines from the same squad (B0 holds; B1 makes the free transfer that gains most on FPL's own `ep_next`), plus how Gaffer's projections and FPL's compared. It does nothing before `data_checked`, skips what it has already scored and writes the same file for the same inputs, so it is safe to run as often as you like. Nothing runs it automatically yet. `/scorecard` then shows the season to date (the last recommendation before each deadline counts).
+
+The admin report covers every session: tokens and cost per session, model and tool, latency, errors, budget events and data-source health.
+
+```bash
+docker compose exec gaffer node /opt/tools/gaffer-admin/main.ts
+docker compose exec gaffer cat /data/admin/admin.html > admin.html
+```
 
 To stop the stack, run `docker compose down`. Your sessions and snapshots are kept in Docker volumes. To wipe them as well, run `docker compose down -v`.
 
@@ -63,11 +82,13 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_PROVIDER` | `anthropic` | Pi provider |
 | `GAFFER_MODEL` | `claude-sonnet-5-5` | Model ID. Models newer than Pi 0.87.1's catalogue are declared in [`harness/models.json`](harness/models.json) |
 | `GAFFER_THINKING` | `medium` | Pi thinking level |
+| `GAFFER_BUDGET_SOFT` | `0.75` | USD per session. When a run crosses it, the model is told once to wrap up and submit |
 | `GAFFER_BUDGET_HARD` | `1.50` | USD per session. The run is stopped when it crosses this |
 | `GAFFER_BUDGET_DAILY` | `5` | USD per UTC day, across sessions. New prompts are refused once it's reached |
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
+| `GAFFER_SESSIONS_ROOT` | `/sessions` (image) | The directory whose sessions the daily cap and `/usage` sum |
 
-To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and add that provider's key to the harness environment. `docker-compose.yml` only wires up the Anthropic key.
+To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in [`harness/models.json`](harness/models.json). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
 
 On a Linux host with gVisor installed, you can run the sandbox under `runsc`:
 
@@ -87,17 +108,18 @@ browser ──ws──> ttyd ─> tmux ─> pi + pi-gaffer          (gaffer cont
 
 - **Harness (`harness/`):** Node 24, Pi 0.87.1 from npm, the `pi-gaffer` package installed with `pi install`, and ttyd with tmux.
 - **Package (`packages/pi-gaffer/`):** five extensions, six skills and three prompt templates. The model sees seven tools: Pi's `read`, `write`, `edit` and `bash` (all running in the sandbox), `fpl_snapshot`, `submit_recommendation` and `set_preferences`.
-  - `gaffer-core`: the prompt, the tool allowlist, the `!` shell block, `/team`, `/prefs` and `/export-rec`.
+  - `gaffer-core`: the prompt, the tool allowlist, the `!` shell block, `/team`, `/prefs`, `/export-rec`, `/usage` and `/scorecard`.
   - `gaffer-sandbox`: Pi's four file and shell tools, routed to the sandbox.
   - `gaffer-data`: the `fpl_snapshot` tool (FPL data, and bookmaker odds with `include: ["odds"]`) and the read-only guard.
   - `gaffer-recommend`: `submit_recommendation`, the gate every recommendation passes (schema, then `gaffer_lib validate` in the sandbox against the snapshot the run used, every number recomputed, at most two retries), the recommendation's rendering, and `set_preferences`.
-  - `gaffer-budget`: the cost caps.
+  - `gaffer-budget`: the cost caps, and one "wrap up and submit" steer when a session passes the soft cap.
   - Skills (`skills/`), loaded by the model when it needs them: `gaffer-workflow`, `team-news`, `transfer-and-captaincy`, `chip-strategy`, `risk-and-ownership`, `fpl-rules-2026-27`. They hold judgement and procedure; the numbers come from code.
   - Prompt templates (`prompts/`): `/gw`, `/whatif`, `/explain`.
 - **Sandbox (`sandbox/`):** Python 3.14 with the analytics stack, `gaffer_lib` and [open-fpl-solver](https://github.com/solioanalytics/open-fpl-solver) (pinned commit, HiGHS), driven by `sandboxd`, a small HTTP exec service.
-- **Library (`python/gaffer_lib/`):** rules, `derive`, `validate`, the model (`strength`, `minutes`, `xp`), the planner (`plan`), the one-command golden path (`python -m gaffer_lib run --snapshot … --out /work/plan.json`), `recompute` (the second half of the gate: `python -m gaffer_lib validate --request`) and the `backtest`.
+- **Library (`python/gaffer_lib/`):** rules, `derive`, `validate`, the model (`strength`, `minutes`, `xp`), the planner (`plan`), the one-command golden path (`python -m gaffer_lib run --snapshot … --out /work/plan.json`), `recompute` (the second half of the gate: `python -m gaffer_lib validate --request`), `outcomes` (`python -m gaffer_lib score`: a finished GW's points for a line-up, the baselines and the projection error) and the `backtest`.
+- **Tools (`tools/`, also in the harness image):** `gaffer-eval` (live tracking) and `gaffer-admin` (the admin report). **Evals (`evals/`):** the 30 cases, their builder, and the headless runner behind `pnpm eval`.
 - **Snapshots:** each `fpl_snapshot` call writes an immutable, content-hashed snapshot under `/data/snapshots/`. The sandbox can read it, but not write to it.
-- **Records:** every recommendation is a `gaffer.recommendation` entry in Pi's session log, next to a `gaffer.validation` entry holding exactly what the gate was given. `/data/ledger/recommendations.jsonl` indexes them, `/data/users/<hash>/prefs.json` holds preferences and `/data/exports/` the exports. Team IDs appear in those files only as an HMAC hash.
+- **Records:** every recommendation is a `gaffer.recommendation` entry in Pi's session log, next to a `gaffer.validation` entry holding exactly what the gate was given. `/data/ledger/recommendations.jsonl` indexes them, `/data/ledger/outcomes.jsonl` scores them once their GW is finished, `/data/users/<hash>/prefs.json` holds preferences, `/data/exports/` the exports and `/data/admin/admin.html` the admin report. Team IDs appear in those files only as an HMAC hash.
 
 The design is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), with decisions in [docs/decisions/](docs/decisions/) and requirements in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md).
 
@@ -144,6 +166,12 @@ node packages/pi-gaffer/scripts/export-schema.ts
 # the same with the odds source down, and a scripted model's recommendation through the submit gate
 # (rejected, corrected, stored, exported, replayed). No API key needed.
 cd deploy/compose && ./tests/verify.sh
+
+# the eval suite (FR-EVL-02) through the running stack: 30 cases, results in evals/results/<date>-<model>.jsonl.
+# Needs the history once (tools/fetch_history.py, above). The scripted faux model is free and is what CI runs;
+# a real model costs about $0.05 a case. Any provider/model Pi supports works; --only runs some cases.
+npx pnpm@12.6.0 eval
+npx pnpm@12.6.0 eval --model anthropic/claude-sonnet-5-5
 
 # real-model sessions through the stack (these spend money on your key, about $0.05 each):
 ./tests/real-run.sh my-run "My FPL team ID is 1. What should I do this week?"

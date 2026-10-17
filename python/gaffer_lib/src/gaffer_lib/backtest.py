@@ -321,15 +321,9 @@ def template_squad(inputs: ModelInputs) -> list[int]:
 def score_gw(lineup: Mapping, points: Mapping[int, float], minutes: Mapping[int, float], element_type: Mapping[int, int], rules: R.Rules, hit_cost: int) -> dict:
     """Real points for a lineup: automatic substitutions, captain doubled (the vice if the captain
     didn't play), minus the hit cost."""
-    played = lambda p: minutes.get(p, 0) > 0  # noqa: E731
-    picks = [R.Pick(p, i + 1, element_type[p]) for i, p in enumerate(list(lineup["xi"]) + list(lineup["bench"]))]
-    subs = R.automatic_subs(picks, played, rules)
-    xi = list(lineup["xi"])
-    for out, into in subs:
-        xi[xi.index(out)] = into
-    captain = lineup["captain"] if played(lineup["captain"]) else lineup["vice_captain"] if played(lineup["vice_captain"]) else None
-    total = sum(points.get(p, 0.0) for p in xi) + (points.get(captain, 0.0) if captain in xi else 0.0)
-    return {"points": total - hit_cost, "gross": total, "captain_points": points.get(captain, 0.0) if captain in xi else 0.0, "autosubs": len(subs)}
+    s = R.lineup_points(lineup["xi"], lineup["bench"], lineup["captain"], lineup["vice_captain"], None, points,
+                        lambda p: minutes.get(p, 0) > 0, element_type, rules, hit_cost)
+    return {"points": s["points"], "gross": s["gross"], "captain_points": s["captain_points"], "autosubs": len(s["autosubs"])}
 
 
 def lineup_by(squad: Sequence[int], value: Mapping[int, float], element_type: Mapping[int, int], rules: R.Rules) -> dict:
@@ -338,9 +332,10 @@ def lineup_by(squad: Sequence[int], value: Mapping[int, float], element_type: Ma
     return {"xi": xi, "bench": bench, "captain": ranked[0], "vice_captain": ranked[1]}
 
 
-def greedy_transfer(team: Team, inputs: ModelInputs, value: Mapping[int, float]) -> tuple[int, int] | None:
+def greedy_transfer(team: Team, inputs: ModelInputs, value: Mapping[int, float], sell: Mapping[int, int] | None = None) -> tuple[int, int] | None:
     """The single legal swap (same position, within budget and the club limit) that gains the most
-    `value`, or None if no swap gains anything."""
+    `value`, or None if no swap gains anything. `sell`: selling prices, when they are known directly
+    (a live snapshot's `derive`); otherwise they follow from the team's purchase prices."""
     rules = inputs.rules
     by_team: dict[int, int] = {}
     for p in team.squad:
@@ -349,7 +344,7 @@ def greedy_transfer(team: Team, inputs: ModelInputs, value: Mapping[int, float])
     candidates = sorted((p for p in inputs.players.values() if p.id not in team.squad and p.status != "u"), key=lambda p: -value.get(p.id, 0.0))
     for out in team.squad:
         po = inputs.players[out]
-        funds = team.bank + R.selling_price(team.purchase[out], po.now_cost, rules)
+        funds = team.bank + (sell[out] if sell is not None else R.selling_price(team.purchase[out], po.now_cost, rules))
         for c in candidates:
             gain = value.get(c.id, 0.0) - value.get(out, 0.0)
             if gain <= best_gain:
@@ -389,9 +384,10 @@ def apply_transfers(team: Team, transfers: Sequence[tuple[int, int]], inputs: Mo
 # Policies: each returns the GW's transfers and lineup from what was known before the deadline
 
 
-def decide(policy: str, team: Team, inputs: ModelInputs, *, first: bool, fresh_xp: bool = True, time_limit: float = P.TIME_LIMIT_S, proj=None) -> dict:
+def decide(policy: str, team: Team, inputs: ModelInputs, *, first: bool, fresh_xp: bool = True, time_limit: float = P.TIME_LIMIT_S, proj=None,
+           sell: Mapping[int, int] | None = None) -> dict:
     """`fresh_xp`: whether the official xP in `inputs` was recorded for the previous GW. B1 only
-    transfers on a fresh value; on a stale one it holds."""
+    transfers on a fresh value; on a stale one it holds. `sell`: see `greedy_transfer`."""
     et = {i: p.element_type for i, p in inputs.players.items()}
     ep = {i: (p.ep_next or 0.0) for i, p in inputs.players.items()}
     own = {i: (p.selected or 0.0) for i, p in inputs.players.items()}
@@ -401,7 +397,7 @@ def decide(policy: str, team: Team, inputs: ModelInputs, *, first: bool, fresh_x
         value = ep if policy == "B1" else own
         swap = None
         if not first and team.ft >= 1 and (policy == "B2" or fresh_xp):
-            swap = greedy_transfer(team, inputs, value)
+            swap = greedy_transfer(team, inputs, value, sell)
         squad = [swap[1] if swap and p == swap[0] else p for p in team.squad]
         return {"transfers": [swap] if swap else [], **lineup_by(squad, value, et, inputs.rules)}
     if policy == "G0":

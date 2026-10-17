@@ -2,7 +2,7 @@
  * fpl_snapshot core (ADR 0002): fetch with the freshness policy, fall back to the last good data when
  * FPL is updating, validate, write an immutable snapshot, and summarise it for the model.
  */
-import { createHmac } from "node:crypto";
+import { hashTeamId } from "./team-hash.ts";
 import { type Derived, type DeriveFn, DeriveInputError } from "./derive.ts";
 import { type FplClient, type FplResponse, FplNotFoundError, FplUnavailableError, type UnavailableReason } from "./http.ts";
 import { fetchOdds, type OddsDeps, type OddsFile } from "./odds.ts";
@@ -31,9 +31,7 @@ export class TeamNotFoundError extends Error {
 	override name = "TeamNotFoundError";
 }
 
-export function hashTeamId(teamId: number, salt: string): string {
-	return `hmac-sha256:${createHmac("sha256", salt).update(String(teamId)).digest("hex")}`;
-}
+export { hashTeamId } from "./team-hash.ts";
 
 export interface SnapshotDeps {
 	client: FplClient;
