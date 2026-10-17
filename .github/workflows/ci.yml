@@ -10,6 +10,9 @@ permissions:
 
 env:
   PNPM: npx --yes pnpm@12.6.0
+  # The sandbox image's Python (python:3.14-slim at its pinned digest). A 3.14 pre-release lacks C-API
+  # symbols numpy 2.5.3's wheel needs, and an old uv only offers pre-releases.
+  PYTHON: 3.14.7
   SOLVER_COMMIT: ec65f5e2b2be34441cb4b2a9efafea1ec0fe3b79
 
 jobs:
@@ -23,8 +26,8 @@ jobs:
           node-version: 24.21.0
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: 0.6.6
-      - run: uv python install 3.14
+          version: 0.12.21
+      - run: uv python install $PYTHON
       - run: $PNPM install --frozen-lockfile
       # vitest: the S1 extension checks (test/s1.test.ts), unit and extension tests, the eval graders.
       - run: $PNPM test
@@ -38,7 +41,7 @@ jobs:
         env:
           PYTHONPATH: python/gaffer_lib/src
         run: |
-          GAFFER_SOLVER_DIR="$RUNNER_TEMP/open-fpl-solver" uv run --no-project --python 3.14 \
+          GAFFER_SOLVER_DIR="$RUNNER_TEMP/open-fpl-solver" uv run --no-project --python "$PYTHON" \
             --with pytest==9.1.1 --with hypothesis==6.168.3 --with numpy==2.5.3 --with pandas==3.0.6 --with scipy==1.18.1 \
             --with highspy==1.15.1 --with requests==2.34.2 --with fuzzywuzzy==0.18.0 pytest python/gaffer_lib/tests
 
@@ -53,8 +56,8 @@ jobs:
           node-version: 24.21.0
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
-          version: 0.6.6
-      - run: uv python install 3.14
+          version: 0.12.21
+      - run: uv python install $PYTHON
       - run: $PNPM install --frozen-lockfile
       # The history cases are built from third-party archives that are never committed: fetch them once
       # per change of the fetch script and keep them in the cache.
