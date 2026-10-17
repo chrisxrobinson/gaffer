@@ -1,0 +1,21 @@
+first process: [exit SIGKILL]
+JSONL after the kill: [
+  'session',
+  'model_change',
+  'thinking_level_change',
+  'message:system',
+  'message:user',
+  'message:assistant(toolUse)'
+]
+second process: after reopen (pi --continue), entries: ["model_change","thinking_level_change","message:system","message:user","message:assistant"]; isStreaming=false
+1.5 s later, nothing ran by itself: model calls=0
+after the user types "continue": model calls=2
+[exit 0]
+effects.log: [
+  '53186 model sees last=user [{"type":"text","text":"/gw"}]',
+  '53186 start golden_path tool:1792256836728:72s8n2rqueb',
+  '53269 model sees last=user [{"type":"text","text":"continue"}]',
+  '53269 start golden_path tool:1792256839264:jdrurfyf1pb',
+  '53269 end golden_path tool:1792256839264:jdrurfyf1pb',
+  '53269 model sees last=toolResult:golden_path [{"type":"text","text":"plan written"}]'
+]

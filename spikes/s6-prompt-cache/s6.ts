@@ -22,7 +22,7 @@ import { createAgentSession, DefaultResourceLoader, defineTool, type ExtensionAP
 import { Type } from "typebox";
 import { fplContextSection, GAFFER_PREAMBLE } from "../../../packages/pi-gaffer/src/prompt.ts";
 
-const { values } = parseArgs({ options: { variant: { type: "string" }, label: { type: "string" }, prompts: { type: "string", default: "3" } } });
+const { values } = parseArgs({ options: { variant: { type: "string" }, label: { type: "string" }, prompts: { type: "string", default: "3" }, think: { type: "boolean", default: false } } });
 const variant = values.variant as "A" | "B";
 const label = values.label ?? `${variant}-${VERSION}`;
 const REPO = resolve(import.meta.dirname, "../../..");
@@ -122,14 +122,16 @@ async function main() {
 	const modelRuntime = await ModelRuntime.create({ modelsPath: join(agentDir, "models.json"), authPath: join(agentDir, "auth.json") } as never);
 	const model = modelRuntime.getModel("anthropic", "claude-sonnet-5-5");
 	if (!model) throw new Error("model not found");
-	const { session } = await createAgentSession({ cwd, agentDir, model: model as never, modelRuntime: modelRuntime as never, thinkingLevel: "medium" as never, resourceLoader: loader, sessionManager: SessionManager.create(cwd, sessionsDir), settingsManager, tools: ["read", "fpl_snapshot"] } as never);
+	const { session } = await createAgentSession({ cwd, agentDir, model: model as never, modelRuntime: modelRuntime as never, thinkingLevel: (values.think ? "high" : "medium") as never, resourceLoader: loader, sessionManager: SessionManager.create(cwd, sessionsDir), settingsManager, tools: ["read", "fpl_snapshot"] } as never);
 	const noop = () => undefined;
 	const ui: Record<string, unknown> = { notify: noop };
 	for (const m of ["select", "confirm", "input", "editor", "custom", "onTerminalInput", "setStatus", "setWorkingMessage", "setWorkingVisible", "setWorkingIndicator", "setHiddenThinkingLabel", "setWidget", "setFooter", "setHeader", "setTitle", "pasteToEditor", "setEditorText", "getEditorText", "addAutocompleteProvider", "setEditorComponent", "getEditorComponent", "getAllThemes", "getTheme", "setTheme", "getToolsExpanded", "setToolsExpanded"]) ui[m] = noop;
 	await session.bindExtensions({ uiContext: ui as never, mode: "tui" } as never);
 
 	const prompts = [
-		`My FPL team ID is ${teamId}. Take a snapshot and tell me my squad and bank in a short table. Don't run anything else.`,
+		values.think
+			? `My FPL team ID is ${teamId}. Take a snapshot. Then reason carefully about which single transfer gains most over the next three GWs given the fixtures and prices, weighing at least three candidates, and give your answer in two lines. Don't run anything else.`
+			: `My FPL team ID is ${teamId}. Take a snapshot and tell me my squad and bank in a short table. Don't run anything else.`,
 		"From that squad, who should I captain for GW8? One line, no tools.",
 		"And which of my defenders looks weakest on these numbers? One line, no tools.",
 		"Thanks. Which midfielder has the best ep_next per £m? One line, no tools.",
@@ -145,7 +147,7 @@ async function main() {
 		.map((e) => {
 			const u = e.message!.usage ?? {};
 			const thinking = (e.message!.content ?? []).filter((c) => c.type === "thinking");
-			return { input: u.input, cacheRead: u.cacheRead, cacheWrite: u.cacheWrite, output: u.output, cost: u.cost?.total, thinking_blocks: thinking.length, thinking_chars: thinking.reduce((n, c) => n + (c.thinking?.length ?? 0), 0) };
+			const m = e.message as { stopReason?: string; errorMessage?: string }; return { input: u.input, cacheRead: u.cacheRead, cacheWrite: u.cacheWrite, output: u.output, cost: u.cost?.total, thinking_blocks: thinking.length, thinking_chars: thinking.reduce((n, c) => n + (c.thinking?.length ?? 0), 0), stop: m.stopReason, error: m.errorMessage?.slice(0, 300) };
 		});
 	const resolvedCompat = (model as { compat?: Record<string, unknown> }).compat;
 	const out = { label, variant, pi: VERSION, model_compat: resolvedCompat, team_id: "synthetic", prompts: perPrompt, requests, calls, total_cost: calls.reduce((s, c) => s + (c.cost ?? 0), 0) };

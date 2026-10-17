@@ -1,6 +1,6 @@
 # ADR 0008 — Default model, provider swap and hard budget caps
 
-**Status:** Accepted · **Date:** 2026-09-27
+**Status:** Accepted, amended by [ADR 0010](0010-context-as-section-patches.md) (prices, model config) · **Date:** 2026-09-27
 
 ## Context
 - **Prices** in Pi 0.87.1's model catalogue (`pi-ai/dist/models.generated.js`), per million tokens:
@@ -8,7 +8,8 @@
   | Model | Input | Output | Cache read |
   |---|---|---|---|
   | `claude-sonnet-5` | $2 | $10 | $0.20 |
-  | `claude-sonnet-5-5` (not in the 0.87.1 catalogue; added via `harness/models.json`, prices from Anthropic's published rates, ID and limits verified with the Models API on 2026-09-28) | $2 | $10 | $0.20 |
+  | `claude-sonnet-5-5` (not in the 0.87.1 catalogue; added via `harness/models.json`, prices from Anthropic's published rates, ID and limits verified with the Models API on 2026-09-28) | $2 | $10 | $0.20 until 2026-10-07, **$0.10 since** (Anthropic release notes; ADR 0010) |
+  | `claude-haiku-5-5` (launched 2026-10-07; in Pi's catalogue from 1.1.0; prompts ≤ 100k tokens) | $0.10 | $0.50 | $0.01 |
   | `claude-opus-5-5` | $4 | $20 | — |
   | `claude-haiku-4-5` | $1 | $5 | — |
   | `claude-fable-5-1` | $10 | $50 | — |
@@ -34,3 +35,7 @@
 ## Consequences
 - The caps depend on Pi's cost numbers being right. Spike S1 used Pi's test ("faux") model provider, which reports $0, so real-provider cost reporting needs checking in the first MVP milestone (ROADMAP M1 exit criterion).
 - The per-message usage data is also what the admin centre reads, so there is one source for spend.
+
+## Amendments
+- **2026-10-17 ([ADR 0010](0010-context-as-section-patches.md)):** the Sonnet 5.5 cache-read price fell to $0.10/MTok on 2026-10-07 and `harness/models.json` is corrected (on Pi ≥ 1.1 the override is removed and the catalogue entry used). The model entry also gains `supportsMidConvoSystemMessages`, so per-prompt sections don't re-bill the history. Spend now includes Pi's `usage` entries (cache warming, summaries), which the caps previously missed. Prices are checked against the provider's price list and release notes at each Pi upgrade.
+- **2026-10-17 (research 12 §12, research 07):** Claude Haiku 5.5 ($0.10/$0.50) is a candidate default to be qualified by the eval suite, not a decision ([ROADMAP](../ROADMAP.md) M1.1-1).

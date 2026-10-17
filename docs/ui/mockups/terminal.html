@@ -1,0 +1,142 @@
+<title>Gaffer Terminal Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Barlow+Condensed:wght@700&display=swap">
+<style>
+/* Layout: one 100-column terminal per screen, as the browser terminal (ttyd → tmux → pi) would draw it.
+   The terminal palette is Gaffer's own (passed to xterm.js), so light and dark are both designed, not inherited. */
+:root {
+  --page: #E6EBEF; --page-ink: #0E1B2B; --page-ink-2: #4B5A6B; --page-line: #BCC7D0;
+  --t-bg: #0D1620; --t-fg: #E6EDF3; --t-muted: #93A4B5; --t-dim: #5E7085; --t-green: #3DBE7E; --t-yellow: #F5C84B; --t-red: #EF6A5B;
+  --t-border: #2E4560; --t-user: #142130; --t-pend: #111D29; --t-ok: #10241E; --t-err: #2A1A1D; --t-sel: #2E4560; --t-think: #94A6BA;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; --sans: "IBM Plex Sans", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page: #070C12; --page-ink: #E6EDF3; --page-ink-2: #A3B2C2; --page-line: #22344A; color-scheme: dark; } }
+:root[data-theme="dark"] { --page: #070C12; --page-ink: #E6EDF3; --page-ink-2: #A3B2C2; --page-line: #22344A; color-scheme: dark; }
+:root[data-term="light"] { --t-bg: #FFFFFF; --t-fg: #0E1B2B; --t-muted: #4B5A6B; --t-dim: #7A8796; --t-green: #1E7B4F; --t-yellow: #9A6A00; --t-red: #C0392B;
+  --t-border: #BCC7D0; --t-user: #F1F4F6; --t-pend: #F6F8FA; --t-ok: #EEF6F1; --t-err: #FBEEEC; --t-sel: #CFE3D8; --t-think: #5B6B7D; }
+body { background: var(--page); color: var(--page-ink); font: 14px/1.45 var(--sans); }
+.wrap { padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; max-width: 1080px; margin: 0 auto; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; border-bottom: 1px dashed var(--page-line); padding-bottom: 10px; }
+.bar b { font-family: var(--mono); letter-spacing: .04em; }
+.bar a { color: var(--page-ink); }
+.seg { display: inline-flex; border: 1px solid var(--page-line); border-radius: 4px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 4px 9px; cursor: pointer; color: inherit; font: inherit; }
+.seg button + button { border-left: 1px solid var(--page-line); }
+.seg button[aria-pressed="true"] { background: var(--page-ink); color: var(--page); }
+h2 { font: 700 22px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; letter-spacing: .02em; margin: 0; }
+figure { margin: 0; display: grid; gap: 8px; }
+figcaption { color: var(--page-ink-2); max-width: 75ch; }
+.term { overflow-x: auto; border-radius: 6px; border: 1px solid var(--page-line); background: var(--t-bg); }
+pre.screen { margin: 0; padding: 10px 12px; width: max-content; font: 13px/1.25 var(--mono); color: var(--t-fg); }
+.hdr { display: block; line-height: 1.02; }
+.cell { display: inline-block; width: 1ch; text-align: center; overflow: hidden; vertical-align: bottom; }
+.m { color: var(--t-muted); } .d { color: var(--t-dim); } .g { color: var(--t-green); } .y { color: var(--t-yellow); } .r { color: var(--t-red); }
+.b { font-weight: 600; } .th { color: var(--t-think); font-style: italic; }
+.bd { color: var(--t-border); }
+.ub { background: var(--t-user); display: inline-block; width: 100ch; }
+.pend { background: var(--t-pend); display: inline-block; width: 100ch; }
+.okb { background: var(--t-ok); display: inline-block; width: 100ch; }
+.errb { background: var(--t-err); display: inline-block; width: 100ch; }
+.sel { background: var(--t-sel); }
+.cur { background: var(--t-green); color: var(--t-bg); }
+</style>
+
+<div class="wrap">
+  <div class="bar" role="region" aria-label="Mockup controls (not part of the product)">
+    <b>MOCKUP</b><span>Gaffer Terminal (UI 1), 100 columns. Sample data.</span>
+    <span class="seg" role="group" aria-label="Terminal palette"><button type="button" id="t-dark" aria-pressed="true">Dark terminal</button><button type="button" id="t-light" aria-pressed="false">Light terminal</button></span>
+    <a href="index.html">Gaffer App (UI 2)</a>
+  </div>
+  <div id="screens"></div>
+</div>
+
+<script>
+const W = 100;
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+const s = (cls, t) => `<span class="${cls}">${esc(t)}</span>`;
+const pad = (t, n) => t + " ".repeat(Math.max(0, n - [...t].length));
+const rule = () => s("bd", "─".repeat(W));
+const MARK = [" ▄▀▀▀▀ ", "█  ●━━━", " ▀▄▄▄▄▀"];
+const WORD = ["▄▀▀▀ ▄▀▀▄ █▀▀▀ █▀▀▀ █▀▀▀ █▀▀▄", "█ ▀█ █▀▀█ █▀▀  █▀▀  █▀▀  █▀▀▄", "▀▄▄▀ ▀  ▀ ▀    ▀    ▀▀▀▀ ▀  ▀"];
+const TAG = [["b", "Fantasy Premier League assistant · 2026/27"], ["m", "gaffer 1.1.0 · claude-sonnet-5-5 · thinking medium"], ["m", "Advice only. Gaffer never logs in to your FPL account."]];
+function header() {
+  return '<span class="hdr">' + MARK.map((m, i) => (i === 1 ? s("b", "█  ") + [..."●━━━"].map((ch) => `<span class="g b cell">${ch}</span>`).join("") : s("b", m)) + "    " + s("b", WORD[i]) + "    " + s(TAG[i][0], TAG[i][1])).join("\n") + "</span>";
+}
+function footer(left, right) { return " " + left + " ".repeat(Math.max(1, W - 2 - stripLen(left) - stripLen(right))) + right; }
+const stripLen = (html) => [...html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")].length;
+const STATUS_L = s("b", "Touchline XI") + s("m", " · ") + s("y b", "GW8 6d 02:57") + s("m", " · FT ") + "2" + s("m", " (derived) · bank ") + "£0.6m";
+const STATUS_R = s("m", "today ") + "$0.07" + s("m", " of $5.00 · session ") + "$0.03";
+function editor(text, cursor = true) { return rule() + "\n" + s("g", "› ") + esc(text) + (cursor ? s("cur", " ") : "") + "\n" + rule(); }
+const blank = (n) => "\n".repeat(n);
+
+const SCREENS = [
+  ["Start-up", "Pi's header is replaced by the Gaffer mark and wordmark (an extension `setHeader`, with `quietStartup` hiding Pi's resource listing). Pi's footer (cwd, token counters) is replaced by the status strip: team, GW and live deadline countdown, free transfers, bank, and spend against the caps. It updates every second while idle and after each tool call.",
+    () => header() + "\n\n" + s("m", " Start with ") + s("g", "/team <id>") + s("m", " (the number in your Points page address), then ") + s("g", "/gw") + s("m", ".") + "\n" +
+      s("d", " Type / for commands · Shift+Enter new line · Esc stops a run · PageUp/PageDown scroll") + blank(14) + editor("") + "\n" + footer(STATUS_L, STATUS_R)],
+  ["Commands: only Gaffer's", "Typing `/` lists Gaffer's commands and templates and three session basics (`/new`, `/resume`, `/help`). Pi's coding and admin commands (`/share`, `/login`, `/model`, `/settings`, `/export`, `/tree`, `/reload`, `/bug`, `/mcp` and the rest) are not listed and do nothing if typed.",
+    () => header() + blank(9) +
+      " " + s("bd", "┌" + "─".repeat(78) + "┐") + "\n" +
+      [["/gw", "Full recommendation for the next GW: transfers, captain, XI, chip, 4-GW plan", true],
+       ["/whatif", "Test a transfer or chip against the best plan: /whatif Watkins>Isak"],
+       ["/explain", "Why a player is in, out or captain: /explain Mukiele"],
+       ["/team", "Set your FPL team: /team <id> [--ft N] [--pending \"OUT>IN\"]"],
+       ["/prefs", "Show or change saved preferences: risk, chips to save, keep, avoid"],
+       ["/scorecard", "Season to date: Gaffer's plans vs your points vs baselines"],
+       ["/usage", "Tokens, cost and time for this session and today"],
+       ["/export-rec", "Write the latest recommendation as JSON to /data/exports"],
+       ["/new", "Start a new session"], ["/resume", "Open an earlier session"], ["/help", "What Gaffer can do and how to ask"]]
+        .map(([c, d, sel]) => " " + s("bd", "│") + (sel ? `<span class="sel">${esc(" " + pad(c, 12))}${s("m", pad(d, 66))}</span>` : " " + s("g", pad(c, 12)) + s("m", pad(d, 65))) + s("bd", "│")).join("\n") + "\n" +
+      " " + s("bd", "└" + "─".repeat(78) + "┘") + "\n" + editor("/") + "\n" + footer(STATUS_L, STATUS_R)],
+  ["A run streaming", "Unchanged from today apart from the theme and labels: the summarized thinking (muted), each tool as a block with Pi's own renderer, and Gaffer's labels for its tools (\"Snapshot\", \"Plan\", \"Check\"). The working line gives the elapsed time and how to stop.",
+    () => s("ub", " /gw keep Palmer, max one hit".padEnd(W)) + "\n\n" +
+      s("th", " Snapshot first, with odds, then the golden path. Palmer is a keep.") + "\n\n" +
+      s("okb", pad(" " + "SNAPSHOT  fresh · 15 players · bank £0.6m · 2 FT (derived) · odds 10/10 · 2.1s", W)) + "\n" +
+      s("okb", pad(s("m", "   GW7 current · GW8 next · deadline Fri 23 Oct 17:30 UTC · chips left WC FH BB TC").replace(/<[^>]+>/g, ""), W)) + "\n" +
+      s("okb", pad("   News: Egan \"Knock - 75% chance of playing\" · Semenyo likely to rise tonight", W)) + "\n\n" +
+      s("okb", pad(" READ  gaffer-workflow (playbook)", W)) + "\n\n" +
+      s("pend", pad(" PLAN  python -m gaffer_lib run --snapshot …/20261017T135130Z-3fa2c1d0e9b7 --prefs … ", W)) + "\n" +
+      s("pend", pad("   projecting points · solving 6 GWs (main solve 31 s of 43 s)", W)) + blank(9) +
+      " " + `<span class="g cell">⠋</span>` + s("m", " Gaffer is planning · 38 s · $0.031 · Esc to stop") + "\n" + editor("", false) + "\n" + footer(STATUS_L, STATUS_R)],
+  ["The recommendation", "Gaffer's renderer, unchanged in content (FR-OUT-02 at 100 columns). Brand colours: green headings and gains, armband yellow for medium confidence and the captain, red for losses.",
+    () => s("g b", "GAFFER · GW8 recommendation") + s("m", " · deadline Fri 23 Oct 17:30 UTC · confidence ") + s("y b", "medium") + "\n" +
+      s("m", "2 free transfers (derived) · bank £1.5m after · data from 2026-10-17 13:51 UTC") + "\n\n" +
+      s("g b", "TRANSFERS") + "  net " + s("g", "+7.3 xP") + " over 4 GWs (no hits)" + "\n" +
+      s("m", "  Out                       Sell  → In                         Price  xP 4GW  xP 6GW*  Conf") + "\n" +
+      "  Watkins (AVL)            £8.6m  → João Pedro (CHE)           £7.6m    " + s("g", "+4.2") + "     +5.1  " + s("g", "high") + "\n" +
+      s("m", "      Watkins has one goal in six and Villa visit Arsenal and Liverpool. João Pedro takes") + "\n" +
+      s("m", "      Chelsea's penalties and three of their next four are at home. It also frees £1.0m.") + "\n" +
+      "  Egan (BRE)               £4.4m  → Mukiele (BOU)              £4.5m    " + s("g", "+3.1") + "     +3.6  " + s("y", "medium") + "\n" +
+      s("m", "      Egan has a knock (75%) and Brentford travel twice. Mukiele has started every league game.") + "\n\n" +
+      s("g b", "STARTING XI") + "  62.4 expected points · 4-4-2" + "\n" +
+      "  GK   Raya 4.1" + "\n" +
+      "  DEF  Gabriel 4.6 · Muñoz 4.0 · Mukiele 3.9 " + s("g", "IN") + " · De Cuyper 3.6" + "\n" +
+      "  MID  Palmer 6.8 " + s("m", "(V)") + " · Saka 6.3 · Semenyo 5.4 · Mbeumo 5.1" + "\n" +
+      "  FWD  Haaland 7.9 " + s("y b", "(C)") + " · João Pedro 5.6 " + s("g", "IN") + "\n" +
+      s("m", "  Bench  GK Henderson · 1 Thiago 4.4 · 2 Konsa 3.3 · 3 M.Sangaré 3.2") + "\n\n" +
+      s("g b", "CHIP") + "  none this week " + s("m", "· TC GW10 +4.1 · BB GW9 +3.2 · FH GW12 −1.1 · WC not evaluated") + "\n\n" +
+      s("g b", "PLAN") + s("m", "   GW  moves                               C           FT  hits  xP") + "\n" +
+      "        8  Watkins→João Pedro, Egan→Mukiele    Haaland      2     0  62.4" + "\n" +
+      "        9  roll                                Haaland      1     0  58.1" + "\n" +
+      "       10  M.Sangaré→Kudus                     Haaland      2     0  60.3" + "\n" +
+      "       11  roll                                Palmer       2     0  57.9" + "\n\n" +
+      s("y", "! Free transfers are derived from public data: check you have 2 in the FPL app.") + "\n" + editor("", false) + "\n" + footer(STATUS_L, STATUS_R)],
+  ["A blocked command", "If a removed Pi command is typed anyway, Gaffer says why in one line and nothing runs. `/share` would publish the session, so it is blocked rather than hidden.",
+    () => header() + blank(12) + s("errb", pad(" /share is not available in Gaffer: sessions stay on this machine. Use /export-rec for the JSON.", W)) + "\n" +
+      s("errb", pad(" /login is not available in Gaffer: the model key is set by the operator.", W)) + "\n\n" + editor("") + "\n" + footer(STATUS_L, STATUS_R)]
+];
+
+const box = document.getElementById("screens");
+SCREENS.forEach(([title, cap, draw]) => {
+  const f = document.createElement("figure");
+  f.innerHTML = `<h2>${esc(title)}</h2><figcaption>${esc(cap).replace(/`([^`]+)`/g, "<code>$1</code>")}</figcaption><div class="term"><pre class="screen" aria-label="${esc(title)} screen">${draw()}</pre></div>`;
+  box.append(f);
+});
+function setTerm(t) { document.documentElement.dataset.term = t; document.getElementById("t-dark").setAttribute("aria-pressed", String(t === "dark")); document.getElementById("t-light").setAttribute("aria-pressed", String(t === "light")); try { localStorage.setItem("gaffer-term", t); } catch {} }
+document.getElementById("t-dark").addEventListener("click", () => setTerm("dark"));
+document.getElementById("t-light").addEventListener("click", () => setTerm("light"));
+let saved = null; try { saved = localStorage.getItem("gaffer-term"); } catch {}
+setTerm(saved === "light" ? "light" : "dark");
+</script>
