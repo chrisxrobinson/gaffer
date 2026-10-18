@@ -25,6 +25,9 @@ export interface SnapshotEntry {
 	snapshot_hash: string;
 	team_id: number;
 	team_id_hash: string;
+	/** The FPL team's name and bank (£m, as of the last deadline), for the TUI's status strip (FR-UI-05). */
+	team_name?: string;
+	bank?: number | null;
 	fetched_at: string;
 	stale: boolean;
 	stale_reason: string | null;

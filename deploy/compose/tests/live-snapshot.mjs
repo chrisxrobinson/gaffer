@@ -61,7 +61,7 @@ const { session } = await createAgentSession({
 const notes = [];
 const noop = () => undefined;
 const ui = { notify: (m, t) => notes.push(`${t}: ${m}`) };
-for (const m of ["select", "confirm", "input", "editor", "custom", "setStatus", "setWidget", "setTitle", "setWorkingMessage", "setWorkingVisible"]) ui[m] = noop;
+for (const m of ["select", "confirm", "input", "editor", "custom", "setStatus", "setWidget", "setTitle", "setWorkingMessage", "setWorkingVisible", "setHeader", "setFooter", "addAutocompleteProvider", "setEditorComponent"]) ui[m] = noop;
 await session.bindExtensions({ uiContext: ui, mode: "tui" });
 console.log("active tools:", session.getActiveToolNames().join(", "));
 

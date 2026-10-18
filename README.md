@@ -21,7 +21,7 @@ Paste your API key into `deploy/compose/secrets/anthropic_api_key`. The script a
 docker compose up -d --build
 ```
 
-Open **http://127.0.0.1:7681**. You get the Pi terminal UI with Gaffer loaded. Then:
+Open **http://127.0.0.1:7681**. You get the Gaffer Terminal: Pi's terminal UI with Gaffer's header, status strip, theme and commands. Then:
 
 1. `/team <your FPL team ID>`. The ID is the number in the URL of your Points page on the FPL site, for example `/team 1234567`.
    FPL doesn't publish free transfers or transfers you've made for the next GW, so Gaffer derives the free-transfer count and shows it as assumed. If it's wrong, or you've already made transfers, say so: `/team 1234567 --ft 2 --pending "Salah>Palmer, Saka>Foden"` (names or player IDs, OUT>IN). Each `/team` replaces the last, so restate options you want to keep.
@@ -40,12 +40,17 @@ Commands:
 | `/export-rec` | Writes the latest recommendation's JSON to `/data/exports/<rec_id>.json` and prints the path |
 | `/usage` | This session's model calls, tokens, cost, tools and run time, and today's spend against the caps |
 | `/scorecard` | Season to date for your team: Gaffer's recommended line-ups vs your actual points vs the B0/B1 baselines, once GWs have been scored |
+| `/new`, `/resume` | Start a new session, or open an earlier one |
+| `/copy` | Copies the last answer to your clipboard |
+| `/help` | What Gaffer can do and how to ask |
+
+These are the only commands. Pi's own (`/model`, `/settings`, `/share`, `/login`, `/export`, `/tree` and the rest) are not listed and, if typed, Gaffer says in one line why they aren't available and does nothing (ADR 0013).
 
 Preferences are saved per team and survive restarts. You can also state them in words ("save my wildcard", "keep Haaland", "no hits") and Gaffer saves them. They constrain the optimiser and are enforced when a recommendation is validated: a saved chip isn't played, a kept player isn't sold. Risk mode (`safe`, `balanced`, `aggressive`) only breaks ties between plans within half a point of the best; Gaffer always maximises expected points.
 
 The exported JSON follows [`schemas/recommendation-1.json`](schemas/recommendation-1.json). To copy an export out of the container: `docker compose exec gaffer cat /data/exports/<rec_id>.json > rec.json`.
 
-`/export` (without `-rec`) is Pi's own command: it exports the whole conversation as HTML. Text after a template command such as `/gw` is parsed like a shell command line, so an apostrophe is taken as a quote mark and dropped ("can't" arrives as "cant").
+Text after a template command such as `/gw` is parsed like a shell command line, so an apostrophe is taken as a quote mark and dropped ("can't" arrives as "cant").
 
 ### Scoring past GWs and the admin report
 
@@ -68,7 +73,8 @@ To stop the stack, run `docker compose down`. Your sessions and snapshots are ke
 
 ### Using the terminal UI
 
-- It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Ctrl+Home and Ctrl+End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit). To select text with the mouse, hold Shift while dragging.
+- The header shows Gaffer's wordmark and model; the two lines at the bottom are the status strip: your team, the next GW with a live countdown to its deadline, free transfers ("derived" when Gaffer worked them out), bank, and today's and this session's spend against the caps. They come from the latest snapshot and the same figures as `/usage`. The tab title is "Gaffer · GW8 · 6d", with "working" during a run.
+- It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Ctrl+Home and Ctrl+End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit; reopening the page resumes the session). To copy, drag over text (Pi says "Copied!") or type `/copy` for the last answer; the page puts it on your clipboard. Holding Shift while dragging uses the browser's own selection instead.
 - `!` shell commands are disabled, because the harness container holds the API key. Gaffer's own code runs in the sandbox.
 - Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session.
 - **Only one browser tab can be connected at a time.** A second tab shows "Press ⏎ to Reconnect" and won't connect until the first tab is closed. See [Troubleshooting](#troubleshooting).
@@ -87,6 +93,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_BUDGET_DAILY` | `5` | USD per UTC day, across sessions. New prompts are refused once it's reached |
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
 | `GAFFER_SESSIONS_ROOT` | `/sessions` (image) | The directory whose sessions the daily cap and `/usage` sum |
+| `GAFFER_TERMINAL_THEME` | `dark` | The browser terminal's palette, `dark` or `light`. Pi follows it with the `gaffer-dark` or `gaffer-light` theme |
 
 To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in a `models.json` in the agent dir (`/opt/pi-agent`); the image ships none (ADR 0009). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
 

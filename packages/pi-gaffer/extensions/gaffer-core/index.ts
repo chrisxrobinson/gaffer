@@ -2,7 +2,7 @@
  * gaffer-core: turns the coding agent into an FPL agent (ARCHITECTURE §1).
  * Replaces the coding preamble while keeping skills, injects fpl_context and user_preferences
  * sections, restricts the active tools, blocks the user's `!` shell, and adds /team, /prefs,
- * /export-rec, /usage and /scorecard.
+ * /export-rec, /usage and /scorecard. The terminal's identity and command surface are in ui.ts (ADR 0013).
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -18,11 +18,14 @@ import { savePreferences, sessionTeamHash } from "../../src/team-prefs.ts";
 import { hashTeamId } from "../../src/snapshot.ts";
 import { parseTeamArgs } from "../../src/team-args.ts";
 import { SnapshotStore } from "../../src/store.ts";
-import { dayTotals, scanSessions, sessionUsage, usageLines } from "../../src/usage.ts";
+import { usageLines, usageNow } from "../../src/usage.ts";
+import { gafferUi } from "./ui.ts";
 
 export const USER_SHELL_BLOCKED = "Shell commands are disabled in Gaffer: the harness holds credentials. Ask Gaffer instead; its code runs in the sandbox.";
 
 export default function gafferCore(pi: ExtensionAPI) {
+	gafferUi(pi);
+
 	pi.on("session_start", async () => {
 		// Second line of defence after the CLI --tools allowlist (S1: SDK hosts must bindExtensions for this to run).
 		const available = new Set(pi.getAllTools().map((t) => t.name));
@@ -126,15 +129,8 @@ export default function gafferCore(pi: ExtensionAPI) {
 		description: "Tokens, cost, tools and latency for this session, and today's spend against the caps",
 		handler: async (_args, ctx) => {
 			try {
-				const now = new Date();
-				const dir = sessionsRoot(ctx.sessionManager.getSessionDir());
-				const file = ctx.sessionManager.getSessionFile();
-				// This session from memory (Pi writes its file lazily, from the first user message), the others from disk.
-				const session = sessionUsage(ctx.sessionManager.getEntries() as never, file ?? "");
-				const others = scanSessions(dir).filter((s) => !file || join(dir, s.file) !== file);
-				const day = now.toISOString().slice(0, 10);
-				const t = dayTotals([...others, session], now);
-				ctx.ui.notify(usageLines(session, { day, ...t }, budgetConfig()).join("\n"), "info");
+				const { session, today } = usageNow(ctx.sessionManager, sessionsRoot(ctx.sessionManager.getSessionDir()));
+				ctx.ui.notify(usageLines(session, today, budgetConfig()).join("\n"), "info");
 			} catch (e) {
 				ctx.ui.notify(`Usage could not be read: ${(e as Error).message}`, "error");
 			}

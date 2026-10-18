@@ -17,6 +17,8 @@ services:
       GAFFER_PROVIDER: ${GAFFER_PROVIDER:-anthropic}
       GAFFER_MODEL: ${GAFFER_MODEL:-claude-sonnet-5-5}
       GAFFER_THINKING: ${GAFFER_THINKING:-medium}
+      # The browser terminal's palette, dark or light; Pi follows it with gaffer-dark or gaffer-light (ADR 0013).
+      GAFFER_TERMINAL_THEME: ${GAFFER_TERMINAL_THEME:-dark}
       GAFFER_BUDGET_SOFT: ${GAFFER_BUDGET_SOFT:-0.75}
       GAFFER_BUDGET_HARD: ${GAFFER_BUDGET_HARD:-1.50}
       GAFFER_BUDGET_DAILY: ${GAFFER_BUDGET_DAILY:-5}

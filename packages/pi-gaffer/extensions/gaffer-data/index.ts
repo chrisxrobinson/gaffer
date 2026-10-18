@@ -56,6 +56,8 @@ export default function gafferData(pi: ExtensionAPI) {
 					snapshot_hash: details.snapshot_hash,
 					team_id: teamId,
 					team_id_hash: details.team_id_hash,
+					team_name: details.team_name,
+					bank: details.bank,
 					fetched_at: details.fetched_at,
 					stale: details.stale,
 					stale_reason: details.stale_reason,
