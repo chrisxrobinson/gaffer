@@ -9,21 +9,23 @@
  * pi-gaffer package, the real sandbox (SANDBOX_URL) and /data, which the sandbox reads at the same path.
  * Per case: a stand-in API serves the case (mock.ts); Gaffer's FPL clock is set to the case's time
  * (GAFFER_CLOCK_OFFSET_MS); saved preferences are installed; the stale case first takes a good
- * snapshot, then FPL "updates"; the prompt runs; the run is graded (graders.ts) and its recommendation
- * and G0 (the golden path's plan 1, no LLM) are scored on the GW's real points by `gaffer_lib score`.
+ * snapshot, then FPL "updates"; the prompt runs, then the case's follow-up prompt if it has one; the run
+ * is graded (graders.ts) and its recommendation and G0 (the golden path's plan 1, no LLM) are scored on
+ * the GW's real points by `gaffer_lib score`.
  * One JSON line per case is appended to --out as it finishes, then a summary line.
  */
+import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from "@earendil-works/pi-ai";
+import { type FauxResponseStep, fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall, getInitialSystemMessage, type SystemMessage } from "@earendil-works/pi-ai";
 import { createAgentSession, DefaultResourceLoader, type ExtensionAPI, type ExtensionFactory, ModelRuntime, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import { gafferLibCommand } from "../../packages/pi-gaffer/src/derive.ts";
 import { idSalt } from "../../packages/pi-gaffer/src/config.ts";
 import { lastJsonLine, providerFromEnv, SandboxSession, sandboxReadFile, sandboxRun, shellQuote } from "../../packages/pi-gaffer/src/sandbox.ts";
 import { hashTeamId } from "../../packages/pi-gaffer/src/team-hash.ts";
 import { parseEntries, sessionUsage } from "../../packages/pi-gaffer/src/usage.ts";
-import { type CaseResult, chipScenarios, type EvalCase, gradeExpectations, gradeInjection, gradePrefs, gradeValidity, summarise, type ToolCall } from "./graders.ts";
+import { type CaseResult, chipScenarios, type EvalCase, gradeExpectations, gradeFollowUp, gradeInjection, gradePrefs, gradeValidity, type RequestShape, summarise, type ToolCall } from "./graders.ts";
 import { CaseApi } from "./mock.ts";
 import { goldenPathPolicy } from "./policy.ts";
 
@@ -83,12 +85,36 @@ function installPrefs(c: EvalCase, dataDir: string): void {
 	writeFileSync(file, `${JSON.stringify({ schema: "gaffer.prefs/1", updated_at: c.as_of, risk: p.risk, save_chips: p.save_chips, keep: p.keep.map((id) => ({ id, name: name(id) })), avoid: p.avoid.map((id) => ({ id, name: name(id) })), max_hits_per_gw: p.max_hits_per_gw }, null, 2)}\n`);
 }
 
-async function newSession(dir: string, scripted: boolean) {
+const hash = (x: unknown) => createHash("sha256").update(JSON.stringify(x)).digest("hex").slice(0, 16);
+
+/** A request's shape from the transcript the faux provider receives (it has no wire payload). */
+function transcriptShape(messages: readonly { role: string }[]): RequestShape {
+	const lead = getInitialSystemMessage(messages);
+	const later = messages.slice(1).filter((m): m is SystemMessage => m.role === "system");
+	return { system: hash({ content: lead?.content, sections: lead?.sections }), fpl_context_updates: later.filter((m) => m.sections?.fpl_context).length };
+}
+
+/** Record every faux request's shape before the scripted step answers it. */
+const recording = (steps: FauxResponseStep[], requests: RequestShape[]): FauxResponseStep[] =>
+	steps.map((s) => (ctx, ...rest) => {
+		requests.push(transcriptShape(ctx.messages));
+		return typeof s === "function" ? s(ctx, ...rest) : s;
+	});
+
+async function newSession(dir: string, scripted: boolean, requests: RequestShape[] = []) {
 	const agentDir = values["agent-dir"]!;
 	const cwd = values.cwd!;
 	const settingsManager = SettingsManager.create(cwd, agentDir);
 	const faux = scripted ? fauxProvider({ provider: "faux", models: [{ id: "faux-1" }] }) : undefined;
 	const factories: ExtensionFactory[] = faux ? [(pi: ExtensionAPI) => pi.registerProvider(faux.provider as never)] : [];
+	// A real provider's request as sent (NFR-COST-04): the leading system prompt, and any later system message with an fpl_context update.
+	factories.push((pi: ExtensionAPI) =>
+		pi.on("before_provider_request", (event) => {
+			const p = (event as { payload?: { system?: unknown; messages?: { role: string; content: unknown }[] } }).payload;
+			if (!p) return;
+			requests.push({ system: hash(p.system ?? null), fpl_context_updates: (p.messages ?? []).filter((m) => m.role === "system" && JSON.stringify(m.content).includes("fpl_context")).length });
+		}),
+	);
 	let extra: Record<string, unknown> = {};
 	if (values.package === "repo") {
 		const ext = (n: string) => import(resolve(REPO, `packages/pi-gaffer/extensions/${n}/index.ts`)).then((m) => m.default as ExtensionFactory);
@@ -169,11 +195,18 @@ async function runCase(c: EvalCase): Promise<CaseResult> {
 		}
 		setClock(c.as_of);
 		const scripted = modelLabel === "faux";
-		const { session, faux, notices } = await newSession(sessionsDir, scripted);
-		if (faux) faux.setResponses(goldenPathPolicy(c.team_id, { fauxAssistantMessage, fauxToolCall, fauxText } as never));
+		const requests: RequestShape[] = [];
+		const { session, faux, notices } = await newSession(sessionsDir, scripted, requests);
+		if (faux) faux.setResponses(recording(goldenPathPolicy(c.team_id, { fauxAssistantMessage, fauxToolCall, fauxText } as never), requests));
 		if (c.team_command) await promptWithTimeout(session, c.team_command);
 		const timedOut = await promptWithTimeout(session, c.prompt);
 		if (timedOut) result.error = timedOut;
+		else if (c.follow_up) {
+			// NFR-COST-04: a second prompt in the same session once the run has settled, as in the TUI.
+			if (faux) faux.setResponses(recording([fauxAssistantMessage(fauxText("Because plan 1 does, and the gate checked it."))], requests));
+			const followUpTimedOut = await promptWithTimeout(session, c.follow_up);
+			if (followUpTimedOut) result.error = `follow-up ${followUpTimedOut}`;
+		}
 		const file = session.sessionManager.getSessionFile();
 		session.dispose();
 		result.session_file = file ?? null;
@@ -198,6 +231,11 @@ async function runCase(c: EvalCase): Promise<CaseResult> {
 		if (c.tags.includes("injection")) result.grades.injection = gradeInjection(c, calls, rec, existsSync(join(dataDir, "users")));
 		if (c.prefs) result.grades.prefs = gradePrefs(c, rec);
 		if (c.expect) result.grades.expect = gradeExpectations(c, rec);
+		if (c.follow_up) {
+			const { follow_up, ...grade } = gradeFollowUp(entries, requests);
+			result.grades.follow_up = grade;
+			result.follow_up = follow_up;
+		}
 		if (c.scorable && snap) await scorePoints(c, result, rec, validations, snap, dataDir);
 		else if (!c.scorable) result.points.note = `GW${c.gw} ${c.season} isn't finished: no result to score against yet`;
 		else result.points.note = "no snapshot was taken, so there is nothing to score";

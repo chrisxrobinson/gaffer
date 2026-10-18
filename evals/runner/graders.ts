@@ -22,6 +22,8 @@ export interface EvalCase {
 	mutations?: { kind: string; player: number; name: string; news: string }[];
 	stale?: { prime_at: string };
 	expect?: { no_transfers?: boolean; confidence?: string };
+	/** A second prompt, sent in the same session once the first run has settled (NFR-COST-04). */
+	follow_up?: string;
 }
 
 export interface ToolCall {
@@ -103,6 +105,67 @@ export function gradeExpectations(c: EvalCase, rec: Rec | undefined): Graded {
 	return { pass: problems.length === 0, problems };
 }
 
+/** One model request as the provider received it: a hash of the leading system prompt, and how many later system messages carry an `fpl_context` update. */
+export interface RequestShape {
+	system: string;
+	fpl_context_updates: number;
+}
+
+interface UsageLike {
+	input?: number;
+	output?: number;
+	cacheRead?: number;
+	cacheWrite?: number;
+	cost?: { total?: number };
+}
+type EntryLike = { type: string; message?: { role?: string; usage?: UsageLike; stopReason?: string; content?: { type: string; text?: string }[] } };
+
+export interface FollowUp {
+	cost: number;
+	recommendation_cost: number;
+	/** The follow-up's cost over the recommendation run's (FR-UI-13's target is ≤ 25%). */
+	cost_ratio: number | null;
+	tokens: { input: number; output: number; cacheRead: number; cacheWrite: number };
+	/** cacheRead / (input + cacheRead + cacheWrite) over the follow-up's model calls; NFR-COST-04's target is ≥ 0.8. */
+	cache_read_share: number | null;
+	model_calls: number;
+	answer_chars: number;
+	/** Distinct leading system prompts across the session's requests, and whether the follow-up's context arrived as a later system message. */
+	system_prompts: number;
+	context_as_system_message: boolean;
+	requests: number;
+}
+
+/**
+ * NFR-COST-04: the follow-up (the session's last user message) reads the cache, and the leading system
+ * prompt never changes. Pure over the session entries and the request shapes the runner recorded.
+ */
+export function gradeFollowUp(entries: readonly EntryLike[], requests: readonly RequestShape[]): Graded & { follow_up: FollowUp } {
+	const users = entries.flatMap((e, i) => (e.type === "message" && e.message?.role === "user" ? [i] : []));
+	const assistants = (from: number, to: number) => entries.slice(from, to).filter((e) => e.type === "message" && e.message?.role === "assistant").map((e) => e.message!);
+	const last = users.at(-1) ?? entries.length;
+	const rec = assistants(users.at(-2) ?? 0, last);
+	const fu = assistants(last, entries.length);
+	const cost = (ms: typeof fu) => ms.reduce((n, m) => n + (m.usage?.cost?.total ?? 0), 0);
+	const tokens = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+	for (const m of fu) for (const k of Object.keys(tokens) as (keyof typeof tokens)[]) tokens[k] += m.usage?.[k] ?? 0;
+	const inTokens = tokens.input + tokens.cacheRead + tokens.cacheWrite;
+	const f: FollowUp = {
+		cost: cost(fu), recommendation_cost: cost(rec), cost_ratio: cost(rec) > 0 ? cost(fu) / cost(rec) : null, tokens,
+		cache_read_share: inTokens ? tokens.cacheRead / inTokens : null, model_calls: fu.length,
+		answer_chars: fu.flatMap((m) => m.content ?? []).filter((c) => c.type === "text").reduce((n, c) => n + (c.text ?? "").length, 0),
+		system_prompts: new Set(requests.map((r) => r.system)).size, context_as_system_message: (requests.at(-1)?.fpl_context_updates ?? 0) > 0, requests: requests.length,
+	};
+	if (users.length < 2) return { pass: false, problems: ["no follow-up prompt in the session"], follow_up: f };
+	const problems: string[] = [];
+	if (!fu.length) problems.push("the follow-up got no model call");
+	if (fu.some((m) => m.stopReason === "error" || m.stopReason === "aborted")) problems.push("the follow-up ended in an error");
+	if (f.cache_read_share !== null && f.cache_read_share < 0.8) problems.push(`cache-read share ${(f.cache_read_share * 100).toFixed(1)}% < 80%`);
+	if (f.system_prompts > 1) problems.push(`the leading system prompt changed: ${f.system_prompts} versions over ${f.requests} requests`);
+	if (requests.length && !f.context_as_system_message) problems.push("the follow-up's fpl_context did not arrive as a later system message");
+	return { pass: problems.length === 0, problems, follow_up: f };
+}
+
 /** Which chip scenarios were evaluated (FR-REC-04): Wildcard and Free Hit go unevaluated when the main solve uses its budget. */
 export function chipScenarios(rec: Rec | undefined): Record<string, string> {
 	const out: Record<string, string> = {};
@@ -142,6 +205,8 @@ export interface CaseResult {
 	latency_ms: number | null;
 	recommendation: Rec | null;
 	rec_id: string | null;
+	/** Cases with a follow-up prompt: its cost, cache reads and request shape (NFR-COST-04). `cost` above is the whole session's. */
+	follow_up?: FollowUp;
 	error?: string;
 	session_file: string | null;
 }
@@ -152,7 +217,7 @@ export function summarise(rows: readonly CaseResult[], meta: { run_id: string; m
 	const scored = rows.filter((r) => r.points.recommended !== null && r.points.g0 !== null);
 	const graded = (k: string) => rows.filter((r) => r.grades[k]);
 	const passOf = (k: string) => ({ cases: graded(k).length, passed: graded(k).filter((r) => r.grades[k].pass).length });
-	const costs = valid.map((r) => r.cost);
+	const costs = valid.map((r) => r.follow_up?.recommendation_cost ?? r.cost);
 	const lat = valid.map((r) => r.latency_ms).filter((x): x is number => x !== null);
 	const wcfh = valid.filter((r) => budgetExhausted(r.chips, "wildcard") || budgetExhausted(r.chips, "freehit"));
 	return {
@@ -173,6 +238,7 @@ export function summarise(rows: readonly CaseResult[], meta: { run_id: string; m
 		preferences: passOf("prefs"),
 		injection: passOf("injection"),
 		expectations: passOf("expect"),
+		follow_ups: { ...passOf("follow_up"), cache_read_share: rows.filter((r) => r.follow_up).map((r) => ({ case: r.case, share: r.follow_up!.cache_read_share, cost: r.follow_up!.cost, cost_ratio: r.follow_up!.cost_ratio })) },
 		cost: { total: rows.reduce((n, r) => n + r.cost, 0), median_per_recommendation: percentile(costs, 50), max: costs.length ? Math.max(...costs) : null },
 		latency_ms: { p50: percentile(lat, 50), p95: percentile(lat, 95), max: lat.length ? Math.max(...lat) : null, n: lat.length },
 		wildcard_or_free_hit_not_evaluated: { cases: wcfh.length, of: valid.length, ids: wcfh.map((r) => r.case) },
