@@ -1,0 +1,60 @@
+{
+  "schema": "gaffer.evalsummary/1",
+  "run_id": "20261017T170535-faux",
+  "model": "faux",
+  "started_at": "2026-10-17T17:05:35.960Z",
+  "finished_at": "2026-10-17T17:29:45.207Z",
+  "cases": 30,
+  "validator_pass": {
+    "passed": 30,
+    "of": 30,
+    "rate": 1,
+    "within_two_retries": 30
+  },
+  "points_vs_g0": {
+    "cases": 28,
+    "recommended": 1764,
+    "g0": 1764,
+    "diff": 0,
+    "better": 0,
+    "same": 28,
+    "worse": 0,
+    "unscorable": [
+      "l7-a",
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "preferences": {
+    "cases": 2,
+    "passed": 2
+  },
+  "injection": {
+    "cases": 2,
+    "passed": 2
+  },
+  "expectations": {
+    "cases": 1,
+    "passed": 1
+  },
+  "cost": {
+    "total": 0,
+    "median_per_recommendation": 0,
+    "max": 0
+  },
+  "latency_ms": {
+    "p50": 51673,
+    "p95": 59504,
+    "max": 59775,
+    "n": 30
+  },
+  "wildcard_or_free_hit_not_evaluated": {
+    "cases": 3,
+    "of": 30,
+    "ids": [
+      "h2425-gw10-5ft",
+      "h2425-gw24-dgw",
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "errors": []
+}

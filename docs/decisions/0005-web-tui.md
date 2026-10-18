@@ -1,6 +1,6 @@
 # ADR 0005 — Web TUI: ttyd→tmux→Pi for MVP; RPC bridge for multi-user
 
-**Status:** Accepted · **Date:** 2026-09-27
+**Status:** Superseded in part · **Date:** 2026-09-27 · The MVP section is amended by [ADR 0013](0013-gaffer-terminal.md) (Gaffer Terminal: identity, command surface, `--check-origin`, OSC 52); the multi-user section is superseded by [ADR 0014](0014-gaffer-app.md), which builds the RPC bridge in Phase 1.1 as a single-user app. `pi-server`, `pi-client` and `pi-protocol`, named below, were removed from Pi in 1.2.0.
 
 ## Context
 The brief asks for a browser UI that "looks and behaves like the Pi CLI". Pi offers an interactive TUI, print and JSON modes, a JSONL **RPC** mode over stdio (with an exported `RpcClient`), and an in-process SDK. Pi's `pi-web-ui` package is a chat UI that runs the agent in the browser. It is no longer in the monorepo (last release 0.75.3, 2026-05). The newer `pi-server`/`pi-client` packages are experimental and have no auth. Over RPC, custom TUI components are not forwarded; only dialogs and notifications are ([research 05](../research/05-web-tui.md), [research 01 §7–8](../research/01-pi-internals.md)).

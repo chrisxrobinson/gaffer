@@ -1,0 +1,40 @@
+
+[38;2;199;147;25m[Prompts][39m
+[38;2;119;129;135m  /explain, /gw, /whatif[39m
+
+
+ [38;2;199;148;26mWarning: fd not found. Offline mode enabled, skipping download.[39m
+ [38;2;199;148;26mWarning: ripgrep not found. Offline mode enabled, skipping download.[39m
+
+ [38;2;236;114;118mError: GitHub CLI is not logged in. Run 'gh auth login' first.[39m
+
+ [38;2;119;129;135mBug report cancelled[39m
+
+ [38;2;236;114;118mError: Failed to export session: Nothing to export yet - start a conversation first[39m
+
+[38;2;83;160;198m────────────────────────────────────────────────────────────────────────────────────────────────────
+
+[38;2;199;148;26mOnly showing models from configured providers. Use /login to add providers.[39m
+
+> [7m [0m
+
+[38;2;162;145;213m→ ✓ claude-opus-4-8[39m [38;2;150;159;164m[anthropic][39m
+    claude-fable-5 [38;2;150;159;164m[anthropic][39m
+    claude-fable-5-1 [38;2;150;159;164m[anthropic][39m
+    claude-haiku-4-5 [38;2;150;159;164m[anthropic][39m
+    claude-haiku-4-5-20251001 [38;2;150;159;164m[anthropic][39m
+    claude-haiku-5-5 [38;2;150;159;164m[anthropic][39m
+    claude-opus-4-5 [38;2;150;159;164m[anthropic][39m
+    claude-opus-4-5-20251101 [38;2;150;159;164m[anthropic][39m
+    claude-opus-4-6 [38;2;150;159;164m[anthropic][39m
+    claude-opus-4-7 [38;2;150;159;164m[anthropic][39m
+[38;2;150;159;164m  (1/17)[39m
+
+[38;2;150;159;164m  Model Name: Claude Opus 4.8[39m
+
+[38;2;93;177;133m  Model catalogs refreshed.[39m
+
+[38;2;119;129;135m  Enter to select · Ctrl+S to set as default · Escape/Ctrl+C to cancel[39m
+[38;2;83;160;198m────────────────────────────────────────────────────────────────────────────────────────────────────
+[38;2;119;129;135m/tmp/work[39m
+[38;2;119;129;135m0.0%/1.0M (auto)                                                            claude-opus-4-8 • medium

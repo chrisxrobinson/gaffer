@@ -1,0 +1,64 @@
+# Spike S2: Gaffer on Pi 1.3.0, as its own Compose project beside the live `gaffer` one.
+#   docker compose -f spikes/s2-pi-1x-upgrade/docker-compose.s2.yml -p gaffer-s2 up -d --build
+# Differences from deploy/compose/docker-compose.yml: project gaffer-s2, image tags :s2, host port
+# 17681, its own volumes, an EMPTY anthropic_api_key (faux only: no real-model call is possible) and
+# a throwaway salt.
+name: gaffer-s2
+
+services:
+  gaffer:
+    build:
+      context: ../..
+      dockerfile: harness/Dockerfile
+    image: gaffer-harness:s2
+    ports:
+      - "127.0.0.1:17681:7681"
+    networks: [egress, sandbox_net]
+    init: true
+    environment:
+      GAFFER_PROVIDER: anthropic
+      GAFFER_MODEL: claude-sonnet-5-5
+      GAFFER_THINKING: medium
+      SANDBOX_PROVIDER: compose
+      SANDBOX_URL: http://sandbox:8080
+    secrets: [anthropic_api_key, gaffer_id_salt]
+    volumes:
+      - sessions:/sessions
+      - data:/data
+    depends_on: [sandbox]
+
+  sandbox:
+    build:
+      context: ../..
+      dockerfile: sandbox/Dockerfile
+    image: gaffer-sandbox:s2
+    networks: [sandbox_net]
+    init: true
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /work:size=256m,uid=10001,gid=10001,mode=0700
+    volumes:
+      - data:/data:ro
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=../../sandbox/seccomp/moby-default-v27.3.1.json
+    pids_limit: 128
+    mem_limit: 2g
+    cpus: 2
+
+networks:
+  egress: {}
+  sandbox_net:
+    internal: true
+
+volumes:
+  sessions: {}
+  data: {}
+
+secrets:
+  anthropic_api_key:
+    file: ./secrets/anthropic_api_key
+  gaffer_id_salt:
+    file: ./secrets/gaffer_id_salt

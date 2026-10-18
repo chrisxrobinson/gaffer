@@ -1,0 +1,741 @@
+<title>Gaffer App Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Doto:wght@700;900&family=Saira+Condensed:wght@500;600;700&family=Saira:wght@400;500;600&display=swap">
+<style>
+/* Layout: an app shell like a desktop agent client. Left rail of sessions grouped team → GW; main pane holds the
+   structured start, the streaming run, and the recommendation rendered from gaffer.recommendation/1.
+   Two directions share one structure: "board" (tactics board: white board, navy ink, pitch green, armband yellow)
+   and "scoreboard" (graphite, amber LED figures, dot-matrix headline numbers). Light and dark for both. */
+:root {
+  --bg: #FFFFFF; --panel: #F1F4F6; --panel-2: #E6EBEF; --ink: #0E1B2B; --ink-2: #4B5A6B; --ink-3: #7A8796;
+  --line: #D5DDE3; --line-2: #BCC7D0; --brand: #1E7B4F; --brand-ink: #FFFFFF; --accent: #F0B400; --accent-ink: #1A1400;
+  --pitch: #1E7B4F; --pitch-2: #1A6E46; --pitch-line: rgba(255,255,255,.7); --counter: #FFFFFF; --counter-ink: #0E1B2B;
+  --good: #1E7B4F; --warn: #B7791F; --bad: #C0392B; --good-bg: #E3F2EA; --warn-bg: #FBF0D9; --bad-bg: #F8E1DE;
+  --think: #5B6B7D; --focus: #2F6FDB; --shadow: 0 1px 2px rgba(14,27,43,.08);
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-figure: var(--f-display); --figure-weight: 700; --radius: 4px; --radius-lg: 6px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1620; --panel: #121E2B; --panel-2: #182736; --ink: #E6EDF3; --ink-2: #A3B2C2; --ink-3: #74859A;
+  --line: #22344A; --line-2: #2E4560; --brand: #3DBE7E; --brand-ink: #062014; --accent: #F5C84B; --accent-ink: #1A1400;
+  --pitch: #12402C; --pitch-2: #0F3826; --pitch-line: rgba(220,240,230,.45); --counter: #E6EDF3; --counter-ink: #0D1620;
+  --good: #4CC98A; --warn: #E8B04A; --bad: #EF6A5B; --good-bg: #123526; --warn-bg: #352A12; --bad-bg: #3A1D1A;
+  --think: #94A6BA; --focus: #7FA8FF; --shadow: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0D1620; --panel: #121E2B; --panel-2: #182736; --ink: #E6EDF3; --ink-2: #A3B2C2; --ink-3: #74859A;
+  --line: #22344A; --line-2: #2E4560; --brand: #3DBE7E; --brand-ink: #062014; --accent: #F5C84B; --accent-ink: #1A1400;
+  --pitch: #12402C; --pitch-2: #0F3826; --pitch-line: rgba(220,240,230,.45); --counter: #E6EDF3; --counter-ink: #0D1620;
+  --good: #4CC98A; --warn: #E8B04A; --bad: #EF6A5B; --good-bg: #123526; --warn-bg: #352A12; --bad-bg: #3A1D1A;
+  --think: #94A6BA; --focus: #7FA8FF; --shadow: none; color-scheme: dark; }
+/* Direction B: scoreboard. Light = daylight board (white, graphite figures, amber kept dark enough to read). */
+:root[data-dir="scoreboard"] {
+  --bg: #F6F7F8; --panel: #FFFFFF; --panel-2: #ECEEF0; --ink: #16181B; --ink-2: #4E545C; --ink-3: #7D848C;
+  --line: #DCDFE3; --line-2: #C3C8CE; --brand: #A35F00; --brand-ink: #FFFFFF; --accent: #A35F00; --accent-ink: #FFFFFF;
+  --pitch: #1D2125; --pitch-2: #23282D; --pitch-line: rgba(255,190,80,.35); --counter: #FFB000; --counter-ink: #16181B;
+  --good: #2E7D32; --warn: #A35F00; --bad: #C62828; --good-bg: #E5F2E6; --warn-bg: #FBEEDB; --bad-bg: #FBE3E3;
+  --think: #5E656D; --focus: #A35F00;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif; --f-body: "Saira", system-ui, sans-serif;
+  --f-figure: "Doto", var(--f-data); --figure-weight: 900; --radius: 2px; --radius-lg: 3px; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root[data-dir="scoreboard"]:not([data-theme="light"]) {
+  --bg: #0B0C0E; --panel: #141619; --panel-2: #1B1E22; --ink: #EDEFF2; --ink-2: #A9AFB7; --ink-3: #747B84;
+  --line: #262A30; --line-2: #343A42; --brand: #FFB000; --brand-ink: #1A1200; --accent: #FFB000; --accent-ink: #1A1200;
+  --pitch: #121417; --pitch-2: #16191C; --pitch-line: rgba(255,176,0,.28); --counter: #FFB000; --counter-ink: #121417;
+  --good: #6FCF73; --warn: #FFB000; --bad: #FF6B5E; --good-bg: #16261A; --warn-bg: #2A2110; --bad-bg: #2E1716;
+  --think: #8E959E; --focus: #FFB000; color-scheme: dark; } }
+:root[data-dir="scoreboard"][data-theme="dark"] {
+  --bg: #0B0C0E; --panel: #141619; --panel-2: #1B1E22; --ink: #EDEFF2; --ink-2: #A9AFB7; --ink-3: #747B84;
+  --line: #262A30; --line-2: #343A42; --brand: #FFB000; --brand-ink: #1A1200; --accent: #FFB000; --accent-ink: #1A1200;
+  --pitch: #121417; --pitch-2: #16191C; --pitch-line: rgba(255,176,0,.28); --counter: #FFB000; --counter-ink: #121417;
+  --good: #6FCF73; --warn: #FFB000; --bad: #FF6B5E; --good-bg: #16261A; --warn-bg: #2A2110; --bad-bg: #2E1716;
+  --think: #8E959E; --focus: #FFB000; color-scheme: dark; }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); font-variant-numeric: tabular-nums; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.num, td.n, .fig { font-variant-numeric: tabular-nums; }
+.lbl { font: 600 11px/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
+.mono { font-family: var(--f-data); font-size: 12.5px; }
+.muted { color: var(--ink-2); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Mockup controls: deliberately not product UI (dashed, labelled). */
+.mock { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-bottom: 1px dashed var(--line-2); background: var(--panel-2); font-size: 12.5px; }
+.mock b { font-family: var(--f-data); font-weight: 600; letter-spacing: .04em; }
+.seg { display: inline-flex; flex-wrap: wrap; justify-self: start; max-width: 100%; border: 1px solid var(--line-2); border-radius: var(--radius); overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 4px 9px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.mock nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.mock nav a { color: var(--ink); text-decoration: none; padding: 3px 8px; border-radius: var(--radius); }
+.mock nav a[aria-current="page"] { background: var(--ink); color: var(--bg); }
+
+/* App shell */
+.app { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: calc(100% - 44px); }
+.rail { border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-width: 0; }
+.brandbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+.brandbar svg { width: 28px; height: 28px; flex: none; }
+.wordmark { font: 700 24px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; }
+.rail-actions { display: flex; gap: 8px; padding: 4px 16px 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line-2); background: var(--bg); padding: 7px 12px; border-radius: var(--radius); cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); font-weight: 600; }
+.btn.small { padding: 4px 9px; font-size: 12.5px; }
+.btn svg { width: 16px; height: 16px; }
+.search { flex: 1; min-width: 0; border: 1px solid var(--line-2); background: var(--bg); border-radius: var(--radius); padding: 6px 9px; }
+.sessions { overflow: auto; padding: 0 8px 16px; flex: 1; }
+.team { margin-top: 10px; }
+.team > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 6px 8px; }
+.team > header h3 { font-size: 16px; }
+.team .gwhead { padding: 6px 8px 2px; }
+.sess { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 7px 8px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent; }
+.sess:hover { background: var(--panel-2); }
+.sess[aria-current="true"] { background: var(--bg); border-color: var(--line-2); box-shadow: var(--shadow); }
+.sess .t { font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sess .m { grid-column: 1 / -1; font-size: 12px; color: var(--ink-2); display: flex; gap: 8px; }
+.state-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; align-self: center; }
+.state-dot.run { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.state-dot.done { background: var(--good); }
+.state-dot.fail { background: var(--bad); }
+.state-dot.idle { background: var(--ink-3); }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 12px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 2; }
+.topbar h1 { font-size: 22px; }
+.strip { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; margin-left: auto; }
+.kv { display: flex; gap: 6px; align-items: baseline; }
+.kv .v { font-family: var(--f-data); font-weight: 600; }
+.kv .v.big { font-family: var(--f-figure); font-weight: var(--figure-weight); font-size: 20px; letter-spacing: .02em; }
+.meter { width: 70px; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; display: inline-block; align-self: center; }
+.meter i { display: block; height: 100%; background: var(--brand); }
+.content { padding-block: 20px 40px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; max-width: 1180px; width: 100%; }
+.screen[hidden] { display: none !important; }
+
+/* Generic surfaces */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 16px; min-width: 0; }
+.card > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: 12px; }
+.card > header h2 { font-size: 20px; }
+.tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border-radius: 3px; font: 600 11.5px/1.5 var(--f-body); letter-spacing: .03em; text-transform: uppercase; border: 1px solid transparent; white-space: nowrap; }
+.tag.high, .tag.good { background: var(--good-bg); color: var(--good); }
+.tag.medium, .tag.warn { background: var(--warn-bg); color: var(--warn); }
+.tag.low, .tag.bad { background: var(--bad-bg); color: var(--bad); }
+.tag.plain { border-color: var(--line-2); color: var(--ink-2); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.scroll-x { overflow-x: auto; }
+
+/* Start screen */
+.start { display: grid; gap: 18px; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.input { border: 1px solid var(--line-2); background: var(--bg); border-radius: var(--radius); padding: 9px 11px; min-width: 0; }
+.input.team { font-family: var(--f-data); font-size: 16px; width: 14ch; }
+.ok { color: var(--good); font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+.ok svg { width: 16px; height: 16px; }
+.gwbox { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.action { text-align: left; display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--bg); cursor: pointer; }
+.action strong { font: 700 17px/1.1 var(--f-display); letter-spacing: .02em; }
+.action span { color: var(--ink-2); font-size: 13px; }
+.action[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.action[aria-pressed="true"] strong { color: var(--brand); }
+.opts { display: grid; gap: 14px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.chipbox { display: flex; flex-wrap: wrap; gap: 6px; }
+.toggle { border: 1px solid var(--line-2); border-radius: var(--radius); background: var(--panel); padding: 5px 10px; cursor: pointer; }
+.toggle[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.player-chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--line-2); border-radius: var(--radius); padding: 3px 4px 3px 8px; background: var(--panel); }
+.player-chip button { border: 0; background: transparent; cursor: pointer; color: var(--ink-3); padding: 0 4px; }
+.go { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.go .btn.primary { font: 700 17px/1 var(--f-display); letter-spacing: .04em; text-transform: uppercase; padding: 12px 20px; }
+
+/* Run transcript */
+.brief { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; padding: 10px 12px; border-left: 3px solid var(--brand); background: var(--panel); border-radius: 0 var(--radius) var(--radius) 0; }
+.brief strong { font: 700 17px/1.2 var(--f-display); }
+.transcript { display: grid; gap: 10px; }
+.think { color: var(--think); padding-left: 14px; border-left: 2px dotted var(--line-2); max-width: 70ch; }
+.think .lbl { display: block; margin-bottom: 2px; }
+.say { max-width: 72ch; }
+details.step { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+details.step > summary { list-style: none; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; cursor: pointer; }
+details.step > summary::-webkit-details-marker { display: none; }
+details.step > summary .what { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+details.step > summary .what b { font-weight: 600; }
+details.step .body { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; gap: 8px; }
+details.step pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.5 var(--f-data); color: var(--ink-2); max-height: 260px; overflow: auto; }
+.ico { width: 18px; height: 18px; display: grid; place-items: center; }
+.ico svg { width: 16px; height: 16px; }
+.ico.ok { color: var(--good); } .ico.err { color: var(--bad); } .ico.run { color: var(--accent); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.progress { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 72%; background: var(--accent); }
+.composer { display: grid; gap: 8px; border: 1px solid var(--line-2); border-radius: var(--radius-lg); padding: 10px; background: var(--panel); }
+.composer textarea { border: 0; background: transparent; resize: vertical; min-height: 44px; outline: none; }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Recommendation */
+.rechead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 24px; align-items: end; padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
+.rechead h2 { font-size: 32px; line-height: 1; text-transform: uppercase; letter-spacing: .03em; }
+.rechead .sub { color: var(--ink-2); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.headline { display: flex; gap: 24px; align-items: flex-end; }
+.headline .fig { font-family: var(--f-figure); font-weight: var(--figure-weight); font-size: 44px; line-height: .9; }
+.headline .fig.pos { color: var(--good); }
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font: 600 11px/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); padding: 0 10px 8px 0; white-space: nowrap; }
+td { padding: 9px 10px 9px 0; border-top: 1px solid var(--line); vertical-align: top; }
+td.n, th.n { text-align: right; font-family: var(--f-data); white-space: nowrap; }
+.mv { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 6px; align-items: baseline; min-width: 260px; }
+.mv .out { color: var(--ink-2); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--bad) 70%, transparent); }
+.mv .in { font-weight: 600; }
+.mv .arr { color: var(--ink-3); text-align: center; }
+.club { font: 500 11px var(--f-data); color: var(--ink-3); margin-left: 4px; }
+.why { color: var(--ink-2); font-size: 13px; margin-top: 4px; max-width: 70ch; }
+.gain { color: var(--good); font-weight: 600; }
+.ledger { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 12px; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line-2); }
+.bar { height: 10px; background: var(--panel-2); border-radius: 2px; position: relative; overflow: hidden; }
+.bar i { position: absolute; top: 0; bottom: 0; left: 0; background: var(--good); }
+.bar i.hit { background: var(--bad); }
+
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.role { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.armband { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font: 700 16px var(--f-display); }
+.armband.v { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2); }
+.role .nm { font: 700 20px/1.1 var(--f-display); }
+.role .xp { font-family: var(--f-figure); font-weight: var(--figure-weight); font-size: 26px; text-align: right; }
+
+/* Pitch */
+.pitchwrap { display: grid; gap: 10px; align-content: start; }
+.split { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.pitch { position: relative; aspect-ratio: 68 / 72; max-width: 100%; border-radius: var(--radius-lg); background: repeating-linear-gradient(180deg, var(--pitch) 0 12.5%, var(--pitch-2) 12.5% 25%); overflow: hidden; display: grid; grid-template-rows: repeat(4, 1fr); padding: 6% 3% 4%; }
+.pitch .lines { position: absolute; inset: 0; pointer-events: none; }
+.pitch .lines * { fill: none; stroke: var(--pitch-line); stroke-width: .45; }
+.lineup-row { position: relative; display: flex; justify-content: space-evenly; align-items: center; }
+.pl { display: grid; justify-items: center; gap: 3px; width: 23%; max-width: 92px; min-width: 0; text-align: center; position: relative; }
+.kit { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--counter); color: var(--counter-ink); font: 700 12px/1 var(--f-data); box-shadow: 0 1px 0 rgba(0,0,0,.25); border: 2px solid transparent; }
+:root[data-dir="scoreboard"] .kv .v.big, :root[data-dir="scoreboard"] .headline .fig, :root[data-dir="scoreboard"] .role .xp { color: var(--accent); }
+:root[data-dir="scoreboard"] .kit { border-radius: 3px; width: 44px; height: 30px; background: transparent; color: var(--counter); border-color: var(--counter); box-shadow: none; }
+.pl .nm { background: var(--ink); color: var(--bg); font: 600 12px/1.2 var(--f-body); padding: 2px 6px; border-radius: 3px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-dir="scoreboard"] .pl .nm { background: transparent; color: #EDEFF2; padding: 0; }
+.pl .xp { font: 600 12px var(--f-data); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.4); }
+:root[data-dir="scoreboard"] .pl .xp { font-family: var(--f-figure); font-weight: 900; font-size: 15px; color: var(--counter); text-shadow: none; }
+.pl .badge { position: absolute; top: -4px; left: calc(50% + 10px); width: 18px; height: 18px; border-radius: 3px; display: grid; place-items: center; font: 700 11px var(--f-display); background: var(--accent); color: var(--accent-ink); }
+.pl .badge.v { background: #fff; color: #0E1B2B; }
+.pl .newin { position: absolute; top: -4px; right: calc(50% + 10px); font: 700 9.5px/1 var(--f-body); letter-spacing: .05em; padding: 3px 4px; border-radius: 2px; background: var(--counter); color: var(--counter-ink); box-shadow: 0 0 0 1.5px var(--good); }
+.bench { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.bench .slot { display: grid; gap: 2px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.bench .slot .o { font: 700 18px/1 var(--f-display); color: var(--ink-3); }
+
+/* Chips + plan */
+.scen { display: grid; grid-template-columns: 120px minmax(0, 1fr) 64px; gap: 8px 12px; align-items: center; }
+.scen .bar i { background: var(--brand); }
+.scen .ne { font-size: 12.5px; color: var(--ink-3); }
+.plan th:first-child, .plan td:first-child { padding-left: 0; }
+.plan .gwc { font: 700 18px var(--f-display); }
+.plan .now td { background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.spark { display: flex; gap: 6px; align-items: flex-end; height: 64px; padding-top: 6px; }
+.spark div { flex: 1; display: grid; gap: 3px; justify-items: center; align-content: end; height: 100%; }
+.spark span.b { width: 100%; background: var(--brand); border-radius: 2px 2px 0 0; }
+.spark span.v { font: 600 11.5px var(--f-data); color: var(--ink-2); }
+.warnbox { display: grid; gap: 6px; padding: 12px; border-left: 3px solid var(--warn); background: var(--warn-bg); border-radius: 0 var(--radius) var(--radius) 0; }
+.news { display: grid; gap: 4px; padding: 10px 12px; border: 1px dashed var(--line-2); border-radius: var(--radius); }
+.news q { color: var(--ink-2); }
+.foot { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; color: var(--ink-3); font-size: 12.5px; }
+
+/* States gallery */
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.state { display: grid; gap: 10px; align-content: start; }
+.state h3 { font-size: 17px; }
+.frame { border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 12px; background: var(--bg); display: grid; gap: 8px; }
+.banner { display: grid; grid-template-columns: 20px 1fr; gap: 8px; padding: 10px; border-radius: var(--radius); }
+.banner svg { width: 18px; height: 18px; margin-top: 1px; }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.banner.bad { background: var(--bad-bg); color: var(--bad); }
+.banner.info { background: var(--panel-2); color: var(--ink-2); }
+.banner p { margin: 0; color: var(--ink); }
+.empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 26px 10px; color: var(--ink-2); }
+.empty svg { width: 48px; height: 48px; opacity: .7; }
+
+/* Scorecard */
+.sc-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12.5px; color: var(--ink-2); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+dialog { border: 1px solid var(--line-2); border-radius: var(--radius-lg); background: var(--bg); color: var(--ink); padding: 0; width: min(720px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(10,15,20,.45); }
+dialog header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+dialog pre { margin: 0; padding: 14px; max-height: 60vh; overflow: auto; font: 12px/1.5 var(--f-data); }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { border-right: 0; border-bottom: 1px solid var(--line); max-height: 280px; }
+  .grid2, .split { grid-template-columns: 1fr; }
+  .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .actions { grid-template-columns: 1fr; }
+  .roles { grid-template-columns: 1fr; }
+  .grid3 { grid-template-columns: 1fr; }
+  .rechead { grid-template-columns: 1fr; }
+  .headline .fig { font-size: 36px; }
+  .kit { width: 32px; height: 32px; font-size: 10.5px; }
+  .pl .nm { font-size: 11px; padding: 1px 4px; }
+  .bench { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scen { grid-template-columns: 92px minmax(0, 1fr) 56px; }
+  .strip { margin-left: 0; }
+}
+</style>
+
+<div class="mock" role="region" aria-label="Mockup controls (not part of the product)">
+  <b>MOCKUP</b>
+  <span class="muted">Sample data, team 900000123 (synthetic). Not the product chrome.</span>
+  <span class="seg" role="group" aria-label="Visual direction">
+    <button type="button" id="dir-board" data-dir="board" aria-pressed="true">A · Tactics board</button>
+    <button type="button" id="dir-score" data-dir="scoreboard" aria-pressed="false">B · Scoreboard</button>
+  </span>
+  <span class="seg" role="group" aria-label="Theme">
+    <button type="button" id="th-system" data-theme-set="system" aria-pressed="true">System</button>
+    <button type="button" id="th-light" data-theme-set="light" aria-pressed="false">Light</button>
+    <button type="button" id="th-dark" data-theme-set="dark" aria-pressed="false">Dark</button>
+  </span>
+  <nav aria-label="Screens">
+    <a href="#start">Start</a><a href="#run">Run</a><a href="#result">Result</a><a href="#states">States</a><a href="#scorecard">Scorecard</a><a href="#prefs">Preferences</a><a href="terminal.html">Terminal (UI 1)</a>
+  </nav>
+</div>
+
+<div class="app">
+  <aside class="rail" aria-label="Sessions">
+    <div class="brandbar">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M56 32 A24 24 0 1 1 45.77 12.34" fill="none" stroke="var(--ink)" stroke-width="7"/><path d="M32 32 H59.5" fill="none" stroke="var(--brand)" stroke-width="7"/><circle cx="32" cy="32" r="6" fill="var(--brand)"/></svg>
+      <span class="wordmark">Gaffer</span>
+    </div>
+    <div class="rail-actions">
+      <button type="button" class="btn primary small" id="new-session"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>New session</button>
+      <label class="sr" for="session-search">Search sessions</label>
+      <input class="search" id="session-search" type="search" placeholder="Search">
+    </div>
+    <div class="sessions" id="sessions"></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h1 id="screen-title">GW8 recommendation</h1>
+      <div class="strip" aria-label="Team status">
+        <span class="kv"><span class="lbl">Team</span><span class="v">Touchline XI</span></span>
+        <span class="kv"><span class="lbl">GW8 deadline</span><span class="v big" id="countdown">6d 02:57</span></span>
+        <span class="kv"><span class="lbl">FT</span><span class="v">2</span></span>
+        <span class="kv"><span class="lbl">Bank</span><span class="v">£0.6m</span></span>
+        <span class="kv"><span class="lbl">Today</span><span class="v">$0.07</span><span class="meter" title="$0.07 of the $5.00 daily cap"><i style="width:1.4%"></i></span></span>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- START -->
+      <section class="screen" id="screen-start" aria-labelledby="start-h">
+        <div class="start">
+          <div class="card">
+            <header><h2 id="start-h">New session</h2><span class="muted">Gaffer advises only. It never logs in to or changes your FPL team.</span></header>
+            <div class="grid2">
+              <div class="field">
+                <label for="team-id">FPL team ID</label>
+                <div class="row">
+                  <input class="input team" id="team-id" inputmode="numeric" pattern="[0-9]*" value="900000123" aria-describedby="team-help">
+                  <span class="ok" id="team-ok"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none"/></svg>Touchline XI</span>
+                </div>
+                <small class="muted" id="team-help">The number in the address of your Points page. Remembered on this device; stored hashed.</small>
+              </div>
+              <div class="field">
+                <span class="lbl" style="font-size:12px">Gameweek</span>
+                <div class="gwbox">
+                  <span style="font:700 22px var(--f-display)">GW8</span>
+                  <span>Deadline <span class="mono">Fri 23 Oct, 18:30 BST</span></span>
+                  <span class="muted">in 6 days · from FPL, checked 2 min ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <header><h2>What do you want to do?</h2></header>
+            <div class="actions" id="actions">
+              <button type="button" class="action" data-action="recommend" aria-pressed="true"><strong>Recommend this GW</strong><span>Transfers, captain, line-up, chip and a 4-GW plan</span></button>
+              <button type="button" class="action" data-action="whatif" aria-pressed="false"><strong>What-if</strong><span>Test a transfer or a chip against the best plan</span></button>
+              <button type="button" class="action" data-action="explain" aria-pressed="false"><strong>Explain a pick</strong><span>Why a player is in, out or captain</span></button>
+              <button type="button" class="action" data-action="chips" aria-pressed="false"><strong>Chip planner</strong><span>When to play each chip before they expire</span></button>
+              <button type="button" class="action" data-action="scorecard" aria-pressed="false"><strong>Scorecard</strong><span>Season so far: Gaffer vs you vs baselines</span></button>
+              <button type="button" class="action" data-action="prefs" aria-pressed="false"><strong>Preferences</strong><span>Risk, chips to save, players to keep</span></button>
+            </div>
+          </div>
+
+          <div class="card" id="opts-card">
+            <header><h2 id="opts-h">Options for this recommendation</h2><span class="muted" id="opts-note">Saved preferences are filled in. Changes here apply to this run only unless you save them.</span></header>
+            <div class="opts" id="opts"></div>
+          </div>
+
+          <div class="go">
+            <span class="muted">About 75 s and $0.06. Data is fetched fresh from FPL at the start.</span>
+            <a class="btn primary" href="#run" id="go-btn">Recommend GW8</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- RUN -->
+      <section class="screen" id="screen-run" hidden aria-label="Run in progress">
+        <div class="brief"><strong>Recommend GW8</strong><span class="muted">Touchline XI · risk balanced · keep Palmer · no chips saved · max 1 hit</span><span class="muted mono" style="margin-left:auto">started 14:52:07</span></div>
+        <div class="transcript" id="transcript"></div>
+        <div class="row" style="justify-content:space-between">
+          <span class="muted" id="run-meta">Running · 38 s · $0.031 so far</span>
+          <span class="row"><button type="button" class="btn small" id="replay">Replay stream</button><button type="button" class="btn small" id="stop">Stop run</button></span>
+        </div>
+      </section>
+
+      <!-- RESULT -->
+      <section class="screen" id="screen-result" hidden aria-label="Recommendation"></section>
+
+      <!-- STATES -->
+      <section class="screen" id="screen-states" hidden aria-labelledby="states-h">
+        <h2 id="states-h" style="font-size:24px">States</h2>
+        <div class="states" id="states"></div>
+      </section>
+
+      <!-- SCORECARD -->
+      <section class="screen" id="screen-scorecard" hidden aria-labelledby="sc-h"></section>
+
+      <!-- PREFS -->
+      <section class="screen" id="screen-prefs" hidden aria-labelledby="pf-h"></section>
+    </div>
+  </main>
+</div>
+
+<dialog id="export-dlg" aria-labelledby="export-h">
+  <header><strong id="export-h">Export</strong><span class="row"><button type="button" class="btn small" id="copy-export">Copy</button><button type="button" class="btn small" id="close-export">Close</button></span></header>
+  <pre id="export-pre"></pre>
+</dialog>
+
+<script>
+/* ---------- Sample data: shaped exactly like gaffer.recommendation/1 (schemas/recommendation-1.json) ---------- */
+const P = {
+  "1": { name: "Raya", team: "ARS", position: "GK", xp: 4.1, p_start: 0.99 },
+  "2": { name: "Henderson", team: "CRY", position: "GK", xp: 3.2, p_start: 0.98 },
+  "3": { name: "Gabriel", team: "ARS", position: "DEF", xp: 4.6, p_start: 0.95 },
+  "4": { name: "Muñoz", team: "CRY", position: "DEF", xp: 4.0, p_start: 0.96 },
+  "5": { name: "Konsa", team: "AVL", position: "DEF", xp: 3.3, p_start: 0.9 },
+  "6": { name: "De Cuyper", team: "BHA", position: "DEF", xp: 3.6, p_start: 0.92 },
+  "7": { name: "Egan", team: "BRE", position: "DEF", xp: 2.9, p_start: 0.62 },
+  "8": { name: "Palmer", team: "CHE", position: "MID", xp: 6.8, p_start: 0.95 },
+  "9": { name: "Saka", team: "ARS", position: "MID", xp: 6.3, p_start: 0.94 },
+  "10": { name: "Mbeumo", team: "MUN", position: "MID", xp: 5.1, p_start: 0.96 },
+  "11": { name: "Semenyo", team: "BOU", position: "MID", xp: 5.4, p_start: 0.97 },
+  "12": { name: "M.Sangaré", team: "NFO", position: "MID", xp: 3.2, p_start: 0.8 },
+  "13": { name: "Haaland", team: "MCI", position: "FWD", xp: 7.9, p_start: 0.95 },
+  "14": { name: "Watkins", team: "AVL", position: "FWD", xp: 4.9, p_start: 0.93 },
+  "15": { name: "Thiago", team: "BRE", position: "FWD", xp: 4.4, p_start: 0.9 },
+  "16": { name: "Mukiele", team: "BOU", position: "DEF", xp: 3.9, p_start: 0.88 },
+  "17": { name: "João Pedro", team: "CHE", position: "FWD", xp: 5.6, p_start: 0.92 },
+  "18": { name: "Kudus", team: "TOT", position: "MID", xp: 4.8, p_start: 0.9 }
+};
+const REC = {
+  schema: "gaffer.recommendation/1", rec_id: "01M5BQ3V8E2K7Z4Y9N6TDR0C1H", created_at: "2026-10-17T13:53:22Z",
+  season: "2026/27", gw: 8, deadline: "2026-10-23T17:30:00Z",
+  team_id_hash: "hmac-sha256:5f1c0d7e2b8a4c6f9e3d1a0b7c5e2f4a6d8b0c2e4f6a8b0d2c4e6f8a0b2c4d6e",
+  model: "anthropic/claude-sonnet-5-5", gaffer_lib: "0.5.0", pi: "1.3.0",
+  snapshot: { id: "2026-27/8/20261017T135130Z-3fa2c1d0e9b7", fetched_at: "2026-10-17T13:51:30Z", stale: false, stale_reason: null },
+  assumptions: { free_transfers: 2, ft_source: "derived", bank: 1.5, pending_transfers: [] },
+  preferences: { risk: "balanced", save_chips: [], keep: [{ id: 8, name: "Palmer" }], avoid: [], max_hits_per_gw: 1 },
+  transfers: [
+    { out: { id: 14, name: "Watkins", sell_price: 8.6 }, in: { id: 17, name: "João Pedro", price: 7.6 }, xp_gain_4gw: 4.2, xp_gain_6gw_decayed: 5.1,
+      rationale: "Watkins has one goal in six and Villa visit Arsenal and Liverpool. João Pedro takes Chelsea's penalties and three of their next four are at home. It also frees £1.0m.", confidence: "high" },
+    { out: { id: 7, name: "Egan", sell_price: 4.4 }, in: { id: 16, name: "Mukiele", price: 4.5 }, xp_gain_4gw: 3.1, xp_gain_6gw_decayed: 3.6,
+      rationale: "Egan has a knock (75%) and Brentford travel twice. Mukiele has started every league game and Bournemouth face three bottom-half sides.", confidence: "medium" }
+  ],
+  hits: 0, hit_cost: 0, net_xp_gain_4gw: 7.3,
+  captain: { id: 13, name: "Haaland", xp: 7.9, p_start: 0.95 },
+  vice_captain: { id: 8, name: "Palmer", xp: 6.8, p_start: 0.95 },
+  starting_xi: [1, 3, 4, 16, 6, 8, 9, 10, 11, 13, 17], bench: [2, 15, 5, 12], expected_points_gw: 62.4,
+  chip: { play: null, confidence: "high",
+    rationale: "No chip this week. Triple Captain is worth most in GW10, when Haaland hosts Burnley, and Bench Boost in GW9. First-half chips expire at the GW19 deadline on 1 January, so both are planned before then.",
+    scenarios: [
+      { chip: "3xc", gw: 10, evaluated: true, delta_xp: 4.1, delta_xp_gw: 5.3 },
+      { chip: "bboost", gw: 9, evaluated: true, delta_xp: 3.2, delta_xp_gw: 3.9 },
+      { chip: "freehit", gw: 12, evaluated: true, delta_xp: -1.1, delta_xp_gw: 2.4 },
+      { chip: "wildcard", gw: null, evaluated: false, reason: "not evaluated: no plan found in the 1.2 s left of the time budget" }
+    ] },
+  plan: [
+    { gw: 8, transfers: [{ out: { id: 14, name: "Watkins" }, in: { id: 17, name: "João Pedro" } }, { out: { id: 7, name: "Egan" }, in: { id: 16, name: "Mukiele" } }], roll_ft: false, chip: null, captain: 13, free_transfers: 2, hits: 0, hit_cost: 0, expected_points: 62.4, note: "Two moves with both free transfers." },
+    { gw: 9, transfers: [], roll_ft: true, chip: null, captain: 13, free_transfers: 1, hits: 0, hit_cost: 0, expected_points: 58.1, note: "Roll, to have two free transfers for GW10." },
+    { gw: 10, transfers: [{ out: { id: 12, name: "M.Sangaré" }, in: { id: 18, name: "Kudus" } }], roll_ft: false, chip: null, captain: 13, free_transfers: 2, hits: 0, hit_cost: 0, expected_points: 60.3, note: "Upgrade the fifth midfielder; Haaland at home." },
+    { gw: 11, transfers: [], roll_ft: true, chip: null, captain: 8, free_transfers: 2, hits: 0, hit_cost: 0, expected_points: 57.9, note: "Roll again; Palmer captain at home to Wolves." }
+  ],
+  xmins_overrides: [{ player: 7, name: "Egan", gw: 8, xmins: 45, quote: "Knock - 75% chance of playing", source: "news" }],
+  players: P,
+  warnings: ["Free transfers are derived from public data: check you have 2 in the FPL app.", "Semenyo is likely to rise in price tonight (+£0.1m)."],
+  summary: "Make two free moves: Watkins to João Pedro and Egan to Mukiele, for 7.3 more expected points over four weeks and £1.5m in the bank. Captain Haaland, with Palmer as vice. Keep your chips: Triple Captain fits GW10 and Bench Boost GW9, both before the first-half chips expire. Roll the transfer in GW9.",
+  confidence: { overall: "medium", drivers: ["Mukiele's start is likely, not certain (P 0.88)", "Plan 2 is 0.9 xP behind"] },
+  validation: { passed: true, recomputed: true, max_model_number_drift: 0, numbers_checked: 0, drift: [], score: 312.6, best_score: 312.6, gap_to_best: 0, margin: 0.9, plans_compared: 3, optimality_checked: true,
+    solver: { name: "open-fpl-solver", commit: "ec65f5e", status: "Optimal", gap: 0.0008, timed_out: false }, attempts: 2 }
+};
+const CHIP = { wildcard: "Wildcard", freehit: "Free Hit", bboost: "Bench Boost", "3xc": "Triple Captain" };
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const h = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const sign = (x) => (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(x).toFixed(1);
+const ICON = {
+  ok: '<svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none"/></svg>',
+  err: '<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" fill="none"/></svg>',
+  run: '<svg viewBox="0 0 16 16" class="spin"><path d="M8 2a6 6 0 1 1-6 6" stroke="currentColor" stroke-width="2" fill="none"/></svg>',
+  warn: '<svg viewBox="0 0 16 16"><path d="M8 2l7 12H1z" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8 6v4M8 11.5v1" stroke="currentColor" stroke-width="1.6"/></svg>',
+  info: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 7v4M8 4.5v1" stroke="currentColor" stroke-width="1.6"/></svg>'
+};
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+/* ---------- direction + theme ---------- */
+function setDir(d) { document.documentElement.dataset.dir = d === "scoreboard" ? "scoreboard" : ""; if (d !== "scoreboard") delete document.documentElement.dataset.dir;
+  document.querySelectorAll("[data-dir]").forEach((b) => b.tagName === "BUTTON" && b.setAttribute("aria-pressed", String(b.dataset.dir === d))); store.set("gaffer-mock-dir", d); }
+function setTheme(t) { if (t === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  document.querySelectorAll("[data-theme-set]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeSet === t))); store.set("gaffer-mock-theme", t); }
+document.querySelectorAll("button[data-dir]").forEach((b) => b.addEventListener("click", () => setDir(b.dataset.dir)));
+document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => setTheme(b.dataset.themeSet)));
+setDir(store.get("gaffer-mock-dir") || "board"); setTheme(store.get("gaffer-mock-theme") || "system");
+
+/* ---------- sessions rail ---------- */
+const SESSIONS = [
+  { team: "Touchline XI", id: "900000123", gws: [
+    { gw: 8, items: [ { id: "s1", t: "Recommend GW8", m: "14:52 · running", st: "run" }, { id: "s2", t: "What-if: keep Watkins", m: "Yesterday · $0.04", st: "done" } ] },
+    { gw: 7, items: [ { id: "s3", t: "Recommend GW7", m: "11 Oct · scored 71 (you 64)", st: "done" }, { id: "s4", t: "Explain: why Mbeumo?", m: "11 Oct · $0.02", st: "idle" } ] },
+    { gw: 6, items: [ { id: "s5", t: "Recommend GW6", m: "3 Oct · no recommendation", st: "fail" } ] } ] },
+  { team: "Mini-league alt", id: "900000456", gws: [ { gw: 8, items: [ { id: "s6", t: "Chip planner", m: "Wed · $0.03", st: "idle" } ] } ] }
+];
+function renderSessions() {
+  const box = $("#sessions"); box.textContent = "";
+  for (const team of SESSIONS) {
+    const sec = h(`<section class="team"><header><h3>${esc(team.team)}</h3><span class="mono muted">${team.id}</span></header></section>`).firstElementChild;
+    for (const g of team.gws) {
+      sec.append(h(`<div class="gwhead lbl">GW${g.gw}</div>`));
+      for (const s of g.items) sec.append(h(`<div class="sess" role="link" tabindex="0" aria-current="${s.id === "s1"}" title="Double-click to rename"><span class="t">${esc(s.t)}</span><span class="state-dot ${s.st}" aria-label="${s.st}"></span><span class="m">${esc(s.m)}</span></div>`));
+    }
+    box.append(sec);
+  }
+}
+renderSessions();
+
+/* ---------- start: per-action options ---------- */
+const squad = Object.entries(P).filter(([id]) => +id <= 15);
+const OPTS = {
+  recommend: () => `
+    <div class="grid2">
+      <div class="field"><span class="lbl">Risk appetite</span><span class="seg" role="group" aria-label="Risk"><button type="button">Safe</button><button type="button" aria-pressed="true">Balanced</button><button type="button">Aggressive</button></span>
+        <small class="muted">Only breaks ties between plans within 0.5 xP of the best.</small></div>
+      <div class="field"><span class="lbl">Most hits this GW</span><span class="seg" role="group" aria-label="Max hits"><button type="button">0</button><button type="button" aria-pressed="true">1</button><button type="button">2</button><button type="button">No limit</button></span></div>
+    </div>
+    <div class="field"><span class="lbl">Chips to save</span><div class="chipbox">${Object.entries(CHIP).map(([k, v]) => `<button type="button" class="toggle" aria-pressed="false">${v}</button>`).join("")}</div></div>
+    <div class="field"><label for="keep">Players to keep</label><div class="row"><span class="player-chip">Palmer <span class="club">CHE</span><button type="button" aria-label="Remove Palmer">×</button></span><input class="input" id="keep" list="squad-list" placeholder="Add from your squad" style="width:20ch"></div>
+      <datalist id="squad-list">${squad.map(([, p]) => `<option value="${esc(p.name)}">`).join("")}</datalist></div>
+    <div class="grid2">
+      <div class="field"><label for="ft">Free transfers</label><div class="row"><input class="input mono" id="ft" value="2" style="width:6ch"><span class="muted">Derived from public data. Change it if the FPL app shows a different number.</span></div></div>
+      <div class="field"><label for="pending">Transfers already made for GW8</label><input class="input" id="pending" placeholder="e.g. Saka → Kudus"></div>
+    </div>
+    <label class="row"><input type="checkbox" id="save-prefs"> Save these as my preferences for Touchline XI</label>`,
+  whatif: () => `
+    <div class="field"><span class="lbl">Test</span><span class="seg" role="group" aria-label="What-if kind"><button type="button" aria-pressed="true">A transfer</button><button type="button">A chip</button><button type="button">Keep a player</button></span></div>
+    <div class="row"><label class="sr" for="wi-out">Out</label><select class="input" id="wi-out">${squad.map(([, p]) => `<option${p.name === "Watkins" ? " selected" : ""}>${esc(p.name)}</option>`).join("")}</select><span>→</span><label class="sr" for="wi-in">In</label><input class="input" id="wi-in" value="Isak" style="width:18ch"><span class="muted">in GW</span><input class="input mono" id="wi-gw" value="8" style="width:5ch"></div>
+    <small class="muted">Gaffer solves with this move forced and compares it with the best plan, in expected points over 4 GWs.</small>`,
+  explain: () => `
+    <div class="field"><label for="ex-p">Player</label><select class="input" id="ex-p">${Object.values(P).map((p) => `<option${p.name === "Mukiele" ? " selected" : ""}>${esc(p.name)}</option>`).join("")}</select></div>
+    <div class="field"><span class="lbl">From</span><span class="seg" role="group" aria-label="Context"><button type="button" aria-pressed="true">Latest recommendation</button><button type="button">Squad only</button></span></div>`,
+  chips: () => `
+    <div class="field"><span class="lbl">Chips left (first half, expire GW19 · 1 Jan 18:30)</span><div class="chipbox">${Object.values(CHIP).map((v) => `<span class="tag plain">${v}</span>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Weeks to consider</span><span class="seg" role="group" aria-label="Horizon"><button type="button" aria-pressed="true">GW8–GW13</button><button type="button">To GW19</button></span>
+      <small class="muted">One forced-chip solve per chip and week. A longer range takes longer and may leave Wildcard and Free Hit unevaluated.</small></div>`,
+  scorecard: () => `<p class="muted" style="margin:0">No options. Shows every counted recommendation for Touchline XI this season against your real points and the two baselines.</p>`,
+  prefs: () => `<p class="muted" style="margin:0">Opens your saved preferences for Touchline XI.</p>`
+};
+const GO = { recommend: ["Recommend GW8", "#run"], whatif: ["Test this move", "#run"], explain: ["Explain Mukiele", "#run"], chips: ["Plan my chips", "#run"], scorecard: ["Open scorecard", "#scorecard"], prefs: ["Open preferences", "#prefs"] };
+const OPTH = { recommend: "Options for this recommendation", whatif: "What to test", explain: "Which player", chips: "Chip planner", scorecard: "Scorecard", prefs: "Preferences" };
+function pickAction(a) {
+  document.querySelectorAll(".action").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.action === a)));
+  $("#opts").innerHTML = OPTS[a](); $("#opts-h").textContent = OPTH[a]; $("#opts-note").hidden = a !== "recommend";
+  $("#go-btn").textContent = GO[a][0]; $("#go-btn").href = GO[a][1];
+  $("#opts").querySelectorAll(".seg").forEach((seg) => seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))))));
+  $("#opts").querySelectorAll(".toggle").forEach((b) => b.addEventListener("click", () => b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true"))));
+}
+document.querySelectorAll(".action").forEach((b) => b.addEventListener("click", () => pickAction(b.dataset.action)));
+pickAction("recommend");
+$("#team-id").addEventListener("input", (e) => { const ok = /^[1-9][0-9]{0,9}$/.test(e.target.value); $("#team-ok").innerHTML = ok ? ICON.ok + "Touchline XI" : ICON.warn + "Digits only, from your Points page address"; $("#team-ok").style.color = ok ? "" : "var(--bad)"; });
+
+/* ---------- run transcript (event stream rendering) ---------- */
+const STREAM = [
+  { k: "think", text: "Snapshot first, with odds, then the golden path. Palmer is a keep, so the plan must hold him." },
+  { k: "step", st: "ok", ico: "ok", what: "<b>Fetched your team and FPL data</b> · fresh · 15 players · bank £0.6m · 2 FT (derived)", t: "2.1 s",
+    body: "Snapshot 2026-27/8/20261017T135130Z-3fa2c1d0e9b7\nGW7 current · GW8 next · deadline Fri 23 Oct 17:30 UTC\nChips left (first half): WC FH BB TC\nOdds: 10 of 10 GW8 fixtures priced\nNews: Egan \"Knock - 75% chance of playing\"\nPrice watch: Semenyo likely to rise tonight" },
+  { k: "step", st: "ok", ico: "ok", what: "<b>Read playbook</b> · gaffer-workflow", t: "0.0 s", body: "skills/gaffer-workflow/SKILL.md (harness, read-only)" },
+  { k: "step", st: "ok", ico: "ok", what: "<b>Projected points and solved a 6-GW plan</b> · 3 plans · chip scenarios 3 of 4", t: "41.8 s",
+    body: "python -m gaffer_lib run --snapshot … --prefs … --out /work/plan.json\nSolver: Optimal, gap 0.08%, 18.2 s\nPlan 1  312.6  Watkins→João Pedro, Egan→Mukiele\nPlan 2  311.7  Watkins→João Pedro, roll\nPlan 3  311.0  Egan→Mukiele, roll\nTC GW10 +4.1 · BB GW9 +3.2 · FH GW12 −1.1 · WC not evaluated (time budget)" },
+  { k: "think", text: "Plan 1 and plan 2 are close. Egan's knock tips it: his 45 expected minutes cost more than the 0.9 gap. Going with plan 1." },
+  { k: "step", st: "err", ico: "err", what: "<b>Submitted recommendation</b> · rejected, attempt 1 of 3", t: "0.9 s",
+    body: "[PLAN_ASSUMPTIONS_MISMATCH] The plan file was made with --ft 3, but this snapshot says 2 free transfers (derived). Run the golden path exactly as the snapshot summary gives it." },
+  { k: "think", text: "I passed a free-transfer count myself. Re-running the golden path as given." },
+  { k: "step", st: "ok", ico: "ok", what: "<b>Re-ran the plan</b> · same plan 1", t: "39.4 s", body: "Solver: Optimal, gap 0.08%, 17.6 s" },
+  { k: "step", st: "ok", ico: "ok", what: "<b>Submitted recommendation</b> · valid on attempt 2 · all 134 numbers recomputed", t: "1.1 s", body: "rec_id 01M5BQ3V8E2K7Z4Y9N6TDR0C1H · stored and ledgered" }
+];
+function stepEl(s, open = false) {
+  return h(`<details class="step"${open ? " open" : ""}><summary><span class="ico ${s.ico}">${ICON[s.ico]}</span><span class="what">${s.what}</span><span class="mono muted">${s.t}</span></summary><div class="body"><pre>${esc(s.body)}</pre></div></details>`);
+}
+function renderRun(n = STREAM.length, running = true) {
+  const box = $("#transcript"); box.textContent = "";
+  STREAM.slice(0, n).forEach((s) => box.append(s.k === "think" ? h(`<div class="think"><span class="lbl">Thinking</span>${esc(s.text)}</div>`) : stepEl(s)));
+  if (running) box.append(h(`<details class="step" open><summary><span class="ico run">${ICON.run}</span><span class="what"><b>Checking the plan</b> · rules, your preferences, solver's best</span><span class="mono muted">…</span></summary><div class="body"><div class="progress"><i></i></div><span class="muted">Waiting on gaffer_lib validate in the sandbox</span></div></details>`));
+  else box.append(h(`<a class="btn primary" href="#result" style="justify-self:start">Open the recommendation</a>`));
+}
+let timer;
+$("#replay").addEventListener("click", () => { clearInterval(timer); let i = 0; const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches; renderRun(0);
+  if (reduce) return renderRun(STREAM.length, false);
+  timer = setInterval(() => { i++; renderRun(i, i < STREAM.length); if (i >= STREAM.length) clearInterval(timer); }, 700); });
+$("#stop").addEventListener("click", () => { clearInterval(timer); $("#run-meta").textContent = "Stopped by you after 38 s · $0.031 · nothing was saved"; });
+renderRun(5, true);
+
+/* ---------- result: rendered from REC ---------- */
+function pitchSvg() {
+  return `<svg class="lines" viewBox="0 0 68 72" preserveAspectRatio="none" aria-hidden="true"><rect x="2" y="2" width="64" height="68"/><path d="M2 2 H66"/><circle cx="34" cy="2" r="9.15"/><rect x="13.85" y="53.5" width="40.3" height="16.5"/><rect x="24.85" y="64.5" width="18.3" height="5.5"/><path d="M26.7 53.5 A9.15 9.15 0 0 1 41.3 53.5"/></svg>`;
+}
+function counter(id) {
+  const n = Number(id); const p = REC.players[id]; const isC = REC.captain.id === n, isV = REC.vice_captain.id === n; const isNew = REC.transfers.some((t) => t.in.id === n);
+  return `<div class="pl">${isNew ? '<span class="newin">IN</span>' : ""}${isC ? '<span class="badge">C</span>' : isV ? '<span class="badge v">V</span>' : ""}<span class="kit">${p.team}</span><span class="nm">${esc(p.name)}</span><span class="xp">${(isC ? p.xp * 2 : p.xp).toFixed(1)}</span></div>`;
+}
+function renderResult() {
+  const r = REC; const xi = r.starting_xi.map(String);
+  const byPos = (pos) => xi.filter((id) => r.players[id].position === pos);
+  const gain = r.transfers.reduce((s, t) => s + t.xp_gain_4gw, 0);
+  const maxGain = Math.max(8, gain);
+  const dl = new Date(r.deadline);
+  const sec = $("#screen-result"); sec.textContent = "";
+  sec.append(h(`
+  <div class="rechead">
+    <div><h2>GW${r.gw} · Touchline XI</h2>
+      <div class="sub"><span>Deadline <span class="mono">${dl.toUTCString().slice(0, 22)} UTC</span></span><span>${r.assumptions.free_transfers} FT (${r.assumptions.ft_source}) · bank after £${r.assumptions.bank.toFixed(1)}m</span><span>Data from <span class="mono">${r.snapshot.fetched_at.slice(11, 16)}</span> UTC, fresh</span></div></div>
+    <div class="headline"><div><div class="lbl">Expected this GW</div><div class="fig">${r.expected_points_gw.toFixed(1)}</div></div><div><div class="lbl">Net over 4 GWs</div><div class="fig pos">${sign(r.net_xp_gain_4gw)}</div></div><div><div class="lbl">Confidence</div><span class="tag ${r.confidence.overall}" style="font-size:13px">${r.confidence.overall}</span></div></div>
+  </div>
+  <p class="say" style="font-size:15.5px;margin:0">${esc(r.summary)}</p>
+  <div class="card"><header><h2>Transfers</h2><span class="muted">${r.transfers.length} of ${r.assumptions.free_transfers} free · ${r.hits ? r.hits + " hit" : "no hits"}</span></header>
+      <div class="scroll-x"><table><thead><tr><th>Move</th><th class="n">Price</th><th class="n">xP 4GW</th><th class="n">6GW*</th><th>Conf</th></tr></thead><tbody>
+      ${r.transfers.map((t) => `<tr><td><div class="mv"><span class="out">${esc(t.out.name)}<span class="club">${r.players[t.out.id].team}</span></span><span class="arr">→</span><span class="in">${esc(t.in.name)}<span class="club">${r.players[t.in.id].team}</span></span></div><div class="why">${esc(t.rationale)}</div></td>
+        <td class="n">£${t.in.price.toFixed(1)}m<div class="muted" style="font-size:12px">sell £${t.out.sell_price.toFixed(1)}m</div></td><td class="n gain">${sign(t.xp_gain_4gw)}</td><td class="n">${sign(t.xp_gain_6gw_decayed)}</td><td><span class="tag ${t.confidence}">${t.confidence}</span></td></tr>`).join("")}
+      </tbody></table></div>
+      <div class="ledger"><span class="lbl">Gain</span><span class="bar"><i style="width:${(gain / maxGain) * 100}%"></i></span><span class="mono gain">${sign(gain)}</span>
+        <span class="lbl">Hit cost</span><span class="bar"><i class="hit" style="width:${(r.hit_cost / maxGain) * 100}%"></i></span><span class="mono">${r.hit_cost ? "−" + r.hit_cost : "0"}</span>
+        <span class="lbl">Net</span><span></span><span class="mono gain" style="font-size:15px">${sign(r.net_xp_gain_4gw)}</span></div>
+      <small class="muted">* decayed expected points over the 6-GW horizon, later weeks weighted down.</small>
+    </div>
+  <div class="split">
+    <div class="card pitchwrap"><header><h2>Starting XI</h2><span class="muted">${byPos("DEF").length}-${byPos("MID").length}-${byPos("FWD").length} · ${r.expected_points_gw.toFixed(1)} xP</span></header>
+      <div class="pitch" role="img" aria-label="Starting eleven on a pitch">${pitchSvg()}
+        <div class="lineup-row">${byPos("FWD").map(counter).join("")}</div><div class="lineup-row">${byPos("MID").map(counter).join("")}</div><div class="lineup-row">${byPos("DEF").map(counter).join("")}</div><div class="lineup-row">${byPos("GK").map(counter).join("")}</div>
+      </div>
+      <div><div class="lbl" style="margin-bottom:6px">Bench, in auto-sub order</div><div class="bench">${r.bench.map((id, i) => { const p = r.players[id]; return `<div class="slot"><span class="o">${i === 0 ? "GK" : i}</span><b>${esc(p.name)}</b><span class="muted" style="font-size:12px">${p.team} · ${p.xp.toFixed(1)} xP</span></div>`; }).join("")}</div></div>
+    </div>
+    <div style="display:grid;gap:20px;align-content:start;min-width:0">
+    <div class="card"><header><h2>Captaincy</h2><span class="muted">Captain's points shown doubled on the pitch</span></header>
+      <div class="roles">
+        <div class="role"><span class="armband">C</span><div><div class="nm">${esc(r.captain.name)}</div><div class="muted">${r.players[r.captain.id].team} · P(start) ${r.captain.p_start.toFixed(2)}</div></div><div class="xp">${r.captain.xp.toFixed(1)}</div></div>
+        <div class="role"><span class="armband v">V</span><div><div class="nm">${esc(r.vice_captain.name)}</div><div class="muted">${r.players[r.vice_captain.id].team} · P(start) ${r.vice_captain.p_start.toFixed(2)}</div></div><div class="xp">${r.vice_captain.xp.toFixed(1)}</div></div>
+      </div>
+      <div class="news" style="margin-top:14px"><span class="lbl">Team news applied</span>${r.xmins_overrides.map((o) => `<div><b>${esc(o.name)}</b>: ${o.xmins} expected minutes in GW${o.gw}, from FPL news <q>${esc(o.quote)}</q></div>`).join("")}</div>
+    </div>
+      <div class="card"><header><h2>Chips</h2><span class="tag ${r.chip.confidence}">${r.chip.play ? CHIP[r.chip.play] : "No chip"} · ${r.chip.confidence}</span></header>
+        <p class="say" style="margin:0 0 12px">${esc(r.chip.rationale)}</p>
+        <div class="scen">${r.chip.scenarios.map((s) => s.evaluated ? `<span><b>${CHIP[s.chip]}</b> <span class="muted mono">GW${s.gw}</span></span><span class="bar"><i style="width:${Math.max(0, s.delta_xp) / 5 * 100}%;${s.delta_xp < 0 ? "background:var(--bad);width:" + (Math.abs(s.delta_xp) / 5 * 100) + "%" : ""}"></i></span><span class="mono" style="text-align:right">${sign(s.delta_xp)}</span>` : `<span><b>${CHIP[s.chip]}</b></span><span class="ne">${esc(s.reason)}</span><span class="mono muted" style="text-align:right">—</span>`).join("")}</div>
+        <small class="muted" style="display:block;margin-top:8px">Decayed xP against the chip-free plan. First-half chips expire at the GW19 deadline, Fri 1 Jan 18:30 UTC.</small>
+      </div>
+    </div>
+  </div>
+  <div class="card"><header><h2>4-GW plan</h2><span class="muted">FT banked as shown</span></header>
+        <div class="spark" aria-hidden="true">${r.plan.map((g) => `<div><span class="v">${g.expected_points.toFixed(1)}</span><span class="b" style="height:${(g.expected_points - 50) * 4}px"></span><span class="v">GW${g.gw}</span></div>`).join("")}</div>
+        <div class="scroll-x"><table class="plan"><thead><tr><th>GW</th><th>Moves</th><th>C</th><th class="n">FT</th><th class="n">xP</th></tr></thead><tbody>
+        ${r.plan.map((g, i) => `<tr class="${i === 0 ? "now" : ""}"><td class="gwc">${g.gw}</td><td>${g.transfers.length ? g.transfers.map((t) => `${esc(t.out.name)} → <b>${esc(t.in.name)}</b>`).join("<br>") : '<span class="muted">Roll</span>'}${g.chip ? ` <span class="tag warn">${CHIP[g.chip]}</span>` : ""}<div class="why">${esc(g.note)}</div></td><td>${esc(r.players[g.captain].name)}</td><td class="n">${g.free_transfers}</td><td class="n">${g.expected_points.toFixed(1)}</td></tr>`).join("")}
+        </tbody></table></div>
+      </div>
+  <div class="warnbox" role="note"><span class="lbl" style="color:var(--warn)">Check before the deadline</span>${r.warnings.map((w) => `<div>${esc(w)}</div>`).join("")}<div><b>Confidence ${r.confidence.overall}:</b> ${r.confidence.drivers.map(esc).join("; ")}.</div></div>
+  <div class="composer"><label for="ask" class="lbl">Ask about this plan</label><textarea id="ask" rows="2" maxlength="280" placeholder="Questions about this recommendation. To change your team or preferences, start a new run."></textarea>
+    <div class="row" style="justify-content:space-between"><div class="suggest"><button type="button" class="btn small">Why not Saka as captain?</button><button type="button" class="btn small">What if I keep Watkins?</button><button type="button" class="btn small">Explain the bench order</button></div><button type="button" class="btn primary small">Ask</button></div></div>
+  <div class="foot"><span class="mono">rec ${r.rec_id} · ${r.model} · gaffer_lib ${r.gaffer_lib} · pi ${r.pi} · valid on attempt ${r.validation.attempts} · ${r.validation.plans_compared} plans compared, gap to best ${r.validation.gap_to_best}</span>
+    <span class="row"><button type="button" class="btn small" data-export="json">Export JSON</button><button type="button" class="btn small" data-export="csv">Export CSV</button><button type="button" class="btn small" title="Opens this session in the browser terminal">Open in terminal</button></span></div>
+  `));
+  sec.querySelectorAll("[data-export]").forEach((b) => b.addEventListener("click", () => openExport(b.dataset.export)));
+}
+function csv() {
+  const rows = [["gw", "kind", "out", "in", "price", "xp_gain_4gw", "xp_gain_6gw_decayed", "confidence"]];
+  REC.transfers.forEach((t) => rows.push([REC.gw, "transfer", t.out.name, t.in.name, t.in.price, t.xp_gain_4gw, t.xp_gain_6gw_decayed, t.confidence]));
+  rows.push([REC.gw, "captain", "", REC.captain.name, "", REC.captain.xp, "", ""]); rows.push([REC.gw, "vice_captain", "", REC.vice_captain.name, "", REC.vice_captain.xp, "", ""]);
+  REC.plan.forEach((g) => rows.push([g.gw, "plan", g.transfers.map((t) => t.out.name).join("|"), g.transfers.map((t) => t.in.name).join("|"), "", g.expected_points, "", ""]));
+  return rows.map((r) => r.map((c) => /[",\n]/.test(String(c)) ? `"${String(c).replace(/"/g, '""')}"` : c).join(",")).join("\n");
+}
+function openExport(kind) { $("#export-h").textContent = kind === "json" ? `${REC.rec_id}.json` : `gaffer-gw${REC.gw}.csv`; $("#export-pre").textContent = kind === "json" ? JSON.stringify(REC, null, 2) : csv(); $("#export-dlg").showModal(); }
+$("#close-export").addEventListener("click", () => $("#export-dlg").close());
+$("#copy-export").addEventListener("click", async () => { const t = $("#export-pre").textContent; try { await navigator.clipboard.writeText(t); $("#copy-export").textContent = "Copied"; } catch { const r = document.createRange(); r.selectNodeContents($("#export-pre")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("#copy-export").textContent = "Selected: press Ctrl+C"; } });
+renderResult();
+
+/* ---------- states gallery ---------- */
+const STATES = [
+  ["Empty", `<div class="empty"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M56 32 A24 24 0 1 1 45.77 12.34" fill="none" stroke="currentColor" stroke-width="5"/><path d="M32 32 H59.5" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="32" cy="32" r="5" fill="currentColor"/></svg><b style="color:var(--ink)">No sessions yet</b><span>Enter your FPL team ID to get a recommendation for GW8.<br>Deadline Fri 23 Oct, 18:30 BST.</span><a class="btn primary" href="#start">Start</a></div>`],
+  ["Running", `<div class="brief" style="border-left-color:var(--accent)"><strong>Recommend GW8</strong><span class="muted">38 s · $0.031</span></div>${stepEl(STREAM[1]).firstElementChild.outerHTML}<details class="step"><summary><span class="ico run">${ICON.run}</span><span class="what"><b>Projecting points and solving</b> · main solve 31 of 43 s</span><span class="mono muted">31 s</span></summary></details>`],
+  ["Streaming thinking", `<div class="think"><span class="lbl">Thinking</span>Plan 1 and plan 2 are close. Egan's knock tips it: his 45 expected minutes cost more than the 0.9 gap<span class="mono" aria-hidden="true">▍</span></div><small class="muted">Summaries of the model's reasoning, as Pi receives them. Collapsed after the run.</small>`],
+  ["Tool running", `<details class="step" open><summary><span class="ico run">${ICON.run}</span><span class="what"><b>Fetching your team and FPL data</b></span><span class="mono muted">1.2 s</span></summary><div class="body"><pre>GET bootstrap-static (cached, 4 min old)\nGET entry/…/history (fresh)\nGET entry/…/picks (fresh)\nGET fixtures.csv (football-data.co.uk) …</pre></div></details>`],
+  ["Budget soft cap", `<div class="banner warn">${ICON.warn}<p><b>This run has cost $0.76.</b> Gaffer has asked the model to wrap up and submit. The hard stop is $1.50.</p></div>`],
+  ["Budget hard cap", `<div class="banner bad">${ICON.err}<p><b>Run stopped at $1.52</b>, over the $1.50 session cap. Anything above is a partial result and no plan was saved. Start a new session to try again.</p></div>`],
+  ["Daily cap reached", `<div class="banner bad">${ICON.err}<p><b>Today's spend is $5.02</b> of the $5.00 daily cap. New runs can start after midnight UTC. Past sessions and exports still work.</p></div>`],
+  ["FPL updating (data source down)", `<div class="banner warn">${ICON.warn}<p><b>FPL is updating.</b> Using your snapshot from 13:51, 2 h old. Confidence is capped at medium. Within an hour of the deadline Gaffer won't finalise transfers on old data.</p></div>`],
+  ["Odds source down", `<div class="banner info">${ICON.info}<p>Bookmaker odds are unavailable (football-data.co.uk). Team strength comes from the Dixon-Coles model instead.</p></div>`],
+  ["Deadline passed", `<div class="banner info">${ICON.info}<p><b>The GW8 deadline has passed</b> (Fri 23 Oct, 18:30 BST). Recommendations now plan GW9 onwards. GW8 will be scored after FPL checks its data.</p></div><a class="btn" href="#start">Plan GW9</a>`],
+  ["Error: no valid plan", `<div class="banner bad">${ICON.err}<p><b>No recommendation.</b> Three submissions failed the rules check, so nothing is shown or saved. Last error: <span class="mono">CLUB_LIMIT GW8: 4 players from Arsenal</span>.</p></div><div class="row"><a class="btn" href="#start">Try again</a><button type="button" class="btn">View the run</button></div>`],
+  ["Reconnecting", `<div class="banner info"><svg viewBox="0 0 16 16" class="spin" aria-hidden="true"><path d="M8 2a6 6 0 1 1-6 6" stroke="currentColor" stroke-width="2" fill="none"/></svg><p><b>Reconnecting…</b> The run continues on the server. The transcript fills in from where you left when the connection is back.</p></div>`],
+  ["Opened in the other UI", `<div class="banner info">${ICON.info}<p>This session is also open in the browser terminal. Both show the same run; only one can send a prompt at a time.</p></div>`]
+];
+function renderStates() { const box = $("#states"); box.textContent = ""; STATES.forEach(([t, body]) => box.append(h(`<div class="state"><h3>${t}</h3><div class="frame">${body}</div></div>`))); }
+renderStates();
+
+/* ---------- scorecard ---------- */
+function renderScorecard() {
+  const rows = [[6, 55, 59, 62, 57], [7, 71, 64, 58, 61]];
+  const tot = rows.reduce((a, r) => a.map((x, i) => x + (r[i + 1] ?? 0)), [0, 0, 0, 0]);
+  const max = 80;
+  $("#screen-scorecard").innerHTML = `<div class="card"><header><h2 id="sc-h">Scorecard · Touchline XI</h2><span class="muted">${rows.length} counted GWs · scored after FPL checks each GW</span></header>
+    <div class="grid3" style="margin-bottom:16px">${[["Gaffer", tot[0], "var(--brand)"], ["You", tot[1], "var(--ink)"], ["Hold (B0)", tot[2], "var(--ink-3)"]].map(([n, v]) => `<div><div class="lbl">${n}</div><div style="font-family:var(--f-figure);font-weight:var(--figure-weight);font-size:34px">${v}</div></div>`).join("")}</div>
+    <div class="sc-legend"><span><i class="sw" style="background:var(--brand)"></i>Gaffer's plan</span><span><i class="sw" style="background:var(--ink)"></i>Your points</span><span><i class="sw" style="background:var(--ink-3)"></i>B0 hold</span><span><i class="sw" style="background:var(--line-2)"></i>B1 official xP</span></div>
+    <div style="display:grid;gap:10px;margin-top:12px">${rows.map((r) => `<div style="display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center"><b class="mono">GW${r[0]}</b><div style="display:grid;gap:3px">${[[r[1], "var(--brand)"], [r[2], "var(--ink)"], [r[3], "var(--ink-3)"], [r[4], "var(--line-2)"]].map(([v, c]) => `<div style="display:flex;align-items:center;gap:8px"><span style="height:9px;width:${(v / max) * 100}%;background:${c};border-radius:2px"></span><span class="mono" style="font-size:12px">${v}</span></div>`).join("")}</div></div>`).join("")}</div>
+    <p class="muted" style="margin:14px 0 0">GW8 is waiting: it is scored once FPL marks it finished and checked (about Tue 27 Oct).</p></div>`;
+}
+renderScorecard();
+
+/* ---------- preferences ---------- */
+$("#screen-prefs").innerHTML = `<div class="card"><header><h2 id="pf-h">Preferences · Touchline XI</h2><span class="muted">Used by every run for this team and checked when a plan is submitted</span></header><div class="opts">${OPTS.recommend().replace(/<label class="row">[\s\S]*$/, "")}</div><div class="row" style="margin-top:12px;justify-content:flex-end"><button type="button" class="btn">Clear all</button><button type="button" class="btn primary">Save preferences</button></div></div>`;
+$("#screen-prefs").querySelectorAll(".seg").forEach((seg) => seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))))));
+
+/* ---------- routing ---------- */
+const TITLES = { start: "New session", run: "GW8 recommendation", result: "GW8 recommendation", states: "States", scorecard: "Scorecard", prefs: "Preferences" };
+function go(key) {
+  const k = TITLES[key] ? key : "result";
+  document.querySelectorAll(".screen").forEach((s) => (s.hidden = s.id !== `screen-${k}`));
+  document.querySelectorAll(".mock nav a").forEach((a) => a.setAttribute("aria-current", a.getAttribute("href") === `#${k}` ? "page" : "false"));
+  $("#screen-title").textContent = TITLES[k];
+  if (k === "run") renderRun(5, true);
+  scrollTo(0, 0);
+}
+// In-page routing: a bare #token from the address picks the first screen; links switch screens without relying on hash changes.
+document.addEventListener("click", (e) => { const a = e.target.closest('a[href^="#"]'); if (!a) return; e.preventDefault(); const k = a.getAttribute("href").slice(1); go(k); try { history.replaceState(null, "", "#" + k); } catch {} });
+addEventListener("hashchange", () => go(location.hash.slice(1)));
+go((location.hash || "#result").slice(1));
+
+/* ---------- countdown (sample clock fixed relative to load) ---------- */
+(function tick() { const end = Date.now() + ((6 * 24 + 2) * 3600 + 57 * 60) * 1000; const el = $("#countdown");
+  const f = () => { const s = Math.max(0, Math.floor((end - Date.now()) / 1000)); const d = Math.floor(s / 86400), hh = Math.floor((s % 86400) / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+    el.textContent = `${d}d ${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`; };
+  f(); setInterval(f, 1000); })();
+</script>

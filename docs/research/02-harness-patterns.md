@@ -1,5 +1,7 @@
 # R2 — Agent Harness Patterns (2025–2026) and What Gaffer Should Take
 
+> **Update, 2026-10-17:** [Research 12](12-harness-patterns-update.md) reviews what was published from mid-August to mid-October 2026 and keeps every verdict here, with three additions. (1) Prompt caching is now a design concern: Gaffer's per-prompt `fpl_context` must reach Sonnet 5.5 as a mid-conversation system message, not a rewritten system prompt, which re-bills each follow-up and on newer Anthropic accounts fails with a 400 ([ADR 0010](../decisions/0010-context-as-section-patches.md)). (2) Budgets must count Pi's `usage` entries (cache warming, summaries). (3) If the critic in §9e is ever built, it runs in an isolated context. ADR 0007 and the compaction posture in §5 are reaffirmed.
+
 _Researched 2026-09-27 from live sources. Paraphrased; quotes kept under 15 words._
 
 ## Gaffer workload, restated (the lens for every verdict)
