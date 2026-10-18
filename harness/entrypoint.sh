@@ -9,9 +9,10 @@ fi
 
 # Bind ttyd only to the interface with the default route (the egress network, where Docker publishes
 # the port). Never to the internal sandbox network: sandbox code must not be able to drive the TUI.
+# --check-origin: refuse a WebSocket whose Origin isn't the page's own host (ADR 0005, ADR 0013).
 BIND_IP="$(node /opt/gaffer/egress-ip.mjs)"
 
-exec ttyd --interface "$BIND_IP" --port 7681 --writable --max-clients 1 \
+exec ttyd --interface "$BIND_IP" --port 7681 --writable --max-clients 1 --check-origin \
   --index /opt/gaffer/ttyd-index.html \
   -t titleFixed=Gaffer -t fontSize=15 -t disableLeaveAlert=true -t scrollback=10000 \
   tmux -f /opt/gaffer/tmux.conf new-session -A -s gaffer /opt/gaffer/gaffer-pi
