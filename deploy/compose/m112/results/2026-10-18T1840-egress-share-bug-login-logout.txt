@@ -1,0 +1,60 @@
+2026-10-18 18:40:18.057195 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 1335199560:1335199562, ack 3470697970, win 505, options [nop,nop,TS val 4038976137 ecr 3627036770], length 2
+2026-10-18 18:40:18.059075 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 1:7, ack 2, win 500, options [nop,nop,TS val 3627041782 ecr 4038976137], length 6
+2026-10-18 18:40:18.059111 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 7, win 505, options [nop,nop,TS val 4038976139 ecr 3627041782], length 0
+2026-10-18 18:40:23.070225 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 2:4, ack 7, win 505, options [nop,nop,TS val 4038981150 ecr 3627041782], length 2
+2026-10-18 18:40:23.071797 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 7:13, ack 4, win 500, options [nop,nop,TS val 3627046794 ecr 4038981150], length 6
+2026-10-18 18:40:23.071822 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 13, win 505, options [nop,nop,TS val 4038981152 ecr 3627046794], length 0
+2026-10-18 18:40:27.448403 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 13:24, ack 4, win 500, options [nop,nop,TS val 3627051171 ecr 4038981152], length 11
+2026-10-18 18:40:27.448453 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 24, win 505, options [nop,nop,TS val 4038985528 ecr 3627051171], length 0
+2026-10-18 18:40:27.451280 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 4:23, ack 24, win 505, options [nop,nop,TS val 4038985531 ecr 3627051171], length 19
+2026-10-18 18:40:27.451429 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 23:132, ack 24, win 505, options [nop,nop,TS val 4038985531 ecr 3627051171], length 109
+2026-10-18 18:40:27.451483 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [.], ack 132, win 499, options [nop,nop,TS val 3627051174 ecr 4038985531], length 0
+2026-10-18 18:40:27.452813 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 24:34, ack 132, win 499, options [nop,nop,TS val 3627051176 ecr 4038985531], length 10
+2026-10-18 18:40:27.453165 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 34:44, ack 132, win 499, options [nop,nop,TS val 3627051176 ecr 4038985531], length 10
+2026-10-18 18:40:27.453418 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 44, win 505, options [nop,nop,TS val 4038985533 ecr 3627051176], length 0
+2026-10-18 18:40:27.456234 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 132:240, ack 44, win 505, options [nop,nop,TS val 4038985536 ecr 3627051176], length 108
+2026-10-18 18:40:27.497011 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [.], ack 240, win 499, options [nop,nop,TS val 3627051220 ecr 4038985536], length 0
+2026-10-18 18:40:28.078370 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 240:242, ack 44, win 505, options [nop,nop,TS val 4038986158 ecr 3627051220], length 2
+2026-10-18 18:40:28.078527 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [.], ack 242, win 499, options [nop,nop,TS val 3627051801 ecr 4038986158], length 0
+2026-10-18 18:40:28.079930 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 44:50, ack 242, win 499, options [nop,nop,TS val 3627051803 ecr 4038986158], length 6
+2026-10-18 18:40:28.123169 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 50, win 505, options [nop,nop,TS val 4038986203 ecr 3627051803], length 0
+2026-10-18 18:40:32.527214 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 50:60, ack 242, win 499, options [nop,nop,TS val 3627056250 ecr 4038986203], length 10
+2026-10-18 18:40:32.527250 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 60, win 505, options [nop,nop,TS val 4038990607 ecr 3627056250], length 0
+2026-10-18 18:40:32.527287 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 60:70, ack 242, win 499, options [nop,nop,TS val 3627056250 ecr 4038990607], length 10
+2026-10-18 18:40:32.527302 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 70, win 505, options [nop,nop,TS val 4038990607 ecr 3627056250], length 0
+2026-10-18 18:40:32.530149 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 70:82, ack 242, win 499, options [nop,nop,TS val 3627056253 ecr 4038990607], length 12
+2026-10-18 18:40:32.530171 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 82, win 505, options [nop,nop,TS val 4038990610 ecr 3627056253], length 0
+2026-10-18 18:40:32.534286 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 242:252, ack 82, win 505, options [nop,nop,TS val 4038990614 ecr 3627056253], length 10
+2026-10-18 18:40:32.541030 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 82:92, ack 252, win 499, options [nop,nop,TS val 3627056264 ecr 4038990614], length 10
+2026-10-18 18:40:32.558577 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 92:102, ack 252, win 499, options [nop,nop,TS val 3627056281 ecr 4038990614], length 10
+2026-10-18 18:40:32.558646 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 102, win 505, options [nop,nop,TS val 4038990638 ecr 3627056264], length 0
+2026-10-18 18:40:32.561325 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 252:274, ack 102, win 505, options [nop,nop,TS val 4038990641 ecr 3627056264], length 22
+2026-10-18 18:40:32.574714 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 102:134, ack 274, win 499, options [nop,nop,TS val 3627056297 ecr 4038990641], length 32
+2026-10-18 18:40:32.584216 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 274:306, ack 134, win 505, options [nop,nop,TS val 4038990664 ecr 3627056297], length 32
+2026-10-18 18:40:32.589950 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 134:144, ack 306, win 499, options [nop,nop,TS val 3627056313 ecr 4038990664], length 10
+2026-10-18 18:40:32.609167 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 144:154, ack 306, win 499, options [nop,nop,TS val 3627056332 ecr 4038990664], length 10
+2026-10-18 18:40:32.609247 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 154, win 505, options [nop,nop,TS val 4038990689 ecr 3627056313], length 0
+2026-10-18 18:40:32.611790 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 306:360, ack 154, win 505, options [nop,nop,TS val 4038990692 ecr 3627056313], length 54
+2026-10-18 18:40:32.626040 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 154:174, ack 360, win 499, options [nop,nop,TS val 3627056349 ecr 4038990692], length 20
+2026-10-18 18:40:32.631317 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 360:386, ack 174, win 505, options [nop,nop,TS val 4038990711 ecr 3627056349], length 26
+2026-10-18 18:40:32.641806 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 174:184, ack 386, win 499, options [nop,nop,TS val 3627056364 ecr 4038990711], length 10
+2026-10-18 18:40:32.657543 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 184:194, ack 386, win 499, options [nop,nop,TS val 3627056380 ecr 4038990711], length 10
+2026-10-18 18:40:32.657626 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 194, win 505, options [nop,nop,TS val 4038990737 ecr 3627056364], length 0
+2026-10-18 18:40:32.660467 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 386:403, ack 194, win 505, options [nop,nop,TS val 4038990740 ecr 3627056364], length 17
+2026-10-18 18:40:32.674546 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 194:207, ack 403, win 499, options [nop,nop,TS val 3627056397 ecr 4038990740], length 13
+2026-10-18 18:40:32.677901 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 403:424, ack 207, win 505, options [nop,nop,TS val 4038990758 ecr 3627056397], length 21
+2026-10-18 18:40:32.692632 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 207:217, ack 424, win 499, options [nop,nop,TS val 3627056415 ecr 4038990758], length 10
+2026-10-18 18:40:32.707110 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 217:227, ack 424, win 499, options [nop,nop,TS val 3627056430 ecr 4038990758], length 10
+2026-10-18 18:40:32.707191 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 227, win 505, options [nop,nop,TS val 4038990787 ecr 3627056415], length 0
+2026-10-18 18:40:32.710342 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 424:450, ack 227, win 505, options [nop,nop,TS val 4038990790 ecr 3627056415], length 26
+2026-10-18 18:40:32.751357 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [.], ack 450, win 499, options [nop,nop,TS val 3627056474 ecr 4038990790], length 0
+2026-10-18 18:40:33.087123 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 450:452, ack 227, win 505, options [nop,nop,TS val 4038991167 ecr 3627056474], length 2
+2026-10-18 18:40:33.087296 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [.], ack 452, win 499, options [nop,nop,TS val 3627056810 ecr 4038991167], length 0
+2026-10-18 18:40:33.088878 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 227:233, ack 452, win 499, options [nop,nop,TS val 3627056812 ecr 4038991167], length 6
+2026-10-18 18:40:33.130655 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 233, win 505, options [nop,nop,TS val 4038991210 ecr 3627056812], length 0
+2026-10-18 18:40:38.095561 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 452:454, ack 233, win 505, options [nop,nop,TS val 4038996175 ecr 3627056812], length 2
+2026-10-18 18:40:38.096833 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 233:239, ack 454, win 499, options [nop,nop,TS val 3627061820 ecr 4038996175], length 6
+2026-10-18 18:40:38.096859 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 239, win 505, options [nop,nop,TS val 4038996177 ecr 3627061820], length 0
+2026-10-18 18:40:43.106074 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [P.], seq 454:456, ack 239, win 505, options [nop,nop,TS val 4039001186 ecr 3627061820], length 2
+2026-10-18 18:40:43.107482 eth0  In  IP 172.22.0.1.64332 > 172.22.0.2.7681: Flags [P.], seq 239:245, ack 456, win 499, options [nop,nop,TS val 3627066830 ecr 4039001186], length 6
+2026-10-18 18:40:43.107506 eth0  Out IP 172.22.0.2.7681 > 172.22.0.1.64332: Flags [.], ack 245, win 505, options [nop,nop,TS val 4039001187 ecr 3627066830], length 0
