@@ -1,6 +1,6 @@
 /**
  * gaffer-budget: cost caps (ADR 0008). Per session and per UTC day, from the cost Pi records on every
- * assistant message; plus a turn cap per run (FR-BUD-01). Above the soft cap the model is steered,
+ * assistant message and `usage` entry (NFR-COST-05); plus a turn cap per run (FR-BUD-01). Above the soft cap the model is steered,
  * once per session, to wrap up and submit (FR-BUD-02).
  */
 import type { ExtensionAPI, ExtensionContext, TurnEndEvent } from "@earendil-works/pi-coding-agent";

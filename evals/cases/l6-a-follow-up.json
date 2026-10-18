@@ -1,0 +1,19 @@
+{
+ "schema": "gaffer.evalcase/1",
+ "id": "l6-a-follow-up",
+ "title": "GW6 2026/27, team A, then a follow-up question about the recommendation in the same session",
+ "tags": [
+  "live",
+  "follow-up"
+ ],
+ "source": {
+  "kind": "live",
+  "base": "2026-27-gw6",
+  "team": "a"
+ },
+ "team_id": 900000013,
+ "as_of": "2026-10-01T20:50:03Z",
+ "prompt": "/gw",
+ "team_command": "/team 900000013",
+ "follow_up": "Why that captain rather than the other options? Keep it short."
+}

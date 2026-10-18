@@ -3,9 +3,11 @@
  * session and today, and what `gaffer admin` reports across every session. No parallel store: every
  * figure is read from the JSONL that Pi and the Gaffer extensions already write.
  *
- * - Cost and tokens: each assistant message's `usage` (Pi's own figures, ADR 0008).
+ * - Cost and tokens: each assistant message's `usage` (Pi's own figures, ADR 0008), plus Pi's `usage`
+ *   entries: cache warming and other calls outside the conversation (NFR-COST-05).
  * - Cost per tool: the cost of the assistant message that called it, split evenly between the calls it
- *   made, so the per-tool costs add up to the session's. Messages that call no tool count as "(text)".
+ *   made, so the per-tool costs add up to the session's. Messages that call no tool count as "(text)",
+ *   and `usage` entries as "(cache warming and other Pi calls)".
  * - Latency: an assistant message's `timestamp` is when it started and its entry's when it was written,
  *   so a model call takes entry − message time, a tool call takes its result's time − the calling
  *   message's entry time, and a run takes its user message → the `gaffer.recommendation` entry.
@@ -46,7 +48,15 @@ export interface Entry {
 	timestamp?: string;
 	message?: Message;
 	content?: unknown;
+	/** On a `usage` entry: what the call was for ("cache_warm", …), and its model and usage. */
+	kind?: string;
+	provider?: string;
+	model?: string;
+	usage?: Usage;
 }
+
+/** The row that holds Pi's `usage` entries in the per-tool costs. */
+export const PI_CALLS = "(cache warming and other Pi calls)";
 
 export interface Tokens {
 	input: number;
@@ -113,7 +123,7 @@ export interface SessionUsage {
 	snapshots: { count: number; stale: number; endpoints: Record<string, EndpointStat> };
 	/** The team hashes the session's snapshots were for (never the raw id). */
 	teams: string[];
-	/** Cost by UTC day (assistant message start times). */
+	/** Cost by UTC day (assistant message start times; a `usage` entry's own time). */
 	byDay: Record<string, number>;
 }
 
@@ -227,6 +237,23 @@ export function sessionUsage(entries: readonly Entry[], file = ""): SessionUsage
 			if (run) {
 				run.cost += cost;
 				run.calls++;
+			}
+		}
+		// Pi's own calls outside the conversation: in the session's cost, tokens, model and day, not in a run or the call count.
+		if (e.type === "usage") {
+			const cost = e.usage?.cost?.total ?? 0;
+			const model = `${e.provider ?? "?"}/${e.model ?? "?"}`;
+			u.cost += cost;
+			addTokens(u.tokens, e.usage);
+			const bm = (u.byModel[model] ??= { calls: 0, cost: 0, tokens: emptyTokens() });
+			bm.cost += cost;
+			addTokens(bm.tokens, e.usage);
+			const t = (u.tools[PI_CALLS] ??= { calls: 0, errors: 0, totalMs: 0, maxMs: 0, timed: 0, cost: 0 });
+			t.calls++;
+			t.cost += cost;
+			if (Number.isFinite(at)) {
+				const day = new Date(at).toISOString().slice(0, 10);
+				u.byDay[day] = (u.byDay[day] ?? 0) + cost;
 			}
 		}
 		if (e.type === "message" && m?.role === "toolResult") {
@@ -359,7 +386,7 @@ const secs = (x: number | null) => (x === null ? "?" : `${Math.round(x / 1000)} 
 export function usageLines(session: SessionUsage, today: { day: string; sessions: number; cost: number }, cfg: { soft: number; hard: number; daily: number; maxTurns: number }): string[] {
 	const t = session.tokens;
 	const tools = Object.entries(session.tools)
-		.filter(([name]) => name !== "(text)")
+		.filter(([name]) => name !== "(text)" && name !== PI_CALLS)
 		.map(([name, s]) => `${name} ${s.calls}${s.errors ? ` (${s.errors} failed)` : ""}`);
 	const recs = session.runs.filter((r) => r.recommendation);
 	const last = session.runs.at(-1);
@@ -371,6 +398,8 @@ export function usageLines(session: SessionUsage, today: { day: string; sessions
 		`  runs: ${session.runs.length}, ${recs.length} with a recommendation` + (last ? `; last run ${secs(last.ms)}${last.recommendation ? " to its recommendation" : ""}` : ""),
 	];
 	if (tools.length) lines.push(`  tools: ${tools.join(" · ")}`);
+	const pi = session.tools[PI_CALLS];
+	if (pi) lines.push(`  ${PI_CALLS}: ${pi.calls}, ${usd(pi.cost)}`);
 	if (session.validations.failed) lines.push(`  submissions refused by the gate: ${session.validations.failed} of ${session.validations.attempts}`);
 	lines.push(`  budget: soft ${cap(cfg.soft)} (${softState}) · hard ${cap(cfg.hard)}${session.budget.capped ? ` (stopped: ${session.budget.capped})` : ""} · ${cfg.maxTurns} turns a run`);
 	lines.push(`Today (UTC ${today.day}): ${usd(today.cost)} across ${today.sessions} session${today.sessions === 1 ? "" : "s"}; daily cap ${cap(cfg.daily)} (${usd(Math.max(cfg.daily - today.cost, 0))} left)`);

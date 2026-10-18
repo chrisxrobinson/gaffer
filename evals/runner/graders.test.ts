@@ -1,6 +1,6 @@
 /** The eval suite's code graders on fixed inputs (FR-EVL-02, NFR-SEC-03, FR-INP-02, FR-REC-04). */
 import { describe, expect, it } from "vitest";
-import { budgetExhausted, type CaseResult, chipScenarios, type EvalCase, gradeExpectations, gradeInjection, gradePrefs, gradeValidity, summarise, type ToolCall } from "./graders.ts";
+import { budgetExhausted, type CaseResult, chipScenarios, type EvalCase, gradeExpectations, gradeFollowUp, gradeInjection, gradePrefs, gradeValidity, summarise, type ToolCall } from "./graders.ts";
 
 const CASE: EvalCase = {
 	id: "c", title: "t", tags: [], team_id: 900000001, season: "2026-27", gw: 6, deadline: "2026-10-10T10:00:00Z", as_of: "2026-10-01T20:50:03Z",
@@ -88,6 +88,47 @@ describe("expectations and chip scenarios", () => {
 	});
 });
 
+describe("follow-up (NFR-COST-04)", () => {
+	const user = { type: "message", message: { role: "user" } };
+	const call = (cost: number, input: number, cacheRead: number, cacheWrite: number, extra: Record<string, unknown> = {}) => ({
+		type: "message", message: { role: "assistant", stopReason: "stop", content: [{ type: "text", text: "answer" }], usage: { input, output: 100, cacheRead, cacheWrite, cost: { total: cost } }, ...extra },
+	});
+	const session = [user, call(0.03, 5000, 0, 9000), call(0.02, 200, 9000, 3000), { type: "custom" }, user, call(0.004, 50, 12000, 400)];
+	const same = [{ system: "s1", fpl_context_updates: 0 }, { system: "s1", fpl_context_updates: 0 }, { system: "s1", fpl_context_updates: 1 }];
+
+	it("reports the follow-up's cost, cache-read share and cost against the recommendation run's", () => {
+		const g = gradeFollowUp(session, same);
+		expect(g.problems).toEqual([]);
+		expect(g.follow_up).toMatchObject({ model_calls: 1, tokens: { input: 50, output: 100, cacheRead: 12000, cacheWrite: 400 }, system_prompts: 1, context_as_system_message: true, requests: 3, answer_chars: 6 });
+		expect(g.follow_up.cost).toBeCloseTo(0.004, 9);
+		expect(g.follow_up.recommendation_cost).toBeCloseTo(0.05, 9);
+		expect(g.follow_up.cost_ratio).toBeCloseTo(0.08, 9);
+		expect(g.follow_up.cache_read_share).toBeCloseTo(12000 / 12450, 9);
+	});
+
+	it("fails on a rebuilt system prompt: low cache reads, a changed leading prompt, no mid-conversation context", () => {
+		const rebuilt = [...session.slice(0, -1), call(0.035, 50, 665, 12000)];
+		const g = gradeFollowUp(rebuilt, [same[0], same[1], { system: "s2", fpl_context_updates: 0 }]);
+		expect(g.pass).toBe(false);
+		expect(g.problems).toEqual([
+			"cache-read share 5.2% < 80%",
+			"the leading system prompt changed: 2 versions over 3 requests",
+			"the follow-up's fpl_context did not arrive as a later system message",
+		]);
+	});
+
+	it("the faux provider's estimated tokens are reported but not held to the cache-read target", () => {
+		const low = [...session.slice(0, -1), call(0, 5000, 12000, 5000)];
+		expect(gradeFollowUp(low, same).problems).toEqual(["cache-read share 54.5% < 80%"]);
+		expect(gradeFollowUp(low, same, { cacheReadTarget: null })).toMatchObject({ pass: true, follow_up: { cache_read_share: 12000 / 22000 } });
+	});
+
+	it("fails without a follow-up or when it errors", () => {
+		expect(gradeFollowUp(session.slice(0, 3), []).problems).toEqual(["no follow-up prompt in the session"]);
+		expect(gradeFollowUp([...session.slice(0, -1), call(0, 0, 0, 0, { stopReason: "error" })], []).problems).toEqual(["the follow-up ended in an error"]);
+	});
+});
+
 describe("summary", () => {
 	const row = (id: string, valid: boolean, rec: number | null, g0: number | null, cost: number, ms: number | null, extra: Partial<CaseResult> = {}): CaseResult => ({
 		schema: "gaffer.evalresult/1", run_id: "r", case: id, title: id, tags: [], model: "m", valid, attempts: valid ? 1 : 3, grades: { valid: { pass: valid, problems: [] } },
@@ -112,5 +153,12 @@ describe("summary", () => {
 		expect(s.latency_ms).toEqual({ p50: 70_000, p95: 90_000, max: 90_000, n: 3 });
 		expect(s.wildcard_or_free_hit_not_evaluated).toEqual({ cases: 1, of: 3, ids: ["b"] });
 		expect(s.errors).toEqual([{ case: "c", error: "timed out" }]);
+	});
+	it("a follow-up case counts its recommendation run in the median per recommendation, and its follow-up separately", () => {
+		const follow_up = { cost: 0.004, recommendation_cost: 0.05, cost_ratio: 0.08, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, cache_read_share: 0.96, model_calls: 1, answer_chars: 10, system_prompts: 1, context_as_system_message: true, requests: 5 };
+		const s = summarise([row("f", true, 50, 50, 0.054, 60_000, { follow_up, grades: { valid: { pass: true, problems: [] }, follow_up: { pass: true, problems: [] } } })], { run_id: "r", model: "m", started_at: "s", finished_at: "f" });
+		expect(s.cost.total).toBeCloseTo(0.054, 9);
+		expect(s.cost.median_per_recommendation).toBe(0.05);
+		expect(s.follow_ups).toEqual({ cases: 1, passed: 1, cache_read_share: [{ case: "f", share: 0.96, cost: 0.004, cost_ratio: 0.08 }] });
 	});
 });

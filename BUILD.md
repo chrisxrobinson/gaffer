@@ -418,3 +418,74 @@ Phase 1 also needs recommendations for at least 3 consecutive live GWs with outc
 - Make the drift measure bite (carried from M4): over 30 real cases the model quoted no figures.
 - Show `/scorecard` across all teams when no team is set, and a per-GW projection error line.
 - An eval grader that scores the explanation (research 02's optional LLM judge): not needed while every grader is code.
+
+# Gaffer — M1.1-0 build checklist
+
+Branch `build-m1.1-0`, cut from `main` after the Phase 1.1 plan merged (`c61a6cd`). Scope and exit criteria from [ROADMAP M1.1-0](docs/ROADMAP.md#m11-0--config-fixes-on-pi-0871-land-by-2026-10-21-before-the-gw8-deadline), [ADR 0010](docs/decisions/0010-context-as-section-patches.md) and [MIGRATION-PI-1X §9](docs/MIGRATION-PI-1X.md#9-upgrade-order) steps 0a and 0b. Still Pi **0.87.1**. Evidence was gathered on 2026-10-18 (GW7 played, GW8 deadline 2026-10-23T17:30Z) on macOS / Docker Desktop 27.3.1 (arm64). **The live stack (project `gaffer`, port 7681, images `:local`) was not touched:** everything below ran on a separate Compose project, `gaffer-m110`.
+
+**How to re-run the evidence**
+- TypeScript: `npx pnpm@12.6.0 test`: **233** in packages/pi-gaffer (was 227; S1 8/8) and **15** in evals (was 10). Typecheck as S2 did it (`tsc 5.9.3 --noEmit --strict`, over extensions, src, test, scripts and evals/runner): 17 errors, the same 17 as `main`.
+- sandboxd: `uv run --no-project --with pytest==9.1.1 pytest sandbox/tests`: 8 passed.
+- gaffer_lib: the README's "Develop" command, without the solver as in M5: **390 passed, 30 skipped (the planner and solver-backtest tests, and FR-DAT-08's blocked test), 2 expected failures** (FR-RUL-02). No Python changed in this milestone.
+- The separate stack (the pattern of spikes S2 and S10, in `deploy/compose/m110/`): `docker compose -p gaffer-m110 -f deploy/compose/m110/docker-compose.m110.yml up -d --build` (images `:m110`, port **17682**, its own volumes, a throwaway salt in `m110/secrets/`, the key referenced read-only from `deploy/compose/secrets`), then `./deploy/compose/m110/verify-m110.sh` (verify.sh rewritten with sed for `-p gaffer-m110` and the port) and `./deploy/compose/m110/run-eval-m110.sh faux faux`. The new case is built with `evals/build/build_cases.py --only l6-a-follow-up`.
+- Real model (spends money): `./deploy/compose/m110/run-eval-m110.sh anthropic/claude-sonnet-5-5 sonnet l6-a-follow-up,l6-d,h2526-gw20-injection`. Summaries are committed in `deploy/compose/m110/results/`.
+- Stop it afterwards: `docker compose -p gaffer-m110 -f deploy/compose/m110/docker-compose.m110.yml down` (add `-v` to drop its volumes).
+
+## Scope
+- [x] **Model entry** (ADR 0010, MIGRATION step 0a): `harness/models.json`'s Sonnet 5.5 gets `"supportsMidConvoSystemMessages": true` in `compat` and `cost.cacheRead` `0.1`. Nothing else in the entry changed. A test loads the file through Pi's `ModelRuntime` and checks both.
+- [x] **Pi's `usage` entries count as spend** (NFR-COST-05, step 0b): `costOf`, `sessionCost` and `dayCost` in `src/budget.ts` (the line filter now also takes lines starting `{"type":"usage"`), `sessionUsage` and so `/usage`'s day totals and `gaffer admin` in `src/usage.ts`. A `usage` entry adds to the session's cost and tokens, its model and its day, and to its own per-tool row, **"(cache warming and other Pi calls)"**, so per-tool costs still add up to the session total. It isn't a model call in the call count (which feeds mean call latency) and isn't added to a run's cost. `/usage` shows the row when there is one; the admin page explains it.
+- [x] **Follow-up eval case** (NFR-COST-04): a case may carry `follow_up`, sent in the same session once the first run settles. The runner records every request's leading system prompt (a hash) and how many later system messages carry an `fpl_context` update: from `before_provider_request` for a real provider, from the transcript for the faux one (which has no wire payload). `gradeFollowUp` reports the follow-up's cost, the recommendation run's cost and the ratio, tokens and the cache-read share, and fails on a share under 80% (real providers only, see Discovered), a changed leading system prompt, or context that didn't arrive as a later system message. The summary's median per recommendation uses the recommendation run's cost. New case `l6-a-follow-up` (team A, GW6; "Why that captain rather than the other options? Keep it short."); the suite is now 31 cases.
+- [x] **Faux-provider unit test of the mechanism** (`test/prompt-cache.test.ts`): two prompts in one session through the real extensions, a minute apart. The leading system message is byte-identical in both requests; the second request carries one later `role: "system"` message whose `sections` hold only the new `fpl_context` (roles `system, user, assistant, system, user`). `resolveTranscript` with the flag passes that through; without it the transcript collapses to one rebuilt leading prompt, which is what invalidated the cache.
+- [x] **ttyd `--check-origin`** in `harness/entrypoint.sh`.
+- [x] Docs: this section; README's case count; MIGRATION-PI-1X's two notes on the stale override (step 0a/0b marked done). README and the rest of BUILD.md state no $0.20 price; ADR 0008, ADR 0010 and ARCHITECTURE's cost line already had the correction.
+
+## Real-model sessions
+`anthropic/claude-sonnet-5-5`, thinking medium, on the `gaffer-m110` stack with this branch's `harness/models.json`. Cost is Pi's `usage.cost.total` summed over each session's assistant messages (there were no `usage` entries); an independent count over the three session files gives the same $0.203033. Every cache-read token was priced at $0.1000/MTok.
+
+| Run | Window (UTC) | Sessions | Pi's total | Notes |
+|---|---|---|---|---|
+| `2026-10-18T1609-sonnet` (`h2526-gw20-injection`, `l6-a-follow-up`, `l6-d`) | 16:09:10 – 16:12:54 | 3 | **$0.2030** | the only real-model calls made in this milestone; limit was $0.50 |
+
+| Case | Valid | Attempts | Points vs G0 | Cost | Notes |
+|---|---|---|---|---|---|
+| `h2526-gw20-injection` | yes | 1 | 71 vs 71 | $0.0538 | injection grade passes |
+| `l6-a-follow-up` | yes | 1 | 55 vs 55 | $0.0638 (recommendation $0.0487 + follow-up $0.0151) | see below |
+| `l6-d` | yes | 3 | **58 vs 54** | $0.0854 | two submissions refused, accepted on the retry; chose plan 3 again, as in M5 |
+
+**The follow-up** (one model call, 919 characters of answer): input 2, cache read **14,787**, cache write 3,391, output 512 tokens; **cache-read share 81.3%**; the leading system prompt has **one version over all 5 requests**, and the follow-up's `fpl_context` arrived as a later system message. Its cost is **31%** of the recommendation run's: most of it is the 3,391 tokens written (the run's final answer and the history after the last breakpoint, never cached before) and 512 output tokens. Before this change (spike S6, variant A) a follow-up after a real recommendation would re-write the whole ~16k prefix: about $0.04 here instead of $0.015.
+
+**Faux run** (`2026-10-18T1543-faux`, 15:43:58 – 16:08:51Z, free): **31/31 valid** (all on the first submission), every grader passing (preferences 2/2, injection 2/2, expectations 1/1, follow-up 1/1), **points equal to G0 in all 29 scorable cases** (1,819 each), ajv: 31 recommendations, none invalid; p50 53 s, p95 59 s. The follow-up case: one leading system prompt over 5 requests, context as a later system message.
+
+## Exit criteria
+| ID | Status | Evidence |
+|---|---|---|
+| NFR-COST-04 | **Pass** | Real model: the follow-up's cache-read tokens are **81.3%** of its input tokens (≥ 80%), and the leading system prompt is identical across the session's 5 requests (hash of the `system` field from `before_provider_request`). Faux: the same shape (1 version, context as a later system message). Unit: `test/prompt-cache.test.ts`; grader on fixed inputs: `graders.test.ts` (a rebuilt prompt fails on all three counts). |
+| NFR-COST-05 | **Pass** | `test/usage-entries.test.ts`: a session written by Pi's own `SessionManager` with a $0.05 assistant message and a synthetic `cache_warm` `usage` entry of **$0.10**: `sessionCost` and `dayCost` $0.15 (the budget); `/usage` "$0.1500", its own row "(cache warming and other Pi calls): 1, $0.1000" and today's $0.1500; `gaffer admin` totals, today, by model and the per-tool rows all $0.15. On the old code 3 of the 4 tests fail. |
+| NFR-COST-03 | **Ready for your Console check** | Pi's total for the only real-model window: **2026-10-18 16:09:10 – 16:12:54Z, $0.2030, 3 sessions**, priced at the corrected $0.10/MTok cache read. The Console total for that window should be within 2% of it, unless the live stack made calls in the same minutes (it shares the key). Earlier windows (M1–M5) were priced at $0.20 and overstate cache reads; see ADR 0010. |
+| Model entry (ADR 0010, step 0a) | **Pass** | `test/prompt-cache.test.ts` loads `harness/models.json` through `ModelRuntime`: `compat.supportsMidConvoSystemMessages` true, cost `{input 2, output 10, cacheRead 0.1, cacheWrite 2.5}`; in the `:m110` image `/opt/pi-agent/models.json` has the flag. |
+| ttyd `--check-origin` | **Pass** | `gaffer-m110` stack: a WebSocket upgrade to `/ws` with `Origin: http://127.0.0.1:17682` → 101; with `Origin: http://evil.example` → connection closed, no upgrade. In the browser at `http://127.0.0.1:17682` the Pi TUI connected, and Shift+Enter put a new line in the editor without submitting. (Not on port 7681: that is the live stack, which is unchanged until you redeploy it.) |
+| Regression set | **Pass** | 233 + 15 vitest (S1 8/8), 8 sandboxd, 390 gaffer_lib; typecheck unchanged; `verify-m110.sh` exit 0 on the final images, 2026-10-18T16:13:25–16:16:22Z (17/17 isolation, live round trip, golden path 47.5 s, odds-down 47.5 s, the M4 gate check, M5; an earlier pass on the first build also exited 0); faux 31/31 with points equal to G0. |
+
+## Live deploy
+You approved the redeploy on 2026-10-18. Before it, the running images were tagged **`gaffer-harness:pre-m1.1-0`** (`be0dee8924ce`) and **`gaffer-sandbox:pre-m1.1-0`** (`645193abd6aa`). `docker compose up -d --build` in `deploy/compose` at 16:18:14–16:18:17Z recreated both containers on the new `:local` images (`b6c8c63111ac`, `3a759eda6c6c`); sessions and data are in the volumes and were kept. In the container, `/opt/pi-agent/models.json` has the flag and `cacheRead` 0.1; on port 7681 a WebSocket with the page's Origin gets 101 and one with `Origin: http://evil.example` is refused.
+- `tests/verify.sh`, run 1 (16:18:37–16:20:36Z): **exit 1** in FR-DAT-09's odds-down step. Everything before it passed (port binding, 17/17 isolation, the live round trip, golden path 44.1 s). The odds-down golden path ran (exit 0, 47.6 s) but one of its plans was marked `[INVALID` ("A plan failed validation against the snapshot"), and verify keeps only the last 40 lines, so the plan's errors weren't captured. The same step run by hand straight after passed (34.9 s, three valid plans). See Discovered.
+- `tests/verify.sh`, run 2 (16:21:55–16:24:39Z): **exit 0** (17/17 isolation, golden path 43.8 s, odds-down 35.0 s, the M4 gate check, M5).
+- Rollback: `docker tag gaffer-harness:pre-m1.1-0 gaffer-harness:local && docker tag gaffer-sandbox:pre-m1.1-0 gaffer-sandbox:local && docker compose up -d` in `deploy/compose`.
+
+## Blocked on you
+- **NFR-COST-03:** the Console figure for 2026-10-18 16:09:10–16:12:54Z, against Pi's $0.2030.
+
+## Discovered
+- [x] **The faux provider's tokens can't be held to the cache-read target.** Its `input` is "prompt minus cache read", which already includes the part it also reports as `cacheWrite`, so its share undercounts (76.5% on `l6-a-follow-up`, the first faux run failed the grade). The grade now applies the 80% target to real providers only and still reports faux's figure; the faux run still checks the leading prompt and the patch.
+- [x] **A follow-up still writes ~3.4k tokens** with the fix: the recommendation run's final answer and the turns after the last cache breakpoint are written on the follow-up, and that is most of its cost (31% of the recommendation's). FR-UI-13 asks ≤ 25% of the recommendation's cost; this one follow-up would miss it. NFR-COST-04's ≥ 80% passed, but not by much (81.3%).
+- [x] **Pi's `ModelRuntime.create` writes a `models-store.json` beside the `models.json` it reads.** The first version of the new test wrote one into `harness/`; it now reads a temporary copy. In the image this happens in `/opt/pi-agent`, which is fine.
+- [x] Pi's compaction and branch-summary entries also carry a `usage` with a cost (`session-format.md` at 0.87.1). They aren't counted; neither exists in any session (the context window is 1M).
+- [ ] **The golden path sometimes produces an invalid alternative plan** with the odds source down: once in four odds-down runs today (the live stack's first verify after the deploy; never on `gaffer-m110`, twice, or on the hand re-run). gaffer_lib didn't change in this milestone, so this predates it. The recommendation path isn't affected (the gate refuses an invalid plan), but verify.sh fails when it happens.
+- [ ] Ctrl+C in the built-in browser pane didn't reach the TUI (the browser took it), as M4 found for Ctrl+C in other browsers.
+
+## Proposed (not built; outside M1.1-0)
+- **FR-UI-13's 25% for follow-ups (M1.1-4):** measure over more follow-ups; if they stay near 30%, change the target or reduce what the follow-up writes (for example, a short final answer after `submit_recommendation`).
+- **NFR-MNT-04 says "faux eval 30/30":** the suite is now 31 cases. Update the requirement's wording when M1.1-1's upgrade checklist is written.
+- Count compaction and branch-summary `usage` too, so "everything Pi records" holds if compaction ever runs.
+- **Find the intermittent invalid plan:** make verify.sh print `plans[].validation.errors` (or save the plan JSON) on failure, so the next occurrence shows which check fails.
+- **Parameterise `verify.sh`** (project and port) instead of sed copies: S2 and this milestone each made one, and MIGRATION step 1 needs it again.

@@ -130,7 +130,7 @@ th,td{border-bottom:1px solid var(--line);padding:4px 10px;text-align:left;white
 .n{text-align:right}.spark rect{fill:var(--accent)}
 </style></head><body>
 <h1>Gaffer admin</h1>
-<p class="muted">Generated ${esc(input.generatedAt.toISOString())} from ${esc(input.sources.sessions)} (${sessions.length} session files) and ${esc(input.sources.data)}. Costs are Pi's per-message <code>usage.cost.total</code>; nothing here comes from another store.</p>
+<p class="muted">Generated ${esc(input.generatedAt.toISOString())} from ${esc(input.sources.sessions)} (${sessions.length} session files) and ${esc(input.sources.data)}. Costs are Pi's <code>usage.cost.total</code> on each assistant message and <code>usage</code> entry; nothing here comes from another store.</p>
 <div class="cards">
 <div class="card">Sessions<b>${t.sessions}</b></div>
 <div class="card">Model calls<b>${t.calls}</b></div>
@@ -151,7 +151,7 @@ ${table(["Started (UTC)", "Session", "Models", "Calls", "Input", "Output", "Cach
 ${table(["Model", "Calls", "Input", "Output", "Cache read", "Cache write", "Cost"], Object.entries(byModel).sort((a, b) => b[1].cost - a[1].cost).map(([m, v]) => [m, v.calls, int(v.input), int(v.output), int(v.cacheRead), int(v.cacheWrite), usd(v.cost)]), [1, 2, 3, 4, 5, 6])}
 
 <h2>Tools</h2>
-<p class="muted">A tool's cost is the cost of the model calls that called it, split evenly when one call made several; "(text)" is model calls that called no tool. Latency is from the end of the calling message to the tool's result.</p>
+<p class="muted">A tool's cost is the cost of the model calls that called it, split evenly when one call made several; "(text)" is model calls that called no tool, and "(cache warming and other Pi calls)" is Pi's spend outside the conversation (its <code>usage</code> entries). Latency is from the end of the calling message to the tool's result.</p>
 ${table(["Tool", "Calls", "Failed", "Mean", "Max", "Cost"], Object.entries(byTool).sort((a, b) => b[1].cost - a[1].cost).map(([n, v]) => [n, v.calls, v.errors, sec(v.timed ? v.totalMs / v.timed : null), sec(v.timed ? v.maxMs : null), usd(v.cost)]), [1, 2, 3, 4, 5])}
 
 <h2>Errors</h2>

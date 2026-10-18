@@ -1,4 +1,4 @@
-/** Spend accounting from Pi's per-message usage (ADR 0008). */
+/** Spend accounting from Pi's per-message usage and its `usage` entries (ADR 0008, ADR 0010). */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { BudgetConfig } from "./config.ts";
@@ -9,11 +9,14 @@ interface EntryLike {
 	data?: unknown;
 	timestamp?: string;
 	message?: { role?: string; timestamp?: number; usage?: { cost?: { total?: number } } };
+	usage?: { cost?: { total?: number } };
 }
 
-const costOf = (e: EntryLike) => (e.type === "message" && e.message?.role === "assistant" ? (e.message.usage?.cost?.total ?? 0) : 0);
+/** An assistant message's cost, or a `usage` entry's: what Pi spends outside the conversation (cache warming, summaries; NFR-COST-05). */
+const costOf = (e: EntryLike) =>
+	e.type === "message" && e.message?.role === "assistant" ? (e.message.usage?.cost?.total ?? 0) : e.type === "usage" ? (e.usage?.cost?.total ?? 0) : 0;
 
-/** Total cost of every assistant message in the session file, on all branches: money spent on an abandoned branch is still spent. */
+/** Total cost of every assistant message and `usage` entry in the session file, on all branches: money spent on an abandoned branch is still spent. */
 export function sessionCost(entries: readonly EntryLike[]): number {
 	return entries.reduce((sum, e) => sum + costOf(e), 0);
 }
@@ -22,7 +25,7 @@ function sameUtcDay(ms: number, day: Date): boolean {
 	return new Date(ms).toISOString().slice(0, 10) === day.toISOString().slice(0, 10);
 }
 
-/** Cost of assistant messages timestamped on `day` (UTC) across every session file under dir. */
+/** Cost of assistant messages and `usage` entries timestamped on `day` (UTC) across every session file under dir. */
 export function dayCost(dir: string, day: Date): number {
 	let files: string[];
 	try {
@@ -39,7 +42,7 @@ export function dayCost(dir: string, day: Date): number {
 			continue;
 		}
 		for (const line of text.split("\n")) {
-			if (!line.includes('"assistant"')) continue;
+			if (!line.includes('"assistant"') && !line.startsWith('{"type":"usage"')) continue;
 			try {
 				const e = JSON.parse(line) as EntryLike;
 				const ms = e.message?.timestamp ?? (e.timestamp ? Date.parse(e.timestamp) : Number.NaN);

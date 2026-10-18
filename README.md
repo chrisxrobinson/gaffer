@@ -117,7 +117,7 @@ browser ──ws──> ttyd ─> tmux ─> pi + pi-gaffer          (gaffer cont
   - Prompt templates (`prompts/`): `/gw`, `/whatif`, `/explain`.
 - **Sandbox (`sandbox/`):** Python 3.14 with the analytics stack, `gaffer_lib` and [open-fpl-solver](https://github.com/solioanalytics/open-fpl-solver) (pinned commit, HiGHS), driven by `sandboxd`, a small HTTP exec service.
 - **Library (`python/gaffer_lib/`):** rules, `derive`, `validate`, the model (`strength`, `minutes`, `xp`), the planner (`plan`), the one-command golden path (`python -m gaffer_lib run --snapshot … --out /work/plan.json`), `recompute` (the second half of the gate: `python -m gaffer_lib validate --request`), `outcomes` (`python -m gaffer_lib score`: a finished GW's points for a line-up, the baselines and the projection error) and the `backtest`.
-- **Tools (`tools/`, also in the harness image):** `gaffer-eval` (live tracking) and `gaffer-admin` (the admin report). **Evals (`evals/`):** the 30 cases, their builder, and the headless runner behind `pnpm eval`.
+- **Tools (`tools/`, also in the harness image):** `gaffer-eval` (live tracking) and `gaffer-admin` (the admin report). **Evals (`evals/`):** the 31 cases (one with a follow-up prompt, NFR-COST-04), their builder, and the headless runner behind `pnpm eval`.
 - **Snapshots:** each `fpl_snapshot` call writes an immutable, content-hashed snapshot under `/data/snapshots/`. The sandbox can read it, but not write to it.
 - **Records:** every recommendation is a `gaffer.recommendation` entry in Pi's session log, next to a `gaffer.validation` entry holding exactly what the gate was given. `/data/ledger/recommendations.jsonl` indexes them, `/data/ledger/outcomes.jsonl` scores them once their GW is finished, `/data/users/<hash>/prefs.json` holds preferences, `/data/exports/` the exports and `/data/admin/admin.html` the admin report. Team IDs appear in those files only as an HMAC hash.
 
@@ -167,7 +167,7 @@ node packages/pi-gaffer/scripts/export-schema.ts
 # (rejected, corrected, stored, exported, replayed). No API key needed.
 cd deploy/compose && ./tests/verify.sh
 
-# the eval suite (FR-EVL-02) through the running stack: 30 cases, results in evals/results/<date>-<model>.jsonl.
+# the eval suite (FR-EVL-02) through the running stack: 31 cases, results in evals/results/<date>-<model>.jsonl.
 # Needs the history once (tools/fetch_history.py, above). The scripted faux model is free and is what CI runs;
 # a real model costs about $0.05 a case. Any provider/model Pi supports works; --only runs some cases.
 npx pnpm@12.6.0 eval
