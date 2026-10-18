@@ -108,13 +108,13 @@ async function newSession(dir: string, scripted: boolean, requests: RequestShape
 	const faux = scripted ? fauxProvider({ provider: "faux", models: [{ id: "faux-1" }] }) : undefined;
 	const factories: ExtensionFactory[] = faux ? [(pi: ExtensionAPI) => pi.registerProvider(faux.provider as never)] : [];
 	// A real provider's request as sent (NFR-COST-04): the leading system prompt, and any later system message with an fpl_context update.
-	factories.push((pi: ExtensionAPI) =>
+	factories.push((pi: ExtensionAPI) => {
 		pi.on("before_provider_request", (event) => {
 			const p = (event as { payload?: { system?: unknown; messages?: { role: string; content: unknown }[] } }).payload;
 			if (!p) return;
 			requests.push({ system: hash(p.system ?? null), fpl_context_updates: (p.messages ?? []).filter((m) => m.role === "system" && JSON.stringify(m.content).includes("fpl_context")).length });
-		}),
-	);
+		});
+	});
 	let extra: Record<string, unknown> = {};
 	if (values.package === "repo") {
 		const ext = (n: string) => import(resolve(REPO, `packages/pi-gaffer/extensions/${n}/index.ts`)).then((m) => m.default as ExtensionFactory);
