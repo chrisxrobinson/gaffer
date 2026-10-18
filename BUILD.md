@@ -466,8 +466,13 @@ Branch `build-m1.1-0`, cut from `main` after the Phase 1.1 plan merged (`c61a6cd
 | ttyd `--check-origin` | **Pass** | `gaffer-m110` stack: a WebSocket upgrade to `/ws` with `Origin: http://127.0.0.1:17682` → 101; with `Origin: http://evil.example` → connection closed, no upgrade. In the browser at `http://127.0.0.1:17682` the Pi TUI connected, and Shift+Enter put a new line in the editor without submitting. (Not on port 7681: that is the live stack, which is unchanged until you redeploy it.) |
 | Regression set | **Pass** | 233 + 15 vitest (S1 8/8), 8 sandboxd, 390 gaffer_lib; typecheck unchanged; `verify-m110.sh` exit 0 on the final images, 2026-10-18T16:13:25–16:16:22Z (17/17 isolation, live round trip, golden path 47.5 s, odds-down 47.5 s, the M4 gate check, M5; an earlier pass on the first build also exited 0); faux 31/31 with points equal to G0. |
 
+## Live deploy
+You approved the redeploy on 2026-10-18. Before it, the running images were tagged **`gaffer-harness:pre-m1.1-0`** (`be0dee8924ce`) and **`gaffer-sandbox:pre-m1.1-0`** (`645193abd6aa`). `docker compose up -d --build` in `deploy/compose` at 16:18:14–16:18:17Z recreated both containers on the new `:local` images (`b6c8c63111ac`, `3a759eda6c6c`); sessions and data are in the volumes and were kept. In the container, `/opt/pi-agent/models.json` has the flag and `cacheRead` 0.1; on port 7681 a WebSocket with the page's Origin gets 101 and one with `Origin: http://evil.example` is refused.
+- `tests/verify.sh`, run 1 (16:18:37–16:20:36Z): **exit 1** in FR-DAT-09's odds-down step. Everything before it passed (port binding, 17/17 isolation, the live round trip, golden path 44.1 s). The odds-down golden path ran (exit 0, 47.6 s) but one of its plans was marked `[INVALID` ("A plan failed validation against the snapshot"), and verify keeps only the last 40 lines, so the plan's errors weren't captured. The same step run by hand straight after passed (34.9 s, three valid plans). See Discovered.
+- `tests/verify.sh`, run 2 (16:21:55–16:24:39Z): **exit 0** (17/17 isolation, golden path 43.8 s, odds-down 35.0 s, the M4 gate check, M5).
+- Rollback: `docker tag gaffer-harness:pre-m1.1-0 gaffer-harness:local && docker tag gaffer-sandbox:pre-m1.1-0 gaffer-sandbox:local && docker compose up -d` in `deploy/compose`.
+
 ## Blocked on you
-- **Redeploying the live stack** with this branch (`cd deploy/compose && docker compose up -d --build`): your call, before the GW8 deadline (2026-10-23T17:30Z) if you want the cheaper follow-ups for GW8.
 - **NFR-COST-03:** the Console figure for 2026-10-18 16:09:10–16:12:54Z, against Pi's $0.2030.
 
 ## Discovered
@@ -475,10 +480,12 @@ Branch `build-m1.1-0`, cut from `main` after the Phase 1.1 plan merged (`c61a6cd
 - [x] **A follow-up still writes ~3.4k tokens** with the fix: the recommendation run's final answer and the turns after the last cache breakpoint are written on the follow-up, and that is most of its cost (31% of the recommendation's). FR-UI-13 asks ≤ 25% of the recommendation's cost; this one follow-up would miss it. NFR-COST-04's ≥ 80% passed, but not by much (81.3%).
 - [x] **Pi's `ModelRuntime.create` writes a `models-store.json` beside the `models.json` it reads.** The first version of the new test wrote one into `harness/`; it now reads a temporary copy. In the image this happens in `/opt/pi-agent`, which is fine.
 - [x] Pi's compaction and branch-summary entries also carry a `usage` with a cost (`session-format.md` at 0.87.1). They aren't counted; neither exists in any session (the context window is 1M).
+- [ ] **The golden path sometimes produces an invalid alternative plan** with the odds source down: once in four odds-down runs today (the live stack's first verify after the deploy; never on `gaffer-m110`, twice, or on the hand re-run). gaffer_lib didn't change in this milestone, so this predates it. The recommendation path isn't affected (the gate refuses an invalid plan), but verify.sh fails when it happens.
 - [ ] Ctrl+C in the built-in browser pane didn't reach the TUI (the browser took it), as M4 found for Ctrl+C in other browsers.
 
 ## Proposed (not built; outside M1.1-0)
 - **FR-UI-13's 25% for follow-ups (M1.1-4):** measure over more follow-ups; if they stay near 30%, change the target or reduce what the follow-up writes (for example, a short final answer after `submit_recommendation`).
 - **NFR-MNT-04 says "faux eval 30/30":** the suite is now 31 cases. Update the requirement's wording when M1.1-1's upgrade checklist is written.
 - Count compaction and branch-summary `usage` too, so "everything Pi records" holds if compaction ever runs.
+- **Find the intermittent invalid plan:** make verify.sh print `plans[].validation.errors` (or save the plan JSON) on failure, so the next occurrence shows which check fails.
 - **Parameterise `verify.sh`** (project and port) instead of sed copies: S2 and this milestone each made one, and MIGRATION step 1 needs it again.
