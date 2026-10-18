@@ -75,7 +75,7 @@ Every one of these is a real API in Pi 0.87.1. Each was tested in [Spike S1](../
 | Durable non-context records | `pi.appendEntry(customType, data)` | S1-7; [session format](https://pi.dev/docs/latest/session-format) |
 | Slash commands | `pi.registerCommand(name, { handler })` | [extensions doc](https://pi.dev/docs/latest/extensions) |
 | Rendering tool results in the TUI | `renderResult(result, opts, theme)` on the tool | `examples/extensions/structured-output.ts` |
-| Budget enforcement | `turn_end` handler, `ctx.abort()` (`types.d.ts:239`), `pi.sendUserMessage(…, { deliverAs: "steer" })` (`types.d.ts:1055`) | source |
+| Budget enforcement | `turn_end` handler, `ctx.abort()` (`types.d.ts:239`), `pi.sendMessage({customType, content, display}, { deliverAs: "steer" })` (as built; `types.ts:1731-1745 @v1.3.0`, unchanged; 1.2.0's `deliverAs` requirement applies to `sendUserMessage`, which Gaffer doesn't use) | source; research 07 |
 | FPL-aware compaction | `session_before_compact` returning a custom summary | `types.d.ts:985`; research 01 §10 |
 | Provider/model swap | `pi.registerProvider()`, `models.json`, `--provider/--model` | [custom-provider doc](https://pi.dev/docs/latest/custom-provider) |
 | Skills | `SKILL.md` directories, progressive disclosure (only name, description and path go in the prompt) | [skills doc](https://pi.dev/docs/latest/skills); S1-8 |

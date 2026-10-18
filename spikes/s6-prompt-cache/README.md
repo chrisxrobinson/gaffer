@@ -1,6 +1,6 @@
 # Spike S6 — Does rewriting `fpl_context` on every prompt defeat prompt caching?
 
-**Date:** 2026-10-17 · **Pi:** 0.87.1 and 1.3.0 · **Model:** `anthropic/claude-sonnet-5-5`, thinking medium (real API) · **Spend:** $0.1637 over 5 runs · **Result: yes for follow-up prompts, and a one-line model-config change fixes it on both versions.**
+**Date:** 2026-10-17 · **Pi:** 0.87.1 and 1.3.0 · **Model:** `anthropic/claude-sonnet-5-5`, thinking medium (real API) · **Spend:** $0.1967 over 6 runs · **Result: yes for follow-up prompts, and a one-line model-config change fixes it on both versions.**
 
 ## Question
 `gaffer-core` rebuilds two system-prompt sections in `before_agent_start` on every prompt. `fpl_context` always changes, because it carries `now: <ISO time>` and a countdown to the deadline (`packages/pi-gaffer/src/prompt.ts:59-95`). Does that defeat Anthropic prompt caching? Would mid-conversation system messages (in Pi since 0.86.0, not 1.0 as the brief assumed) carry the deadline-aware context more cheaply?
@@ -45,6 +45,18 @@ cd spikes/s6-prompt-cache/v1.3.0 && npm ci && cp ../s6.ts . && ANTHROPIC_API_KEY
 - **0.87.1 and 1.3.0 behave identically.** The fix doesn't need the upgrade.
 - **Behaviour:** in B every answer used the current context. The model sees the original section in the leading prompt and the update after it. Each later prompt adds about 250 tokens (one more copy of `fpl_context`), which is negligible at Gaffer's session lengths.
 - **Thinking:** no thinking blocks in any S6 call (short prompts; adaptive thinking chose not to think). Pi requests `display: "summarized"` by default and supports only `"summarized" | "omitted"` (`anthropic-messages.ts:192, 1287, 1294`): it never asks for Sonnet 5.5's `display: "updates"` progress notes. In the live stack's sessions (read-only count, 2026-10-17), 69 of 201 Sonnet 5.5 calls carry a thinking block, all non-empty, about 200 characters each.
+
+## Variant C: Pi 1.3.0's own catalogue entry (the M1.1-1 configuration)
+On 1.3.0, with no `models.json` entry at all, Sonnet 5.5 resolves from Pi's catalogue, which sets `supportsMidConvoSystemMessages`, `supportsMidConvoToolChanges` and `supportsMidConvoEffort`. That changes the request shape in three ways S6's variant B didn't test (research 07): `thinking: {type: "adaptive", display: "summarized", block_binding: {prefix_mismatch_behavior: "drop_block"}}`, `output_config.effort` plus a per-request effort marker sent as a `role: "system"` message, and the inline-tools beta. Run `C-1.3.0-think` ($0.0330, thinking `high`, a reasoning first prompt and two follow-ups):
+
+| Call | Cache read / write | Thinking | Result |
+|---|---|---|---|
+| 1 (snapshot) | 0 / 3,187 | 165 chars | tool call |
+| 2 (answer) | 3,187 / 1,207 | 590 chars | stop |
+| 3 (follow-up 1) | 4,394 / 1,357 | — | stop |
+| 4 (follow-up 2) | 5,751 / 289 | 229 chars | stop |
+
+The API accepted every request; follow-ups read the cache as in variant B; summarized thinking arrived. The request log shows the effort markers and the `fpl_context` updates as mid-conversation system messages (`usausaussauss` by the fourth request). This pre-checks MIGRATION-PI-1X step 4; spike S10 runs the eval cases on the same configuration.
 
 ## Price (found on the way)
 Anthropic lowered Sonnet 5.5 cache reads from $0.20 to **$0.10/MTok** on **2026-10-07** (release notes: "0.05x the base input price instead of 0.1x"; the pricing page fetched 2026-10-17 agrees, and so does Pi 1.3.0's catalogue). Gaffer's `harness/models.json` still says $0.20, which was right when it was written (2026-09-28) and has been stale since 2026-10-07. So Gaffer's figures for M4 (2026-10-11), M5 and the eval summaries (2026-10-16) overstate cache-read cost by 2×. A typical recommendation (BUILD.md M4: about 40k cache-read, 11k cache-write and 2k output tokens, about $0.055) carries $0.008 of cache reads at $0.20 but $0.004 at the true price, so Gaffer's figure is about 7% too high. That alone would fail NFR-COST-03's 2% check against the Console for any window after 2026-10-07. (The bundled API reference in this session still says $0.20; the release notes and the live price list win because they are primary and dated.)
