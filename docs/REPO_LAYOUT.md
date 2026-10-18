@@ -14,6 +14,7 @@ gaffer/
 │   │   │   ├── gaffer-data/       #   fpl_snapshot tool: fetch, cache-bust, TTL, retry+jitter, validate, snapshot
 │   │   │   ├── gaffer-recommend/  #   submit_recommendation (validate + recompute + terminate), set_preferences, renderer
 │   │   │   └── gaffer-budget/     #   per-session/day cost caps, soft-cap steering
+│   │   ├── src/                   #   shared code; 1.1: commands.ts, the command allowlist and refusals (for both UIs)
 │   │   ├── src/schema/            #   TypeBox schemas: recommendation/1 (with the submission and prefs), FPL response subsets
 │   │   ├── scripts/               #   export-schema.ts (→ schemas/recommendation-1.json), replay.ts (rec_id → rerun the gate, NFR-OBS-01)
 │   │   ├── skills/                #   SKILL.md directories (see list below)
@@ -29,10 +30,10 @@ gaffer/
 │       ├── src/gaffer_lib/        #   rules, derive, strength, minutes, xp, plan, ownership, validate, backtest, cli
 │       └── tests/                 #   pytest + Hypothesis; golden files from event/{gw}/live explain[]
 ├── sandbox/                       # Sandbox image: Dockerfile (python:3.14-slim), sandboxd.py exec service, seccomp/ (vendored Moby default profile), tests/
-├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux + gaffer-web), tmux.conf, entrypoint (ttyd and gaffer-web), gaffer-pi launcher (TUI and --mode rpc), ttyd page script (keys, OSC 52 copy, viewport);
+├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux + gaffer-web), tmux.conf, entrypoint (ttyd and gaffer-web), gaffer-pi launcher (TUI and --mode rpc), ttyd page script (keys, OSC 52 copy, title, viewport) and ttyd's palette from docs/ui/brand/tokens.json;
 │                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013; M1.1-1); models.json only for models the catalogue lacks (none today)
 ├── deploy/
-│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks)
+│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs and commands.mjs, the NFR-SEC-08 and FR-UI-06 gates), m1xx/ (each milestone's separate evidence stack)
 │   ├── aws/                       #   Phase 2 IaC: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager
 │   └── generic/                   #   Caddy + oauth2-proxy compose override for Hetzner/Fly-style hosts
 ├── evals/                         # A workspace package: `pnpm eval` (runner/cli.ts)
