@@ -66,11 +66,12 @@ describe("countdown and title", () => {
 });
 
 /** Test-only: a fixed cost per assistant message (the faux provider reports $0), as in extensions.test.ts. */
-const costPerMessage = (usd: number) => (pi: ExtensionAPI) =>
+const costPerMessage = (usd: number) => (pi: ExtensionAPI) => {
 	pi.on("message_end", (event) => {
 		const m = event.message as { role: string; usage?: { cost: Record<string, number> } };
 		if (m.role === "assistant" && m.usage) return { message: { ...m, usage: { ...m.usage, cost: { ...m.usage.cost, total: usd } } } as never };
 	});
+};
 
 describe("status strip with the real extensions (FR-UI-05)", () => {
 	let env: GafferTestEnv;
