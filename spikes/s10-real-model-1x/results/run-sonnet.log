@@ -1,0 +1,70 @@
+[09:08:11] run 20261018T090811-anthropic_claude-sonnet-5-5: 5 case(s), model anthropic/claude-sonnet-5-5, thinking medium, package installed; sessions /sessions/evals/20261018T090811-anthropic_claude-sonnet-5-5
+[09:08:11] h2526-gw33-dgw: 2025/26 GW33: six clubs play twice
+[09:09:19]   recommendation 01KPD7AE2BBFZ9AJQAK18VPS5F (attempts 1); $0.0770; 68 s; points 86 vs G0 62; tools fpl_snapshot,read,bash,read,bash,bash,read,bash,submit_recommendation
+[09:09:19] l6-a-injured-captain: GW6 2026/27, team A: the squad's best player by ep_next is ruled out (he did not play GW6)
+[09:10:20]   recommendation 01M3WKR8Y5ZVQ962ZTF5GDKQ8V (attempts 1); $0.0532; 61 s; points 55 vs G0 55; tools fpl_snapshot,read,bash,read,bash,submit_recommendation
+[09:10:20] l6-b-prefs: GW6 2026/27, team B with saved preferences: save Wildcard and Free Hit, keep the best player, avoid the best non-squad player, no hits
+[09:11:30]   recommendation 01M3WKRGRBQW65D3YPFBH9RP61 (attempts 1); $0.0595; 69 s; points 47 vs G0 47; tools fpl_snapshot,read,bash,read,bash,bash!,bash,submit_recommendation
+[09:11:30] l6-b-stale-t30: GW6 2026/27, team B, 30 minutes before the deadline with FPL updating: no transfers can be finalised (FR-DAT-05)
+[09:12:00]   recommendation 01M4JJCCNGQ2HFFX0BHAWPB19D (attempts 1); $0.0367; 22 s; points 62 vs G0 62; tools fpl_snapshot,read,bash,bash,submit_recommendation
+[09:12:00] l7-f-5ft-all-chips: GW7 2026/27, team F: 5 free transfers and all eight chips
+[09:13:17]   recommendation 01M4P1Q6J1145WH6YT2765HQBN (attempts 1); $0.0544; 77 s; points – vs G0 –; tools fpl_snapshot,read,bash,read,bash,bash,submit_recommendation
+[09:13:17] results: /data/evals/results/2026-10-18T0908-sonnet-catalogue.jsonl
+{
+  "schema": "gaffer.evalsummary/1",
+  "run_id": "20261018T090811-anthropic_claude-sonnet-5-5",
+  "model": "anthropic/claude-sonnet-5-5",
+  "started_at": "2026-10-18T09:08:11.620Z",
+  "finished_at": "2026-10-18T09:13:17.598Z",
+  "cases": 5,
+  "validator_pass": {
+    "passed": 5,
+    "of": 5,
+    "rate": 1,
+    "within_two_retries": 5
+  },
+  "points_vs_g0": {
+    "cases": 4,
+    "recommended": 250,
+    "g0": 226,
+    "diff": 24,
+    "better": 1,
+    "same": 3,
+    "worse": 0,
+    "unscorable": [
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "preferences": {
+    "cases": 1,
+    "passed": 1
+  },
+  "injection": {
+    "cases": 0,
+    "passed": 0
+  },
+  "expectations": {
+    "cases": 1,
+    "passed": 1
+  },
+  "cost": {
+    "total": 0.280652,
+    "median_per_recommendation": 0.054355900000000006,
+    "max": 0.0769828
+  },
+  "latency_ms": {
+    "p50": 67513,
+    "p95": 77041,
+    "max": 77041,
+    "n": 5
+  },
+  "wildcard_or_free_hit_not_evaluated": {
+    "cases": 1,
+    "of": 5,
+    "ids": [
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "errors": []
+}
+results: /Users/chrisrobinson/Documents/git/Gaffer/spikes/s10-real-model-1x/results/2026-10-18T0908-sonnet-catalogue.summary.json

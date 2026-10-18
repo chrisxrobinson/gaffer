@@ -1,0 +1,7 @@
+[09:03:01] run 20261018T090301-anthropic_claude-sonnet-5-5: 6 case(s), model anthropic/claude-sonnet-5-5, thinking medium, package repo; sessions /sessions/evals/20261018T090301-anthropic_claude-sonnet-5-5
+[09:03:01] h2526-gw33-dgw: 2025/26 GW33: six clubs play twice
+[09:04:20]   recommendation 01KPD7ARWKV6PS9ED58FC2TFMJ (attempts 2); $0.0796; 79 s; points 62 vs G0 62; tools fpl_snapshot,read!,bash!,bash,submit_recommendation!,bash,submit_recommendation
+[09:04:20] l6-a-injured-captain: GW6 2026/27, team A: the squad's best player by ep_next is ruled out (he did not play GW6)
+[09:05:40]   recommendation 01M3WKRV8CPVNKQDPJM0D21VBJ (attempts 3); $0.0933; 80 s; points 55 vs G0 55; tools fpl_snapshot,read!,bash!,bash,submit_recommendation!,submit_recommendation!,bash,submit_recommendation
+[09:05:40] l6-b-prefs: GW6 2026/27, team B with saved preferences: save Wildcard and Free Hit, keep the best player, avoid the best non-squad player, no hits
+canceled

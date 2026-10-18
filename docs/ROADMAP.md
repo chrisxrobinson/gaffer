@@ -88,7 +88,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
   - ADR 0012's lock in the same change: `--no-mcp` on every CLI launch, `-builtin:` entries for MCP, codemode, tool search and llama.cpp in `settings.json`, the `--tools` allowlist kept
   - the security-relevant settings from ADR 0013: `sessionShareDestination: "gist"`, `externalEditor: "/bin/false"`, `enableSkillCommands: false`, `doubleEscapeAction: "none"`, and the keybindings that reach model, thinking, editor, suspend, tree, fork and session delete unbound
   - the upgrade gate as CI tests: S3's lock checks (NFR-SEC-08), the default model's price and compat check (NFR-MNT-05)
-  - qualify Claude Haiku 5.5 with the full real-model suite as a candidate default (ADR 0008 amendment); the decision is recorded, not assumed
+  - *(done in planning, spike S10: Claude Haiku 5.5 qualified against the full suite and not adopted, ADR 0008; the catalogue entry pre-checked on six Sonnet 5.5 cases)*
 - **Exit:** NFR-MNT-01 (whole Pi tree pinned), NFR-MNT-04, NFR-MNT-05, NFR-SEC-08; the regression set on 1.3.0; ≥ 5 real-model Sonnet 5.5 cases including a follow-up, with cost per recommendation within NFR-COST-01 and no rise against M1.1-0; a TUI check in the browser (reasoning shown, recommendation at 100 columns, FR-OUT-02).
 
 ### M1.1-2 — Gaffer Terminal (deploy after the GW9 deadline, 2026-10-31 11:00Z – 11-02, before GW10)

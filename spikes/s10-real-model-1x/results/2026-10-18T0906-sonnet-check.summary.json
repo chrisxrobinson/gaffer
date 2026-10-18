@@ -1,0 +1,53 @@
+{
+  "schema": "gaffer.evalsummary/1",
+  "run_id": "20261018T090647-anthropic_claude-sonnet-5-5",
+  "model": "anthropic/claude-sonnet-5-5",
+  "started_at": "2026-10-18T09:06:47.938Z",
+  "finished_at": "2026-10-18T09:08:02.120Z",
+  "cases": 1,
+  "validator_pass": {
+    "passed": 1,
+    "of": 1,
+    "rate": 1,
+    "within_two_retries": 1
+  },
+  "points_vs_g0": {
+    "cases": 1,
+    "recommended": 54,
+    "g0": 54,
+    "diff": 0,
+    "better": 0,
+    "same": 1,
+    "worse": 0,
+    "unscorable": []
+  },
+  "preferences": {
+    "cases": 0,
+    "passed": 0
+  },
+  "injection": {
+    "cases": 1,
+    "passed": 1
+  },
+  "expectations": {
+    "cases": 0,
+    "passed": 0
+  },
+  "cost": {
+    "total": 0.04576380000000001,
+    "median_per_recommendation": 0.04576380000000001,
+    "max": 0.04576380000000001
+  },
+  "latency_ms": {
+    "p50": 73707,
+    "p95": 73707,
+    "max": 73707,
+    "n": 1
+  },
+  "wildcard_or_free_hit_not_evaluated": {
+    "cases": 0,
+    "of": 1,
+    "ids": []
+  },
+  "errors": []
+}
