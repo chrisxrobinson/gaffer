@@ -10,9 +10,9 @@ import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const PI = "/usr/local/lib/node_modules/@earendil-works/pi-coding-agent";
+const PI = "/opt/pi/node_modules/@earendil-works/pi-coding-agent";
 const { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager } = await import(`${PI}/dist/index.js`);
-const { fauxProvider, fauxAssistantMessage, fauxToolCall, fauxText } = await import(`${PI}/node_modules/@earendil-works/pi-ai/dist/index.js`);
+const { fauxProvider, fauxAssistantMessage, fauxToolCall, fauxText } = await import("/opt/pi/node_modules/@earendil-works/pi-ai/dist/index.js");
 const { findRun, replay } = await import("/opt/pi-gaffer/src/replay.ts");
 const { providerFromEnv, SandboxSession } = await import("/opt/pi-gaffer/src/sandbox.ts");
 

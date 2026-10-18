@@ -8,9 +8,9 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const PI = "/usr/local/lib/node_modules/@earendil-works/pi-coding-agent";
+const PI = "/opt/pi/node_modules/@earendil-works/pi-coding-agent";
 const { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager } = await import(`${PI}/dist/index.js`);
-const { fauxProvider, fauxAssistantMessage, fauxToolCall, fauxText } = await import(`${PI}/node_modules/@earendil-works/pi-ai/dist/index.js`);
+const { fauxProvider, fauxAssistantMessage, fauxToolCall, fauxText } = await import("/opt/pi/node_modules/@earendil-works/pi-ai/dist/index.js");
 
 const teamId = Number(process.env.TEAM_ID ?? 1);
 const agentDir = "/opt/pi-agent"; // the real install: pi-gaffer comes from settings.json

@@ -26,7 +26,11 @@ RUN set -eu; \
 FROM ${NODE_IMAGE}
 RUN apt-get update && apt-get install -y --no-install-recommends tmux=3.5a-3 && rm -rf /var/lib/apt/lists/*
 COPY --from=ttyd /out/ttyd /usr/local/bin/ttyd
-RUN npm install -g @earendil-works/pi-coding-agent@1.3.0 && npm cache clean --force
+# Pi and its whole dependency tree from a committed lockfile (NFR-MNT-01, ADR 0009): since 1.0.1 Pi ships no
+# npm-shrinkwrap.json, so `npm install -g` would resolve the transitive dependencies afresh on every build.
+COPY harness/pi/package.json harness/pi/package-lock.json /opt/pi/
+RUN cd /opt/pi && npm ci --no-audit --no-fund && npm cache clean --force \
+ && ln -s /opt/pi/node_modules/.bin/pi /usr/local/bin/pi
 
 ENV PI_CODING_AGENT_DIR=/opt/pi-agent \
     PI_TELEMETRY=0 \
@@ -58,12 +62,12 @@ COPY tools/gaffer-admin /opt/tools/gaffer-admin
 COPY tools/gaffer-eval /opt/tools/gaffer-eval
 COPY evals/package.json /opt/evals/package.json
 COPY evals/runner /opt/evals/runner
-RUN set -eu; P=/usr/local/lib/node_modules/@earendil-works/pi-coding-agent; \
+RUN set -eu; P=/opt/pi/node_modules; \
     mkdir -p /opt/packages /opt/node_modules/@earendil-works; \
     ln -s /opt/pi-gaffer /opt/packages/pi-gaffer; \
-    ln -s "$P" /opt/node_modules/@earendil-works/pi-coding-agent; \
-    ln -s "$P/node_modules/@earendil-works/pi-ai" /opt/node_modules/@earendil-works/pi-ai; \
-    ln -s "$P/node_modules/typebox" /opt/node_modules/typebox
+    ln -s "$P/@earendil-works/pi-coding-agent" /opt/node_modules/@earendil-works/pi-coding-agent; \
+    ln -s "$P/@earendil-works/pi-ai" /opt/node_modules/@earendil-works/pi-ai; \
+    ln -s "$P/typebox" /opt/node_modules/typebox
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/
 # Models newer than Pi 0.87.1's bundled catalogue (claude-sonnet-5-5), added by configuration (ADR 0008).
