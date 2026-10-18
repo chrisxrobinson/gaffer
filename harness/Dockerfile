@@ -70,8 +70,6 @@ RUN set -eu; P=/opt/pi/node_modules; \
     ln -s "$P/typebox" /opt/node_modules/typebox
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/
-# Models newer than Pi 0.87.1's bundled catalogue (claude-sonnet-5-5), added by configuration (ADR 0008).
-COPY --chown=10002:10002 harness/models.json /opt/pi-agent/models.json
 # Keys that reach model and thinking changes, the external editor, suspend, the session tree, fork, and
 # session delete and rename in the /resume selector, unbound (ADR 0013).
 COPY --chown=10002:10002 harness/keybindings.json /opt/pi-agent/keybindings.json

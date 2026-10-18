@@ -1,0 +1,9 @@
+{
+  "$comment": "NFR-MNT-05: the default model's prices (USD per million tokens) and compat flag, updated by hand from the provider's price list and release notes, never from Pi. test/default-model.test.ts fails when Pi's catalogue disagrees.",
+  "checked": "2026-10-18",
+  "source": "Anthropic pricing page and release notes (Sonnet 5.5 cache read $0.10/MTok since 2026-10-07; ADR 0010)",
+  "provider": "anthropic",
+  "model": "claude-sonnet-5-5",
+  "cost": { "input": 2, "output": 10, "cacheRead": 0.1, "cacheWrite": 2.5 },
+  "compat": { "supportsMidConvoSystemMessages": true }
+}

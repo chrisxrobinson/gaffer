@@ -8,7 +8,7 @@
   | Model | Input | Output | Cache read |
   |---|---|---|---|
   | `claude-sonnet-5` | $2 | $10 | $0.20 |
-  | `claude-sonnet-5-5` (not in the 0.87.1 catalogue; added via `harness/models.json`, prices from Anthropic's published rates, ID and limits verified with the Models API on 2026-09-28) | $2 | $10 | $0.20 until 2026-10-07, **$0.10 since** (Anthropic release notes; ADR 0010) |
+  | `claude-sonnet-5-5` (not in the 0.87.1 catalogue, so added via `harness/models.json` until Pi 1.3.0; from M1.1-1 Pi's catalogue entry, checked by `test/default-model.test.ts`; ID and limits verified with the Models API on 2026-09-28) | $2 | $10 | $0.20 until 2026-10-07, **$0.10 since** (Anthropic release notes; ADR 0010) |
   | `claude-haiku-5-5` (launched 2026-10-07; in Pi's catalogue from 1.1.0; prompts ≤ 100k tokens) | $0.10 | $0.50 | $0.01 |
   | `claude-opus-5-5` | $4 | $20 | — |
   | `claude-haiku-4-5` | $1 | $5 | — |
@@ -37,5 +37,5 @@
 - The per-message usage data is also what the admin centre reads, so there is one source for spend.
 
 ## Amendments
-- **2026-10-17 ([ADR 0010](0010-context-as-section-patches.md)):** the Sonnet 5.5 cache-read price fell to $0.10/MTok on 2026-10-07 and `harness/models.json` is corrected (on Pi ≥ 1.1 the override is removed and the catalogue entry used). The model entry also gains `supportsMidConvoSystemMessages`, so per-prompt sections don't re-bill the history. Spend now includes Pi's `usage` entries (cache warming, summaries), which the caps previously missed. Prices are checked against the provider's price list and release notes at each Pi upgrade.
+- **2026-10-17 ([ADR 0010](0010-context-as-section-patches.md)):** the Sonnet 5.5 cache-read price fell to $0.10/MTok on 2026-10-07 and `harness/models.json` is corrected (on Pi 1.3.0, from M1.1-1, the file is deleted and the catalogue entry used). The model entry also gains `supportsMidConvoSystemMessages`, so per-prompt sections don't re-bill the history. Spend now includes Pi's `usage` entries (cache warming, summaries), which the caps previously missed. Prices are checked against the provider's price list and release notes at each Pi upgrade.
 - **2026-10-18 ([spike S10](../../spikes/s10-real-model-1x/README.md)):** Claude Haiku 5.5 ($0.10/$0.50) was qualified against the full suite on Pi 1.3.0 and **not adopted**. It was valid 30/30 and cost $0.0086 median per recommendation, but its latency p50 was 101 s (NFR-LAT-01: ≤ 90 s), only 9/30 cases passed on the first submission (6 used the last of three attempts), and five cases scored worse than the golden path. Sonnet 5.5 stays the default; Haiku is reconsidered if cost becomes the constraint (Phase 3), after a prompt pass. The same spike ran six Sonnet 5.5 cases on Pi 1.3.0 with the catalogue entry: identical points and attempts to the 0.87.1 run.

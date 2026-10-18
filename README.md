@@ -80,7 +80,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | Variable | Default | Meaning |
 |---|---|---|
 | `GAFFER_PROVIDER` | `anthropic` | Pi provider |
-| `GAFFER_MODEL` | `claude-sonnet-5-5` | Model ID. Models newer than Pi 0.87.1's catalogue are declared in [`harness/models.json`](harness/models.json) |
+| `GAFFER_MODEL` | `claude-sonnet-5-5` | Model ID, from Pi's model catalogue (Sonnet 5.5's prices and flags are checked at each Pi upgrade, NFR-MNT-05) |
 | `GAFFER_THINKING` | `medium` | Pi thinking level |
 | `GAFFER_BUDGET_SOFT` | `0.75` | USD per session. When a run crosses it, the model is told once to wrap up and submit |
 | `GAFFER_BUDGET_HARD` | `1.50` | USD per session. The run is stopped when it crosses this |
@@ -88,7 +88,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
 | `GAFFER_SESSIONS_ROOT` | `/sessions` (image) | The directory whose sessions the daily cap and `/usage` sum |
 
-To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in [`harness/models.json`](harness/models.json). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
+To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in a `models.json` in the agent dir (`/opt/pi-agent`); the image ships none (ADR 0009). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
 
 On a Linux host with gVisor installed, you can run the sandbox under `runsc`:
 
