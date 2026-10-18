@@ -173,7 +173,7 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 	// This session's own JSONL file, as persisted.
 	const sessionEntries = () => {
 		const file = session.sessionManager.getSessionFile();
-		if (!file || !existsSync(file)) return []; // Pi creates the file lazily
+		if (!file || !existsSync(file)) return []; // Pi creates the file lazily, at the first user message
 		return readFileSync(file, "utf8")
 			.trim()
 			.split("\n")

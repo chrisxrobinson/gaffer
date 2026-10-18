@@ -129,7 +129,7 @@ export default function gafferCore(pi: ExtensionAPI) {
 				const now = new Date();
 				const dir = sessionsRoot(ctx.sessionManager.getSessionDir());
 				const file = ctx.sessionManager.getSessionFile();
-				// This session from memory (Pi writes its file lazily), the others from disk.
+				// This session from memory (Pi writes its file lazily, from the first user message), the others from disk.
 				const session = sessionUsage(ctx.sessionManager.getEntries() as never, file ?? "");
 				const others = scanSessions(dir).filter((s) => !file || join(dir, s.file) !== file);
 				const day = now.toISOString().slice(0, 10);

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://pi.dev/schemas/keybindings.schema.json",
+  "app.model.select": [],
+  "app.model.cycleForward": [],
+  "app.model.cycleBackward": [],
+  "app.thinking.cycle": [],
+  "app.editor.external": [],
+  "app.suspend": [],
+  "app.session.tree": [],
+  "app.session.fork": [],
+  "app.session.delete": [],
+  "app.session.deleteNoninvasive": [],
+  "app.session.rename": []
+}

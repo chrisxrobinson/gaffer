@@ -1,6 +1,8 @@
 # NFR-MNT-02: every pull request, including Renovate's Pi upgrades, runs the S1 checks (as vitest
-# tests), the unit tests, the Python suites, and the eval suite with the scripted faux model through
-# the real stack. No secrets: the faux model needs no API key, and CI is never given one.
+# tests), the unit tests (with the SDK lock check and the default model's price check, NFR-SEC-08 and
+# NFR-MNT-05), the Python suites, the CLI lock check in the built image, and the eval suite with the
+# scripted faux model through the real stack. No secrets: the faux model needs no API key, and CI is
+# never given one.
 name: ci
 on:
   pull_request:
@@ -70,6 +72,10 @@ jobs:
         run: |
           ./init-secrets.sh
           docker compose up -d --build --wait
+      # NFR-SEC-08: the image's pi, settings and launch line with hostile mcp.json files (no key needed).
+      - name: built-ins locked off
+        working-directory: deploy/compose
+        run: docker compose exec -T gaffer node --input-type=module - < tests/lockdown.mjs
       - name: pnpm eval --model faux
         run: $PNPM eval --model faux
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

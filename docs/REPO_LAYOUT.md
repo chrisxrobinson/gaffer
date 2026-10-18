@@ -6,7 +6,7 @@
 gaffer/
 ├── packages/
 │   ├── pi-gaffer/                 # THE Pi package: extensions + skills + prompts + theme (installed with `pi install`)
-│   │   ├── package.json           #   "pi": { extensions, skills, prompts, themes }; pins @earendil-works/pi-coding-agent exactly (0.87.1; 1.3.0 from M1.1-1, ADR 0009)
+│   │   ├── package.json           #   "pi": { extensions, skills, prompts, themes }; pins @earendil-works/pi-coding-agent exactly (1.3.0 since M1.1-1, ADR 0009)
 │   │   ├── extensions/
 │   │   │   ├── gaffer-core/       #   customPrompt + sections, tool allowlist, user_bash block, slash commands, compaction;
 │   │   │   │                      #   1.1: header/footer/title, command allowlist (autocomplete + editor wrapper), session and run locks, /run, /help
@@ -30,7 +30,7 @@ gaffer/
 │       └── tests/                 #   pytest + Hypothesis; golden files from event/{gw}/live explain[]
 ├── sandbox/                       # Sandbox image: Dockerfile (python:3.14-slim), sandboxd.py exec service, seccomp/ (vendored Moby default profile), tests/
 ├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux + gaffer-web), tmux.conf, entrypoint (ttyd and gaffer-web), gaffer-pi launcher (TUI and --mode rpc), ttyd page script (keys, OSC 52 copy, viewport);
-│                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013); models.json only for models the catalogue lacks
+│                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013; M1.1-1); models.json only for models the catalogue lacks (none today)
 ├── deploy/
 │   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks)
 │   ├── aws/                       #   Phase 2 IaC: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager

@@ -68,7 +68,7 @@ To stop the stack, run `docker compose down`. Your sessions and snapshots are ke
 
 ### Using the terminal UI
 
-- It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Home and End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit). To select text with the mouse, hold Shift while dragging.
+- It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Ctrl+Home and Ctrl+End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit). To select text with the mouse, hold Shift while dragging.
 - `!` shell commands are disabled, because the harness container holds the API key. Gaffer's own code runs in the sandbox.
 - Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session.
 - **Only one browser tab can be connected at a time.** A second tab shows "Press ⏎ to Reconnect" and won't connect until the first tab is closed. See [Troubleshooting](#troubleshooting).
@@ -80,7 +80,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | Variable | Default | Meaning |
 |---|---|---|
 | `GAFFER_PROVIDER` | `anthropic` | Pi provider |
-| `GAFFER_MODEL` | `claude-sonnet-5-5` | Model ID. Models newer than Pi 0.87.1's catalogue are declared in [`harness/models.json`](harness/models.json) |
+| `GAFFER_MODEL` | `claude-sonnet-5-5` | Model ID, from Pi's model catalogue (Sonnet 5.5's prices and flags are checked at each Pi upgrade, NFR-MNT-05) |
 | `GAFFER_THINKING` | `medium` | Pi thinking level |
 | `GAFFER_BUDGET_SOFT` | `0.75` | USD per session. When a run crosses it, the model is told once to wrap up and submit |
 | `GAFFER_BUDGET_HARD` | `1.50` | USD per session. The run is stopped when it crosses this |
@@ -88,7 +88,7 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
 | `GAFFER_SESSIONS_ROOT` | `/sessions` (image) | The directory whose sessions the daily cap and `/usage` sum |
 
-To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in [`harness/models.json`](harness/models.json). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
+To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in a `models.json` in the agent dir (`/opt/pi-agent`); the image ships none (ADR 0009). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
 
 On a Linux host with gVisor installed, you can run the sandbox under `runsc`:
 
@@ -106,7 +106,7 @@ browser ──ws──> ttyd ─> tmux ─> pi + pi-gaffer          (gaffer cont
                                    └─ /sessions, /data (snapshots) ──ro──>  non-root, read-only root)
 ```
 
-- **Harness (`harness/`):** Node 24, Pi 0.87.1 from npm, the `pi-gaffer` package installed with `pi install`, and ttyd with tmux.
+- **Harness (`harness/`):** Node 24, Pi 1.3.0 from npm (`npm ci` from `harness/pi/package-lock.json`), the `pi-gaffer` package installed with `pi install`, the agent settings and keybindings in `harness/` (built-ins locked off, ADR 0012), and ttyd with tmux.
 - **Package (`packages/pi-gaffer/`):** five extensions, six skills and three prompt templates. The model sees seven tools: Pi's `read`, `write`, `edit` and `bash` (all running in the sandbox), `fpl_snapshot`, `submit_recommendation` and `set_preferences`.
   - `gaffer-core`: the prompt, the tool allowlist, the `!` shell block, `/team`, `/prefs`, `/export-rec`, `/usage` and `/scorecard`.
   - `gaffer-sandbox`: Pi's four file and shell tools, routed to the sandbox.

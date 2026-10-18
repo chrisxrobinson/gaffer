@@ -6,6 +6,7 @@
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type FauxResponseStep, fauxAssistantMessage, fauxText, fauxToolCall } from "@earendil-works/pi-ai";
+import { VERSION } from "@earendil-works/pi-coding-agent";
 import Ajv2020 from "ajv/dist/2020.js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { submitResultLines } from "../extensions/gaffer-recommend/index.ts";
@@ -71,7 +72,7 @@ describe("submit_recommendation (ADR 0003: the single enforcement point)", () =>
 		// FR-OUT-01: the stored entry validates against the published JSON Schema.
 		expectSchemaValid(rec);
 		expect(rec).toMatchObject({
-			schema: "gaffer.recommendation/1", season: "2026/27", gw: 6, model: "faux/faux-1", gaffer_lib: doc.gaffer_lib, pi: "0.87.1",
+			schema: "gaffer.recommendation/1", season: "2026/27", gw: 6, model: "faux/faux-1", gaffer_lib: doc.gaffer_lib, pi: VERSION,
 			snapshot: { id: "snapshot-model", stale: false, stale_reason: null },
 			assumptions: { free_transfers: 3, ft_source: "derived", bank: 0, pending_transfers: [] },
 			hits: 0, hit_cost: 0, expected_points_gw: doc.plans[0].expected_points_gw,

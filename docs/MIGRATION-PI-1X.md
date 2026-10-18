@@ -187,6 +187,8 @@ Each step leaves Gaffer working and has its own gate. Steps 0a and 0b don't need
 
 ## Every Gaffer source line that must change for 1.3.0
 
+*Steps 1–5 done in M1.1-1 (BUILD.md, M1.1-1 section); step 6 is still optional.*
+
 **Required for the upgrade itself (S2):**
 - `packages/pi-gaffer/package.json:31-33`: `0.87.1` → `1.3.0` (pi-ai, pi-coding-agent, pi-tui)
 - `evals/package.json:11-12`: `0.87.1` → `1.3.0`

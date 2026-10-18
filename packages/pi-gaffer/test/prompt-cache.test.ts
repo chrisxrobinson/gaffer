@@ -3,18 +3,12 @@
  * through the real extensions: the faux provider records the transcript of every request. The leading
  * system message stays as the first prompt built it, and the second prompt's `fpl_context` arrives as a
  * later system message (a `SystemMessage.sections` patch). Pi's Anthropic adapter keeps such a message in
- * place only when the model's `compat.supportsMidConvoSystemMessages` is set (spike S6), which
- * harness/models.json now does for Sonnet 5.5.
+ * place only when the model's `compat.supportsMidConvoSystemMessages` is set (spike S6), which Pi's
+ * catalogue entry for Sonnet 5.5 does (test/default-model.test.ts).
  */
-import { copyFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
 import { fauxAssistantMessage, fauxText, getInitialSystemMessage, type Message, resolveTranscript, type SystemMessage, type TranscriptContext } from "@earendil-works/pi-ai";
-import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type GafferTestEnv, startEnv, startGaffer } from "./harness.ts";
-
-const MODELS = resolve(import.meta.dirname, "../../../harness/models.json");
 
 describe("follow-up prompts keep the leading system prompt (NFR-COST-04, ADR 0010)", () => {
 	let env: GafferTestEnv;
@@ -58,13 +52,4 @@ describe("follow-up prompts keep the leading system prompt (NFR-COST-04, ADR 001
 		expect((collapsed[0] as SystemMessage).sections?.fpl_context).toBe(later[0].sections!.fpl_context);
 		expect(collapsed.filter((m) => m.role === "system")).toHaveLength(1);
 	}, 60_000);
-
-	it("harness/models.json gives Sonnet 5.5 mid-conversation system messages and the $0.10 cache-read price", async () => {
-		const dir = mkdtempSync(join(tmpdir(), "gaffer-models-")); // a copy: Pi writes a models-store.json beside it
-		copyFileSync(MODELS, join(dir, "models.json"));
-		const runtime = await ModelRuntime.create({ modelsPath: join(dir, "models.json"), authPath: join(dir, "auth.json") } as never);
-		const model = runtime.getModel("anthropic", "claude-sonnet-5-5") as { compat?: { supportsMidConvoSystemMessages?: boolean }; cost: Record<string, number> } | undefined;
-		expect(model?.compat?.supportsMidConvoSystemMessages).toBe(true);
-		expect(model?.cost).toEqual({ input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 });
-	});
 });

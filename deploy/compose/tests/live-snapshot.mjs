@@ -8,9 +8,9 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const PI = "/usr/local/lib/node_modules/@earendil-works/pi-coding-agent";
+const PI = "/opt/pi/node_modules/@earendil-works/pi-coding-agent";
 const { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager } = await import(`${PI}/dist/index.js`);
-const { fauxProvider, fauxAssistantMessage, fauxToolCall, fauxText } = await import(`${PI}/node_modules/@earendil-works/pi-ai/dist/index.js`);
+const { fauxProvider, fauxAssistantMessage, fauxToolCall, fauxText } = await import("/opt/pi/node_modules/@earendil-works/pi-ai/dist/index.js");
 
 const teamId = Number(process.env.TEAM_ID ?? 1);
 const agentDir = "/opt/pi-agent"; // the real install: pi-gaffer comes from settings.json
@@ -19,6 +19,7 @@ const GOLDEN_LIMIT_S = 60; // NFR-LAT-03
 const faux = fauxProvider({ provider: "faux", models: [{ id: "faux-1" }] });
 let snapshotPath = "";
 let runCmd = "";
+const invalidPlans = `python -c "import json,sys; [print('invalid plan %d: %s' % (p['rank'], json.dumps(p['validation']['errors']))) for p in json.load(open(sys.argv[1]))['plans'] if not p['validation']['valid']]" /work/plan.json`;
 faux.setResponses([
 	fauxAssistantMessage(fauxToolCall("fpl_snapshot", { include: ["odds"] })),
 	(ctx) => {
@@ -32,11 +33,12 @@ faux.setResponses([
 			}),
 		);
 	},
-	// The golden path, exactly as the snapshot summary gives it, timed inside the sandbox.
+	// The golden path, exactly as the snapshot summary gives it, timed inside the sandbox. Then every invalid
+	// plan's full validation.errors, so an intermittent invalid plan shows which check failed.
 	() =>
 		fauxAssistantMessage(
 			fauxToolCall("bash", {
-				command: `S=$(date +%s.%N); ${runCmd} ${process.env.RUN_ARGS ?? ""}; echo run_exit=$?; python -c "import time,sys; print('run_seconds=%.1f' % (time.time()-float(sys.argv[1])))" $S; echo cpus=$(cat /sys/fs/cgroup/cpu.max)`,
+				command: `S=$(date +%s.%N); ${runCmd} ${process.env.RUN_ARGS ?? ""}; echo run_exit=$?; python -c "import time,sys; print('run_seconds=%.1f' % (time.time()-float(sys.argv[1])))" $S; echo cpus=$(cat /sys/fs/cgroup/cpu.max); ${invalidPlans}`,
 				timeout: 115,
 			}),
 		),
@@ -100,7 +102,7 @@ const run = results.filter((r) => r.tool === "bash").at(-1)?.text ?? "";
 const seconds = Number(/run_seconds=([\d.]+)/.exec(run)?.[1] ?? Number.NaN);
 if (!snap.odds?.requested) fail("the snapshot did not include the odds source");
 if (!snap.ep_next?.before_deadline || !(snap.ep_next.players > 0) || !recorded.length) fail("ep_next was not recorded before the deadline (FR-DAT-10)");
-if (!/^Gaffer plan for GW\d+/m.test(run) || !/run_exit=0/.test(run) || /\[INVALID/.test(run)) fail("the golden path did not produce a valid plan in the sandbox");
+if (!/^Gaffer plan for GW\d+/m.test(run) || !/run_exit=0/.test(run) || /\[INVALID/.test(run)) fail(`the golden path did not produce a valid plan in the sandbox\n${run.split("\n").filter((l) => /^invalid plan|\[INVALID/.test(l)).join("\n")}`);
 if (!(seconds <= GOLDEN_LIMIT_S)) fail(`the golden path took ${seconds} s (NFR-LAT-03 limit ${GOLDEN_LIMIT_S} s)`);
 if (!snap.odds.available && !/odds unavailable — team strength from Dixon-Coles/.test(run)) fail("odds were unavailable but the plan has no FR-DAT-09 warning");
 if (process.env.EXPECT && !new RegExp(process.env.EXPECT).test(run)) fail(`the run output does not match ${process.env.EXPECT}`);

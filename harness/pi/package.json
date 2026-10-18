@@ -1,0 +1,8 @@
+{
+  "name": "gaffer-harness-pi",
+  "private": true,
+  "description": "The harness image's Pi install, pinned with package-lock.json and installed with npm ci (NFR-MNT-01, ADR 0009)",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.3.0"
+  }
+}
