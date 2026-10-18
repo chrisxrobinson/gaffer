@@ -1,6 +1,7 @@
 {
   "theme": "gaffer-light/gaffer-dark",
   "quietStartup": true,
+  "autocompleteMaxVisible": 15,
   "extensions": ["-builtin:mcp", "-builtin:codemode", "-builtin:tool-search", "-builtin:llama.cpp"],
   "sessionShareDestination": "gist",
   "externalEditor": "/bin/false",

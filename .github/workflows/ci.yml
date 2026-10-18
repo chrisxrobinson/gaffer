@@ -1,8 +1,8 @@
 # NFR-MNT-02: every pull request, including Renovate's Pi upgrades, runs the S1 checks (as vitest
 # tests), the unit tests (with the SDK lock check and the default model's price check, NFR-SEC-08 and
-# NFR-MNT-05), the Python suites, the CLI lock check in the built image, and the eval suite with the
-# scripted faux model through the real stack. No secrets: the faux model needs no API key, and CI is
-# never given one.
+# NFR-MNT-05), the Python suites, the CLI lock check and the TUI command check (FR-UI-06) in the built
+# image, and the eval suite with the scripted faux model through the real stack. No secrets: the faux
+# model needs no API key, and CI is never given one.
 name: ci
 on:
   pull_request:
@@ -76,6 +76,10 @@ jobs:
       - name: built-ins locked off
         working-directory: deploy/compose
         run: docker compose exec -T gaffer node --input-type=module - < tests/lockdown.mjs
+      # FR-UI-06: the image's pi in tmux; every Pi built-in typed in full is refused (an undocumented seam, ADR 0013).
+      - name: only Gaffer's commands in the TUI
+        working-directory: deploy/compose
+        run: docker compose exec -T gaffer node --input-type=module - < tests/commands.mjs
       - name: pnpm eval --model faux
         run: $PNPM eval --model faux
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

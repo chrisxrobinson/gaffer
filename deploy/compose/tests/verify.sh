@@ -1,6 +1,7 @@
 #!/bin/sh
 # Stack checks against a running `docker compose up` (run from deploy/compose):
-# NFR-SEC-04 port binding, NFR-SEC-01/02 sandbox isolation, NFR-SEC-08 the built-ins locked off, a live
+# NFR-SEC-04 port binding, NFR-SEC-01/02 sandbox isolation, NFR-SEC-08 the built-ins locked off, FR-UI-06
+# the command allowlist in the real TUI, a live
 # fpl_snapshot round trip with odds, the gaffer_lib golden path in the sandbox within NFR-LAT-03's 60 s,
 # FR-DAT-09's fallback with the odds source down, and (M4) a scripted model's recommendation through the
 # submit gate: rejected, corrected, stored, exported and replayed. No LLM key is needed: the model is Pi's
@@ -25,6 +26,9 @@ dc exec -T gaffer node --input-type=module - < tests/isolation.mjs
 
 echo "== NFR-SEC-08: Pi's built-in MCP, codemode, tool search and llama.cpp locked off"
 dc exec -T gaffer node --input-type=module - < tests/lockdown.mjs
+
+echo "== FR-UI-06: only Gaffer's commands in the real TUI (tmux, 100 columns); the shortcuts do nothing"
+dc exec -T gaffer node --input-type=module - < tests/commands.mjs
 
 echo "== fpl_snapshot live round trip and the golden path in the sandbox (team ${TEAM_ID:-1})"
 dc exec -T -e TEAM_ID="${TEAM_ID:-1}" gaffer node --input-type=module - < tests/live-snapshot.mjs

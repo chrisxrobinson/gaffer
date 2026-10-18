@@ -17,29 +17,30 @@ export function isAllowedCommand(name: string): boolean {
 	return ALLOWED.has(name);
 }
 
-// Why each Pi command is missing, in Gaffer's words. Anything not listed gets the default.
-const SESSIONS = "Use /new for a fresh session or /resume for an earlier one.";
+// Why each Pi command is missing, in Gaffer's words. Pi shows a refusal as " Warning: <text>", so each fits
+// in one line at 100 columns (90 characters). Anything not listed gets the default.
+const SESSIONS = "one session, one conversation. Try /new or /resume.";
 const WHY: Record<string, string> = {
-	share: "sessions stay on this machine. Use /export-rec for the recommendation's JSON.",
+	share: "sessions stay on this machine. Try /export-rec.",
 	export: "use /export-rec for the recommendation's JSON.",
-	import: `sessions come only from Gaffer. ${SESSIONS}`,
+	import: "sessions come only from Gaffer. Try /resume.",
 	bug: "Gaffer sends nothing to third parties.",
 	login: "the model key is set by the operator.",
 	logout: "the model key is set by the operator.",
-	model: "the model is set by the operator (GAFFER_MODEL).",
-	"scoped-models": "the model is set by the operator (GAFFER_MODEL).",
-	thinking: "the thinking level is set by the operator (GAFFER_THINKING).",
-	settings: "its settings are fixed. Use /prefs for your preferences.",
-	tree: `each session is one conversation. ${SESSIONS}`,
-	fork: `each session is one conversation. ${SESSIONS}`,
-	clone: `each session is one conversation. ${SESSIONS}`,
+	model: "the operator sets the model (GAFFER_MODEL).",
+	"scoped-models": "the operator sets the model.",
+	thinking: "the operator sets it (GAFFER_THINKING).",
+	settings: "settings are fixed. Use /prefs for yours.",
+	tree: SESSIONS,
+	fork: SESSIONS,
+	clone: SESSIONS,
 	name: "use /resume to see your sessions.",
 	session: "use /usage for this session's cost and time.",
-	compact: "Gaffer compacts a long session by itself.",
+	compact: "Gaffer compacts long sessions by itself.",
 	reload: "its extensions are fixed.",
 	trust: "it has no projects to trust.",
-	quit: "close the browser tab instead; the session keeps running.",
-	hotkeys: "type /help for what Gaffer can do and its keys.",
+	quit: "close the tab; the session keeps running.",
+	hotkeys: "type /help for Gaffer's commands and keys.",
 	changelog: "type /help for what Gaffer can do.",
 	mcp: "it connects to no MCP servers.",
 	llama: "it uses no local models.",
@@ -47,6 +48,6 @@ const WHY: Record<string, string> = {
 
 /** Gaffer's one-line refusal for a command it doesn't offer. */
 export function refusal(name: string): string {
-	const why = name.startsWith("skill:") ? "Gaffer uses its skills by itself; just ask." : (WHY[name] ?? "type /help to see what Gaffer can do.");
+	const why = name.startsWith("skill:") ? "just ask; it picks its skills." : (WHY[name] ?? "type /help to see what it can do.");
 	return `/${name} is not available in Gaffer: ${why}`;
 }

@@ -3,7 +3,7 @@
  * real extensions and the faux model), FR-UI-06 (the allowlist: autocomplete and the submit guard, one test
  * per refused command). The same refusals in the real TUI under tmux: deploy/compose/tests/commands.mjs.
  */
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -195,13 +195,15 @@ describe("command allowlist (FR-UI-06)", () => {
 		for (const c of GAFFER_COMMANDS) expect(submit(`/${c} x`).passed).toEqual([`/${c} x`]);
 		for (const t of ["What should I do this week?", "!ls", "  hello /share", "/ not a command"]) expect(submit(t).passed).toEqual([t]);
 	});
-	it("/share's refusal says why", () => {
-		expect(refusal("share")).toBe("/share is not available in Gaffer: sessions stay on this machine. Use /export-rec for the recommendation's JSON.");
+	it("/share's refusal says why, and every refusal fits one line at 100 columns as Pi shows it", () => {
+		expect(refusal("share")).toBe("/share is not available in Gaffer: sessions stay on this machine. Try /export-rec.");
+		const skills = readdirSync(join(import.meta.dirname, "../skills")).map((d) => `skill:${d}`);
+		for (const n of [...BUILTIN_SLASH_COMMANDS.map((c) => c.name), ...HIDDEN, ...skills]) expect(visibleWidth(` Warning: ${refusal(n)}`), n).toBeLessThanOrEqual(100);
 	});
 	it("/help covers every command on the list", () => {
 		const help = helpLines().join("\n");
 		for (const c of GAFFER_COMMANDS) expect(help).toContain(`/${c}`);
-		for (const l of helpLines()) expect(visibleWidth(l)).toBeLessThanOrEqual(160);
+		for (const l of helpLines()) expect(visibleWidth(l), l).toBeLessThanOrEqual(96); // one line each at 100 columns
 	});
 });
 

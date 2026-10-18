@@ -163,7 +163,7 @@ class GafferEditor extends CustomEditor {
 }
 
 const DESCRIBE: Record<(typeof GAFFER_COMMANDS)[number], string> = {
-	gw: "/gw [notes]          full recommendation for the next GW: transfers, captain, XI, chip, 4-GW plan",
+	gw: "/gw [notes]          the next GW's recommendation: transfers, captain, XI, chip, 4-GW plan",
 	whatif: "/whatif <idea>       test a transfer or chip against the best plan: /whatif Watkins>Isak",
 	explain: "/explain <player>    why a player is in, out or captain",
 	team: '/team <id>           set your FPL team; add --ft N or --pending "OUT>IN" if FPL is behind',
@@ -181,11 +181,13 @@ const DESCRIBE: Record<(typeof GAFFER_COMMANDS)[number], string> = {
 export function helpLines(): string[] {
 	return [
 		"GAFFER · help",
-		"Gaffer plans your FPL week from public FPL data with tested maths, and explains its picks. It gives advice only and never logs in to your FPL account.",
+		"Gaffer plans your FPL week from public FPL data with tested maths, and explains its picks.",
+		"It gives advice only and never logs in to your FPL account.",
 		"Start with /team <id> (the number in your Points page address), then /gw.",
 		...GAFFER_COMMANDS.map((c) => `  ${DESCRIBE[c]}`),
 		'Or ask in words: "Is Palmer worth keeping?", "Should I play the Bench Boost in GW9?"',
-		"Keys: Shift+Enter new line · Esc stops a run · PageUp/PageDown and Ctrl+Home/Ctrl+End scroll · drag to select and copy.",
+		"Keys: Shift+Enter new line · Esc stops a run · PageUp/PageDown, Ctrl+Home/End scroll",
+		"Copy: drag to select, or /copy for the last answer.",
 	];
 }
 
