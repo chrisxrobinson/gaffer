@@ -48,7 +48,7 @@ MOCK
   for i in 1 2 3 4 5 6 7 8 9 10; do [ -s "$READY" ] && break; sleep 0.5; done
   [ -s "$READY" ] || { echo "the stand-in FPL API did not start:"; cat "$dir/mock.log"; exit 1; }
   echo "stand-in FPL API ready: $(cat "$READY" | cut -c1-400)"
-  FPL_BASE_URL=http://127.0.0.1:18080/api/ pi --session-dir "$dir" --no-context-files --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
+  FPL_BASE_URL=http://127.0.0.1:18080/api/ pi --session-dir "$dir" --no-context-files --no-mcp --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
      --provider "${GAFFER_PROVIDER:-anthropic}" --model "${GAFFER_MODEL:-claude-sonnet-5-5}" --thinking "${GAFFER_THINKING:-medium}" \
      --mode json -p "My FPL team ID is $TEAM_ID. What should I do this week? Give me your full recommendation." < /dev/null > "$dir/run.events" 2> "$dir/run.err" || echo "pi exited $?"
   kill $mock 2>/dev/null || true

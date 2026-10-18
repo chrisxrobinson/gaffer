@@ -5,9 +5,13 @@ cd /work   # same path as the sandbox working dir; empty and read-only here
 # --tui-mode fullscreen: Pi keeps the transcript and scrolls it itself (wheel, PageUp/PageDown, Home/End).
 # In regular mode Pi relies on the terminal's scrollback, and tmux doesn't pass every line that scrolls
 # off to the browser: the top of a result taller than the window (a recommendation) could not be reached.
-set -- --session-dir /sessions --no-context-files --continue --tui-mode fullscreen \
+# --no-mcp: no MCP server is ever spawned next to the key, whatever an mcp.json or a project says (ADR 0012).
+set -- --session-dir /sessions --no-context-files --no-mcp --continue --tui-mode fullscreen \
   --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences
-[ -n "${GAFFER_PROVIDER:-}" ] && set -- "$@" --provider "$GAFFER_PROVIDER"
-[ -n "${GAFFER_MODEL:-}" ] && set -- "$@" --model "$GAFFER_MODEL"
+# Pi 1.x refuses --provider without --model.
+if [ -n "${GAFFER_MODEL:-}" ]; then
+  [ -n "${GAFFER_PROVIDER:-}" ] && set -- "$@" --provider "$GAFFER_PROVIDER"
+  set -- "$@" --model "$GAFFER_MODEL"
+fi
 [ -n "${GAFFER_THINKING:-}" ] && set -- "$@" --thinking "$GAFFER_THINKING"
 exec pi "$@"

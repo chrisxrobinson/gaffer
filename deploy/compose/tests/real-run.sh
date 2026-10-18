@@ -11,7 +11,7 @@ name="$1"; prompt="$2"
 docker compose exec -T -e RUN_NAME="$name" -e PROMPT="$prompt" -e GAFFER_BUDGET_SOFT="${GAFFER_BUDGET_SOFT:-0.75}" gaffer sh -c '
   ANTHROPIC_API_KEY="$(cat /run/secrets/anthropic_api_key)"; export ANTHROPIC_API_KEY
   dir=/sessions/m4-live/$RUN_NAME; mkdir -p "$dir"; cd /work
-  pi --session-dir "$dir" --no-context-files --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
+  pi --session-dir "$dir" --no-context-files --no-mcp --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences \
      --provider "${GAFFER_PROVIDER:-anthropic}" --model "${GAFFER_MODEL:-claude-sonnet-5-5}" --thinking "${GAFFER_THINKING:-medium}" \
      --mode json -p "$PROMPT" < /dev/null > "$dir/run.events" 2> "$dir/run.err" || echo "pi exited $?"
 '
