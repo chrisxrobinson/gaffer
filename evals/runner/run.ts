@@ -232,7 +232,7 @@ async function runCase(c: EvalCase): Promise<CaseResult> {
 		if (c.prefs) result.grades.prefs = gradePrefs(c, rec);
 		if (c.expect) result.grades.expect = gradeExpectations(c, rec);
 		if (c.follow_up) {
-			const { follow_up, ...grade } = gradeFollowUp(entries, requests);
+			const { follow_up, ...grade } = gradeFollowUp(entries, requests, { cacheReadTarget: scripted ? null : 0.8 });
 			result.grades.follow_up = grade;
 			result.follow_up = follow_up;
 		}

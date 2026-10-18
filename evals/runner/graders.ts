@@ -138,9 +138,11 @@ export interface FollowUp {
 
 /**
  * NFR-COST-04: the follow-up (the session's last user message) reads the cache, and the leading system
- * prompt never changes. Pure over the session entries and the request shapes the runner recorded.
+ * prompt never changes. Pure over the session entries and the request shapes the runner recorded. The
+ * cache-read target applies to real providers only: the faux provider's token counts are estimates whose
+ * `input` already includes what it also reports as `cacheWrite`.
  */
-export function gradeFollowUp(entries: readonly EntryLike[], requests: readonly RequestShape[]): Graded & { follow_up: FollowUp } {
+export function gradeFollowUp(entries: readonly EntryLike[], requests: readonly RequestShape[], opts: { cacheReadTarget: number | null } = { cacheReadTarget: 0.8 }): Graded & { follow_up: FollowUp } {
 	const users = entries.flatMap((e, i) => (e.type === "message" && e.message?.role === "user" ? [i] : []));
 	const assistants = (from: number, to: number) => entries.slice(from, to).filter((e) => e.type === "message" && e.message?.role === "assistant").map((e) => e.message!);
 	const last = users.at(-1) ?? entries.length;
@@ -160,7 +162,8 @@ export function gradeFollowUp(entries: readonly EntryLike[], requests: readonly 
 	const problems: string[] = [];
 	if (!fu.length) problems.push("the follow-up got no model call");
 	if (fu.some((m) => m.stopReason === "error" || m.stopReason === "aborted")) problems.push("the follow-up ended in an error");
-	if (f.cache_read_share !== null && f.cache_read_share < 0.8) problems.push(`cache-read share ${(f.cache_read_share * 100).toFixed(1)}% < 80%`);
+	const target = opts.cacheReadTarget;
+	if (target !== null && f.cache_read_share !== null && f.cache_read_share < target) problems.push(`cache-read share ${(f.cache_read_share * 100).toFixed(1)}% < ${target * 100}%`);
 	if (f.system_prompts > 1) problems.push(`the leading system prompt changed: ${f.system_prompts} versions over ${f.requests} requests`);
 	if (requests.length && !f.context_as_system_message) problems.push("the follow-up's fpl_context did not arrive as a later system message");
 	return { pass: problems.length === 0, problems, follow_up: f };

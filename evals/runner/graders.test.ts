@@ -117,6 +117,12 @@ describe("follow-up (NFR-COST-04)", () => {
 		]);
 	});
 
+	it("the faux provider's estimated tokens are reported but not held to the cache-read target", () => {
+		const low = [...session.slice(0, -1), call(0, 5000, 12000, 5000)];
+		expect(gradeFollowUp(low, same).problems).toEqual(["cache-read share 54.5% < 80%"]);
+		expect(gradeFollowUp(low, same, { cacheReadTarget: null })).toMatchObject({ pass: true, follow_up: { cache_read_share: 12000 / 22000 } });
+	});
+
 	it("fails without a follow-up or when it errors", () => {
 		expect(gradeFollowUp(session.slice(0, 3), []).problems).toEqual(["no follow-up prompt in the session"]);
 		expect(gradeFollowUp([...session.slice(0, -1), call(0, 0, 0, 0, { stopReason: "error" })], []).problems).toEqual(["the follow-up ended in an error"]);
