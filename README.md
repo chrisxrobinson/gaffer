@@ -68,7 +68,7 @@ To stop the stack, run `docker compose down`. Your sessions and snapshots are ke
 
 ### Using the terminal UI
 
-- It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Home and End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit). To select text with the mouse, hold Shift while dragging.
+- It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Ctrl+Home and Ctrl+End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit). To select text with the mouse, hold Shift while dragging.
 - `!` shell commands are disabled, because the harness container holds the API key. Gaffer's own code runs in the sandbox.
 - Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session.
 - **Only one browser tab can be connected at a time.** A second tab shows "Press ⏎ to Reconnect" and won't connect until the first tab is closed. See [Troubleshooting](#troubleshooting).
@@ -106,7 +106,7 @@ browser ──ws──> ttyd ─> tmux ─> pi + pi-gaffer          (gaffer cont
                                    └─ /sessions, /data (snapshots) ──ro──>  non-root, read-only root)
 ```
 
-- **Harness (`harness/`):** Node 24, Pi 0.87.1 from npm, the `pi-gaffer` package installed with `pi install`, and ttyd with tmux.
+- **Harness (`harness/`):** Node 24, Pi 1.3.0 from npm (`npm ci` from `harness/pi/package-lock.json`), the `pi-gaffer` package installed with `pi install`, the agent settings and keybindings in `harness/` (built-ins locked off, ADR 0012), and ttyd with tmux.
 - **Package (`packages/pi-gaffer/`):** five extensions, six skills and three prompt templates. The model sees seven tools: Pi's `read`, `write`, `edit` and `bash` (all running in the sandbox), `fpl_snapshot`, `submit_recommendation` and `set_preferences`.
   - `gaffer-core`: the prompt, the tool allowlist, the `!` shell block, `/team`, `/prefs`, `/export-rec`, `/usage` and `/scorecard`.
   - `gaffer-sandbox`: Pi's four file and shell tools, routed to the sandbox.

@@ -69,7 +69,7 @@ RUN set -eu; P=/opt/pi/node_modules; \
     ln -s "$P/@earendil-works/pi-ai" /opt/node_modules/@earendil-works/pi-ai; \
     ln -s "$P/typebox" /opt/node_modules/typebox
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
-COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs /opt/gaffer/
+COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs harness/settings.json /opt/gaffer/
 # Keys that reach model and thinking changes, the external editor, suspend, the session tree, fork, and
 # session delete and rename in the /resume selector, unbound (ADR 0013).
 COPY --chown=10002:10002 harness/keybindings.json /opt/pi-agent/keybindings.json
@@ -81,11 +81,12 @@ RUN useradd --uid 10002 --create-home --home-dir /home/gaffer --shell /usr/sbin/
  && chown -R gaffer:gaffer /home/gaffer /sessions /data /opt/pi-agent
 
 USER gaffer
-# Install the package globally for this agent dir, select the Gaffer theme, and lock off Pi's built-in MCP,
-# codemode, tool search and llama.cpp (ADR 0012; with --no-mcp in gaffer-pi). /share can only target a gist
-# (the image has no gh), no external editor, no /skill:* commands, Esc Esc does nothing (ADR 0013).
+# Install the package globally for this agent dir, then add harness/settings.json: the Gaffer theme; Pi's
+# built-in MCP, codemode, tool search and llama.cpp unloaded (ADR 0012, with --no-mcp in gaffer-pi); /share
+# can only target a gist (the image has no gh), no external editor, no /skill:* commands, and Esc Esc does
+# nothing (ADR 0013).
 RUN pi install /opt/pi-gaffer \
- && node -e 'const f="/opt/pi-agent/settings.json"; const fs=require("fs"); const s=JSON.parse(fs.readFileSync(f,"utf8")); Object.assign(s, { theme: "gaffer", extensions: ["-builtin:mcp", "-builtin:codemode", "-builtin:tool-search", "-builtin:llama.cpp"], sessionShareDestination: "gist", externalEditor: "/bin/false", enableSkillCommands: false, doubleEscapeAction: "none" }); fs.writeFileSync(f, JSON.stringify(s,null,2));' \
+ && node -e 'const f="/opt/pi-agent/settings.json"; const fs=require("fs"); const s=JSON.parse(fs.readFileSync(f,"utf8")); Object.assign(s, JSON.parse(fs.readFileSync("/opt/gaffer/settings.json","utf8"))); fs.writeFileSync(f, JSON.stringify(s,null,2));' \
  && cat /opt/pi-agent/settings.json
 
 WORKDIR /work

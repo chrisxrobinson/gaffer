@@ -1,0 +1,8 @@
+{
+  "theme": "gaffer",
+  "extensions": ["-builtin:mcp", "-builtin:codemode", "-builtin:tool-search", "-builtin:llama.cpp"],
+  "sessionShareDestination": "gist",
+  "externalEditor": "/bin/false",
+  "enableSkillCommands": false,
+  "doubleEscapeAction": "none"
+}

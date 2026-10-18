@@ -2,7 +2,7 @@
 # Pi as Gaffer (ARCHITECTURE §1.5). Runs inside tmux; --continue resumes the latest session after a restart.
 set -eu
 cd /work   # same path as the sandbox working dir; empty and read-only here
-# --tui-mode fullscreen: Pi keeps the transcript and scrolls it itself (wheel, PageUp/PageDown, Home/End).
+# --tui-mode fullscreen: Pi keeps the transcript and scrolls it itself (wheel, PageUp/PageDown, Ctrl+Home/Ctrl+End).
 # In regular mode Pi relies on the terminal's scrollback, and tmux doesn't pass every line that scrolls
 # off to the browser: the top of a result taller than the window (a recommendation) could not be reached.
 # --no-mcp: no MCP server is ever spawned next to the key, whatever an mcp.json or a project says (ADR 0012).
