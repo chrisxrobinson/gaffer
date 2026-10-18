@@ -46,7 +46,7 @@ const { session } = await createAgentSession({
 });
 const notes = [];
 const ui = { notify: (m, t) => notes.push(`${t}: ${m}`) };
-for (const m of ["select", "confirm", "input", "editor", "custom", "setStatus", "setWidget", "setTitle", "setWorkingMessage", "setWorkingVisible"]) ui[m] = () => undefined;
+for (const m of ["select", "confirm", "input", "editor", "custom", "setStatus", "setWidget", "setTitle", "setWorkingMessage", "setWorkingVisible", "setHeader", "setFooter", "addAutocompleteProvider", "setEditorComponent"]) ui[m] = () => undefined;
 await session.bindExtensions({ uiContext: ui, mode: "tui" });
 const results = [];
 session.subscribe((e) => {

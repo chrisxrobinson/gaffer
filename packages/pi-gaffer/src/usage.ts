@@ -370,6 +370,17 @@ export function dayTotals(sessions: readonly SessionUsage[], day: Date): { sessi
 	return { sessions: active.length, cost: active.reduce((n, s) => n + (s.byDay[key] ?? 0), 0) };
 }
 
+/**
+ * This session and today (UTC), as `/usage` and the TUI's footer show them. This session from memory (Pi
+ * writes its file lazily, from the first user message), the others from disk under the sessions root.
+ */
+export function usageNow(sm: { getSessionDir(): string; getSessionFile(): string | undefined; getEntries(): unknown[] }, root: string, now = new Date()) {
+	const file = sm.getSessionFile();
+	const session = sessionUsage(sm.getEntries() as Entry[], file ?? "");
+	const others = scanSessions(root).filter((s) => !file || join(root, s.file) !== file);
+	return { session, today: { day: now.toISOString().slice(0, 10), ...dayTotals([...others, session], now) } };
+}
+
 /** The nearest-rank percentile of `xs` (p in 0..100), or null for none. */
 export function percentile(xs: readonly number[], p: number): number | null {
 	if (!xs.length) return null;

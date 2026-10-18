@@ -123,7 +123,7 @@ export interface Notification {
 	type?: string;
 }
 
-export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxResponseStep[]; skillsDir?: string; promptsDir?: string; extra?: ExtensionFactory[]; cost?: { input: number; output: number }; bind?: boolean; tools?: string[] }) {
+export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxResponseStep[]; skillsDir?: string; promptsDir?: string; extra?: ExtensionFactory[]; cost?: { input: number; output: number }; bind?: boolean; tools?: string[]; ui?: Record<string, unknown> }) {
 	const faux = fauxProvider({
 		provider: "faux",
 		models: [{ id: "faux-1", cost: { input: opts.cost?.input ?? 0, output: opts.cost?.output ?? 0, cacheRead: 0, cacheWrite: 0 } }],
@@ -160,6 +160,7 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 	const noop = () => undefined;
 	const uiContext: Record<string, unknown> = { notify: (message: string, type?: string) => notifications.push({ message, type }) };
 	for (const m of ["select", "confirm", "input", "editor", "custom", "onTerminalInput", "setStatus", "setWorkingMessage", "setWorkingVisible", "setWorkingIndicator", "setHiddenThinkingLabel", "setWidget", "setFooter", "setHeader", "setTitle", "pasteToEditor", "setEditorText", "getEditorText", "addAutocompleteProvider", "setEditorComponent", "getEditorComponent", "getAllThemes", "getTheme", "setTheme", "getToolsExpanded", "setToolsExpanded"]) uiContext[m] = noop;
+	Object.assign(uiContext, opts.ui); // a test's own UI methods, to capture what an extension sets
 	// S1 gotcha: SDK hosts must bind extensions or session_start (and setActiveTools) never runs.
 	const bind = () => session.bindExtensions({ uiContext: uiContext as never, mode: "tui" });
 	if (opts.bind !== false) await bind();

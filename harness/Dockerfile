@@ -2,7 +2,8 @@
 # Build context: repository root.
 ARG NODE_IMAGE=node:24-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe
 
-# ttyd 1.7.7 static binary (not packaged in Debian trixie), checksum-verified, plus its page with our key handler.
+# ttyd 1.7.7 static binary (not packaged in Debian trixie), checksum-verified, plus its page with a viewport tag
+# (spike S9: phones laid it out at 980 px) and our script (Shift+Enter, OSC 52 copy, title).
 FROM ${NODE_IMAGE} AS ttyd
 ARG TARGETARCH
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && rm -rf /var/lib/apt/lists/*
@@ -21,7 +22,7 @@ RUN set -eu; \
     /out/ttyd --port 7999 true & pid=$!; \
     for i in 1 2 3 4 5 6 7 8 9 10; do curl -fs http://127.0.0.1:7999/ -o /tmp/index.html && break; sleep 0.5; done; \
     kill $pid; \
-    node -e 'const fs=require("fs"); const h=fs.readFileSync("/tmp/index.html","utf8"); const js=fs.readFileSync("/tmp/ttyd-keys.js","utf8"); if(!h.includes("window.term=")) throw new Error("ttyd page no longer exposes window.term"); fs.writeFileSync("/out/ttyd-index.html", h.replace("</body>", "<script>"+js+"</script></body>"));'
+    node -e 'const fs=require("fs"); const h=fs.readFileSync("/tmp/index.html","utf8"); const js=fs.readFileSync("/tmp/ttyd-keys.js","utf8"); if(!h.includes("window.term=") || !h.includes("</head>")) throw new Error("ttyd page changed: no window.term or </head>"); fs.writeFileSync("/out/ttyd-index.html", h.replace("</head>", "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head>").replace("</body>", "<script>"+js+"</script></body>"));'
 
 FROM ${NODE_IMAGE}
 RUN apt-get update && apt-get install -y --no-install-recommends tmux=3.5a-3 && rm -rf /var/lib/apt/lists/*
@@ -67,9 +68,12 @@ RUN set -eu; P=/opt/pi/node_modules; \
     ln -s /opt/pi-gaffer /opt/packages/pi-gaffer; \
     ln -s "$P/@earendil-works/pi-coding-agent" /opt/node_modules/@earendil-works/pi-coding-agent; \
     ln -s "$P/@earendil-works/pi-ai" /opt/node_modules/@earendil-works/pi-ai; \
+    ln -s "$P/@earendil-works/pi-tui" /opt/node_modules/@earendil-works/pi-tui; \
     ln -s "$P/typebox" /opt/node_modules/typebox
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs harness/settings.json /opt/gaffer/
+# The brand tokens: the entrypoint passes their xterm.js palette to ttyd.
+COPY docs/ui/brand/tokens.json /opt/gaffer/tokens.json
 # Keys that reach model and thinking changes, the external editor, suspend, the session tree, fork, and
 # session delete and rename in the /resume selector, unbound (ADR 0013).
 COPY --chown=10002:10002 harness/keybindings.json /opt/pi-agent/keybindings.json
@@ -81,7 +85,8 @@ RUN useradd --uid 10002 --create-home --home-dir /home/gaffer --shell /usr/sbin/
  && chown -R gaffer:gaffer /home/gaffer /sessions /data /opt/pi-agent
 
 USER gaffer
-# Install the package globally for this agent dir, then add harness/settings.json: the Gaffer theme; Pi's
+# Install the package globally for this agent dir, then add harness/settings.json: the Gaffer theme pair and
+# Gaffer's own start-up header (quietStartup, ADR 0013); Pi's
 # built-in MCP, codemode, tool search and llama.cpp unloaded (ADR 0012, with --no-mcp in gaffer-pi); /share
 # can only target a gist (the image has no gh), no external editor, no /skill:* commands, and Esc Esc does
 # nothing (ADR 0013).

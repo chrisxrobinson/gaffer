@@ -4,6 +4,8 @@
 .git
 spikes
 docs
+# The brand tokens: the harness passes their terminal palette to ttyd.
+!docs/ui/brand/tokens.json
 secrets
 .env
 var
