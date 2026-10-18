@@ -23,7 +23,7 @@ import { Type } from "typebox";
 import { fplContextSection, GAFFER_PREAMBLE } from "../../../packages/pi-gaffer/src/prompt.ts";
 
 const { values } = parseArgs({ options: { variant: { type: "string" }, label: { type: "string" }, prompts: { type: "string", default: "3" }, think: { type: "boolean", default: false } } });
-const variant = values.variant as "A" | "B";
+const variant = values.variant as "A" | "B" | "C"; // C: no models.json entry, i.e. Pi's own catalogue entry (1.x only)
 const label = values.label ?? `${variant}-${VERSION}`;
 const REPO = resolve(import.meta.dirname, "../../..");
 
@@ -95,7 +95,10 @@ function gafferLike(pi: ExtensionAPI) {
 		const p = (event as { payload: { system?: { text: string }[]; messages: { role: string; content: unknown }[]; tools?: unknown[] } }).payload;
 		const systemText = (p.system ?? []).map((b) => b.text).join("\n");
 		const midSystem = p.messages.filter((m) => m.role === "system").map((m) => JSON.stringify(m.content).slice(0, 160));
+		const q = p as unknown as { thinking?: unknown; output_config?: unknown; betas?: unknown };
 		requests.push({
+			thinking: q.thinking ?? null,
+			output_config: q.output_config ?? null,
 			system_chars: systemText.length,
 			system_has_fpl_context: systemText.includes("<fpl_context>"),
 			system_now: /now: (\S+)/.exec(systemText)?.[1] ?? null,
@@ -111,7 +114,7 @@ async function main() {
 	if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not set");
 	teamId = 9_000_000 + Math.floor(Math.random() * 900_000); // a different system prompt per run: no cache sharing across runs
 	const agentDir = mkdtempSync(join(tmpdir(), "s6-agent-"));
-	writeFileSync(join(agentDir, "models.json"), JSON.stringify({ providers: { anthropic: { models: [entry] } } }, null, 2));
+	if (variant !== "C") writeFileSync(join(agentDir, "models.json"), JSON.stringify({ providers: { anthropic: { models: [entry] } } }, null, 2));
 	writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ cacheWarming: "off" }));
 	const cwd = mkdtempSync(join(tmpdir(), "s6-cwd-"));
 	const sessionsDir = join(import.meta.dirname, "sessions", label);

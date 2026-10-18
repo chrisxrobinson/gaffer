@@ -1,0 +1,14 @@
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+/mc
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+→ mcp         Manage MCP servers: sign in, reconnect, enable or disable, and change exposure
+  compact     Manually compact the session context
+/work
+0.0%/1.0M (auto)                                                                                                  claude-sonnet-5-5 • medium
+  skill:chip-strategy           [u] Chip decisions for 2026/27 - the eight chips and their two halves, the GW19 expiry, blank and double g
+  skill:gaffer-workflow         [u] How to produce a Gaffer recommendation - the golden path (snapshot, gaffer_lib run, judge, submit_reco
+  skill:risk-and-ownership      [u] Gaffer's objective and risk modes - maximum expected points by default, what safe, balanced and aggres
+  (1/7)
+/work
+0.0%/1.0M (auto)                                                                                                  claude-sonnet-5-5 • medium

@@ -35,7 +35,7 @@ Research 10 and spikes S5 (real Pi 1.3.0 in a 100×40 tmux pane) and S9 (ttyd 1.
 
 | Keep | Why |
 |---|---|
-| `/gw`, `/whatif`, `/explain` | Gaffer's templates |
+| `/gw`, `/whatif`, `/explain` (and `/chips` once M1.1-4 adds it) | Gaffer's templates |
 | `/team`, `/prefs`, `/scorecard`, `/usage`, `/export-rec` | Gaffer's commands |
 | `/new` | start a fresh session |
 | `/resume` | open a session started in the Gaffer App (FR-UI-12), with the selector's delete and rename keys unbound |
