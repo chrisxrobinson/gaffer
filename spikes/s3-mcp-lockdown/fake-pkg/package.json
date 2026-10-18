@@ -1,0 +1,8 @@
+{
+  "name": "fake-gaffer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "keywords": ["pi-package"],
+  "pi": { "extensions": ["./extensions/fake.ts"], "skills": ["./skills"] }
+}

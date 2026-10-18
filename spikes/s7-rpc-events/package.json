@@ -1,0 +1,14 @@
+{
+  "name": "s7-rpc-events",
+  "private": true,
+  "type": "module",
+  "description": "Spike S7: what pi --mode rpc 1.3.0 emits for a Gaffer-shaped run (faux model, stub extension)",
+  "scripts": {
+    "spike": "node run-spike.ts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "1.3.0",
+    "@earendil-works/pi-coding-agent": "1.3.0",
+    "typebox": "1.3.27"
+  }
+}

@@ -1,13 +1,13 @@
 # ADR 0002 — FPL data access: our own Pi tool in the harness, not MCP or a third-party library
 
-**Status:** Accepted · **Date:** 2026-09-27
+**Status:** Accepted, context amended by [ADR 0012](0012-builtins-locked-off.md) · **Date:** 2026-09-27
 
 ## Context
 The official FPL API is public, needs no auth for the data Gaffer uses, and is behind Fastly/Varnish rather than Cloudflare. It showed no rate-limit headers when tested on 2026-09-27 ([research 03](../research/03-fpl-data-sources.md)). `my-team/{id}` needs a login and is out of scope: Gaffer never logs in. Two findings shape the design:
 1. Per-user endpoints (`entry/{id}/`, `history/`, `transfers/`, `event/{gw}/picks/`) come back from the CDN up to **about 9 days stale** despite their `no-cache` headers (re-verified 2026-09-28: ages of 3.6–10 days on all four for entry 1). A unique query parameter returns fresh origin data (verified; see the research 03 addendum).
 2. Free transfers and selling prices are **not public**, so they have to be derived. Pending transfers for the next GW are not visible at all.
 
-Pi's author deliberately leaves out MCP, because every server costs thousands of tokens of tool descriptions up front ([research 01 §9](../research/01-pi-internals.md)).
+Pi's author deliberately leaves out MCP, because every server costs thousands of tokens of tool descriptions up front ([research 01 §9](../research/01-pi-internals.md)). *Amended 2026-10-17:* since Pi 0.99.0 MCP is a built-in extension (with deferred tools and codemode exposure to limit the context cost). The decision below is unchanged: research 09 surveyed 51 FPL MCP repositories on 2026-10-17 and none is worth adopting, and Gaffer locks Pi's MCP off ([ADR 0012](0012-builtins-locked-off.md)).
 
 ## Options considered
 | Option | Verdict |

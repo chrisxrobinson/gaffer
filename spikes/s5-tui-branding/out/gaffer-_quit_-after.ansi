@@ -1,0 +1,40 @@
+
+ [38;2;156;204;101m✓ New session started[39m
+
+
+ [38;2;242;193;78mWarning: /compact isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /resume isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /reload isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /debug isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /arminsayshi isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /dementedelves isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /mcp isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /llama isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;102;102;102mteam 1234567 (stub)[39m
+
+ [38;2;242;193;78mWarning: /model isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+ [38;2;242;193;78mWarning: /skill:gaffer-workflow isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+[48;2;31;45;36m
+ [38;2;232;232;227m@[39m
+
+
+[49m [38;2;224;93;93mError: Connection error.
+
+[39m [38;2;224;93;93mError: Retry failed after 1 attempts: Retry cancelled[39m
+
+ [38;2;242;193;78mWarning: /quit isn't available in Gaffer. Type / to see Gaffer's commands.[39m
+
+[38;2;129;162;190m────────────────────────────────────────────────────────────────────────────────────────────────────
+[7m[39m [0m
+[38;2;129;162;190m────────────────────────────────────────────────────────────────────────────────────────────────────
+[1m[38;2;156;204;101m GAFFER [0m[38;2;80;80;80m │ [38;2;128;128;128mTeam[39m [38;2;232;232;227mSpike Utd[38;2;80;80;80m │ [38;2;128;128;128mGW[38;2;232;232;227m8[38;2;80;80;80m │ [38;2;128;128;128mDeadline[39m [38;2;242;193;78m2d 03:10:11[38;2;80;80;80m │ [38;2;128;128;128mFT[39m [38;2;232;232;227m2[38;2;80;80;80m │ [38;2;128;128;128mBank[39m [38;2;232;232;227m£1.5m[38;2;80;80;80m │ [38;2;128;128;128mBudget[39m [38;2;139;195;74m$0.06[38;2;102;102;102m/$0.50[39m

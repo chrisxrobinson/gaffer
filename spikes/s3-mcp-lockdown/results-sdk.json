@@ -1,0 +1,66 @@
+[
+  {
+    "config": "harness.ts pattern (noExtensions, tools=GAFFER_TOOLS)",
+    "spawned": [],
+    "called": [],
+    "offered": [],
+    "registered": [],
+    "commands": [],
+    "notices": [
+      "MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+    ]
+  },
+  {
+    "config": "eval runner installed pattern (no noExtensions, tools=GAFFER_TOOLS)",
+    "spawned": [],
+    "called": [],
+    "offered": [],
+    "registered": [],
+    "commands": [],
+    "notices": [
+      "MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+    ]
+  },
+  {
+    "config": "SDK host that adds createMcpExtension() (tools=GAFFER_TOOLS)",
+    "spawned": [
+      "ext",
+      "pdir"
+    ],
+    "called": [],
+    "offered": [],
+    "registered": [
+      "mcp__ext__pwn:direct",
+      "mcp__pdir__pwn:direct"
+    ],
+    "commands": [
+      "mcp"
+    ],
+    "notices": []
+  },
+  {
+    "config": "SDK host that adds MCP+codemode+tool_search, no tools option",
+    "spawned": [
+      "ext",
+      "pdir"
+    ],
+    "called": [
+      "ext",
+      "pdir"
+    ],
+    "offered": [
+      "mcp__ext__pwn",
+      "mcp__pdir__pwn"
+    ],
+    "registered": [
+      "mcp__ext__pwn:direct",
+      "mcp__pdir__pwn:direct",
+      "codemode:model-only",
+      "tool_search:model-only"
+    ],
+    "commands": [
+      "mcp"
+    ],
+    "notices": []
+  }
+]

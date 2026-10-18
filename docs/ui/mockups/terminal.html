@@ -76,8 +76,8 @@ const SCREENS = [
   ["Start-up", "Pi's header is replaced by the Gaffer mark and wordmark (an extension `setHeader`, with `quietStartup` hiding Pi's resource listing). Pi's footer (cwd, token counters) is replaced by the status strip: team, GW and live deadline countdown, free transfers, bank, and spend against the caps. It updates every second while idle and after each tool call.",
     () => header() + "\n\n" + s("m", " Start with ") + s("g", "/team <id>") + s("m", " (the number in your Points page address), then ") + s("g", "/gw") + s("m", ".") + "\n" +
       s("d", " Type / for commands · Shift+Enter new line · Esc stops a run · PageUp/PageDown scroll") + blank(14) + editor("") + "\n" + footer(STATUS_L, STATUS_R)],
-  ["Commands: only Gaffer's", "Typing `/` lists Gaffer's commands and templates and three session basics (`/new`, `/resume`, `/help`). Pi's coding and admin commands (`/share`, `/login`, `/model`, `/settings`, `/export`, `/tree`, `/reload`, `/bug`, `/mcp` and the rest) are not listed and do nothing if typed.",
-    () => header() + blank(9) +
+  ["Commands: only Gaffer's", "Typing `/` lists Gaffer's commands and templates and four basics (`/new`, `/resume`, `/copy`, `/help`). Pi's coding and admin commands (`/share`, `/login`, `/model`, `/settings`, `/export`, `/tree`, `/reload`, `/bug`, `/mcp` and the rest) are not listed and do nothing if typed.",
+    () => header() + blank(8) +
       " " + s("bd", "┌" + "─".repeat(78) + "┐") + "\n" +
       [["/gw", "Full recommendation for the next GW: transfers, captain, XI, chip, 4-GW plan", true],
        ["/whatif", "Test a transfer or chip against the best plan: /whatif Watkins>Isak"],
@@ -87,7 +87,7 @@ const SCREENS = [
        ["/scorecard", "Season to date: Gaffer's plans vs your points vs baselines"],
        ["/usage", "Tokens, cost and time for this session and today"],
        ["/export-rec", "Write the latest recommendation as JSON to /data/exports"],
-       ["/new", "Start a new session"], ["/resume", "Open an earlier session"], ["/help", "What Gaffer can do and how to ask"]]
+       ["/new", "Start a new session"], ["/resume", "Open an earlier session (including ones from the Gaffer App)"], ["/copy", "Copy the last answer"], ["/help", "What Gaffer can do and how to ask"]]
         .map(([c, d, sel]) => " " + s("bd", "│") + (sel ? `<span class="sel">${esc(" " + pad(c, 12))}${s("m", pad(d, 66))}</span>` : " " + s("g", pad(c, 12)) + s("m", pad(d, 65))) + s("bd", "│")).join("\n") + "\n" +
       " " + s("bd", "└" + "─".repeat(78) + "┘") + "\n" + editor("/") + "\n" + footer(STATUS_L, STATUS_R)],
   ["A run streaming", "Unchanged from today apart from the theme and labels: the summarized thinking (muted), each tool as a block with Pi's own renderer, and Gaffer's labels for its tools (\"Snapshot\", \"Plan\", \"Check\"). The working line gives the elapsed time and how to stop.",

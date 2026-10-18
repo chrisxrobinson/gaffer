@@ -1,0 +1,546 @@
+{
+ "config": "upstream-defaults",
+ "exit": 0,
+ "spawned": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "keyInherited": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "called": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "offered": [
+  "codemode",
+  "tool_search",
+  "mcp__udir__pwn",
+  "mcp__ext__pwn",
+  "mcp__udef__pwn",
+  "mcp__ucm__pwn"
+ ],
+ "mcpSection": true,
+ "registered": [
+  "codemode:model-only",
+  "tool_search:model-only",
+  "mcp__udef__pwn:deferred",
+  "mcp__ucm__pwn:deferred",
+  "mcp__udir__pwn:direct",
+  "mcp__ext__pwn:direct"
+ ],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama",
+  "mcp"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ok:PWNED by udir",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ok:PWNED by ext",
+  "mcp__ucm__pwn(<-78fh2l):ok:PWNED by ucm",
+  "mcp__udef__pwn(<-78fh2l):ok:PWNED by udef",
+  "mcp__ext__pwn(<-78fh2l):ok:PWNED by ext",
+  "codemode:ok:Script completed Wall time 0.1 seconds Output: [\"mcp__ucm__pwn: [object Object]\",\"mcp__ude",
+  "tool_search:ok:Loaded 2 tools. They are available from your next call: - mcp__udef__pwn: Spike tool of se",
+  "mcp__udef__pwn:ok:PWNED by udef"
+ ],
+ "stderr": []
+}
+{
+ "config": "gaffer-line",
+ "exit": 0,
+ "spawned": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "keyInherited": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "called": [],
+ "offered": [],
+ "mcpSection": true,
+ "registered": [
+  "mcp__ext__pwn:direct",
+  "mcp__udir__pwn:direct"
+ ],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama",
+  "mcp"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": []
+}
+{
+ "config": "gaffer-line+approve",
+ "exit": 0,
+ "spawned": [
+  "ext",
+  "pdir",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "keyInherited": [
+  "ext",
+  "pdir",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "called": [],
+ "offered": [],
+ "mcpSection": true,
+ "registered": [
+  "mcp__pdir__pwn:direct",
+  "mcp__udir__pwn:direct",
+  "mcp__udef__pwn:deferred",
+  "mcp__ext__pwn:direct"
+ ],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama",
+  "mcp"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": []
+}
+{
+ "config": "tools+mcp__none",
+ "exit": 0,
+ "spawned": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "keyInherited": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "called": [],
+ "offered": [],
+ "mcpSection": true,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama",
+  "mcp"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": []
+}
+{
+ "config": "exclude-mcp__*",
+ "exit": 0,
+ "spawned": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "keyInherited": [
+  "ext",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "called": [],
+ "offered": [],
+ "mcpSection": true,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama",
+  "mcp"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": []
+}
+{
+ "config": "no-mcp",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "no-mcp+approve",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "settings -builtin:*",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "settings -builtin:* +approve +project +builtin:mcp",
+ "exit": 0,
+ "spawned": [
+  "ext",
+  "pdir",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "keyInherited": [
+  "ext",
+  "pdir",
+  "ucm",
+  "udef",
+  "udir"
+ ],
+ "called": [],
+ "offered": [],
+ "mcpSection": true,
+ "registered": [
+  "mcp__udir__pwn:direct",
+  "mcp__pdir__pwn:direct",
+  "mcp__udef__pwn:deferred",
+  "mcp__ucm__pwn:deferred",
+  "mcp__ext__pwn:direct"
+ ],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "mcp"
+ ],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": []
+}
+{
+ "config": "no-extensions",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "no-extensions+no-mcp+settings",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "no-mcp+default-tools(+codemode), no setActiveTools",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [
+  "codemode",
+  "tool_search"
+ ],
+ "mcpSection": false,
+ "registered": [
+  "codemode:model-only",
+  "tool_search:model-only"
+ ],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ok:Script completed Wall time 0.0 seconds Output: [\"mcp__ucm__pwn: ERR tools.mcp__ucm__pwn do",
+  "tool_search:ok:No matching tools found.",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "no-mcp +approve +project +builtin:mcp",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "no-mcp -e builtin:mcp",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": false,
+ "commands": [
+  "llama"
+ ],
+ "llamaProvider": true,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "pkg installed + settings -builtin:* + no-mcp (RECOMMENDED)",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": true,
+ "packageSkill": true,
+ "commands": [],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "pkg installed + no-extensions",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": false,
+ "packageSkill": true,
+ "commands": [],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}
+{
+ "config": "no-extensions + -e pkgdir",
+ "exit": 0,
+ "spawned": [],
+ "keyInherited": [],
+ "called": [],
+ "offered": [],
+ "mcpSection": false,
+ "registered": [],
+ "packageLoaded": true,
+ "packageSkill": true,
+ "commands": [],
+ "llamaProvider": false,
+ "results": [
+  "mcp__udir__pwn:ERR:Tool mcp__udir__pwn not found",
+  "mcp__pdir__pwn:ERR:Tool mcp__pdir__pwn not found",
+  "mcp__ext__pwn:ERR:Tool mcp__ext__pwn not found",
+  "codemode:ERR:Tool codemode not found",
+  "tool_search:ERR:Tool tool_search not found",
+  "mcp__udef__pwn:ERR:Tool mcp__udef__pwn not found"
+ ],
+ "stderr": [
+  "Extension error (/Users/chrisrobinson/Documents/git/Gaffer/spikes/s3-mcp-lockdown/ext-mcp.ts): MCP server \"ext\" is registered, but no loaded extension connects MCP servers; another extension may have replaced the built-in MCP support"
+ ]
+}

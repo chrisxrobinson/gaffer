@@ -16,31 +16,37 @@ Phase 0's `TASKS.md` is left alone. This file is ticked as work finishes.
 ## Research (one subagent each; lead verifies)
 - [ ] R7 Pi 1.x migration → `docs/research/07-pi-1x-migration.md`, `docs/MIGRATION-PI-1X.md`, spike S2
 - [x] R8 Pi Durable → `docs/research/08-pi-durable.md`, spike S8 (claims checked: README "Experimental", hooks can't abort/steer `types.ts:757-806`, no cross-process locking `README.md:682`, S8 output)
-- [ ] R9 Codemode and MCP → `docs/research/09-codemode-and-mcp.md`, spikes S3, S4
-- [ ] R10 TUI, themes and branding → `docs/research/10-tui-themes-branding.md`, spikes S5, S9
-- [ ] R11 Structured agent UI → `docs/research/11-structured-agent-ui.md`, spike S7
+- [x] R9 Codemode and MCP → `docs/research/09-codemode-and-mcp.md`, spikes S3, S4 (claims checked: `stdio.ts:94` env spread, `main.ts:788` `--no-mcp`, `resource-loader.ts:578-583`, `codemode.mode` only `on|only`, S3 results rows)
+- [x] R10 TUI, themes and branding → `docs/research/10-tui-themes-branding.md`, spikes S5, S9 (claims checked: hard-coded command list `slash-commands.ts:19-44`, `onSubmit` assignment `interactive-mode.ts:2889`, `/bug` offline refusal; its stop-and-ask resolved by `session-share.ts:68`, see Found)
+- [x] R11 Structured agent UI → `docs/research/11-structured-agent-ui.md`, spike S7 (claims checked: RPC `bash` → `emitUserBash` `rpc-mode.ts:561-584`; no session lock, `proper-lockfile` only in settings/auth/trust/MCP OAuth)
 - [x] R12 Harness patterns update → `docs/research/12-harness-patterns-update.md` (+ pointer in 02) (claims checked: price cut dated 2026-10-07 in Anthropic release notes; preserved-thinking 400 rule in the API reference; `usage` entries in `session-format.md` @0.87.1 vs `budget.ts:14`)
 
 ## Spikes
 - [ ] S2 `spikes/s2-pi-1x-upgrade` — does Gaffer run unchanged on Pi 1.3.0? (R7)
-- [ ] S3 `spikes/s3-mcp-lockdown` — can MCP, codemode, tool_search and llama.cpp be kept off whatever config exists? (R9)
-- [ ] S4 `spikes/s4-codemode-guards` — do codemode's nested calls pass Gaffer's guards and accounting? (R9)
-- [ ] S5 `spikes/s5-tui-branding` — header, status strip, brand theme, only Gaffer's commands, no Pi patch? (R10)
+- [x] S3 `spikes/s3-mcp-lockdown` — can MCP, codemode, tool_search and llama.cpp be kept off whatever config exists? (R9) → yes with `--no-mcp` + `-builtin:*` settings + `--tools`; **Gaffer's current line spawns any configured MCP server with the key**
+- [x] S4 `spikes/s4-codemode-guards` — do codemode's nested calls pass Gaffer's guards and accounting? (R9) → guard yes; budget no (`models.*` spend invisible); nested submit wouldn't terminate
+- [x] S5 `spikes/s5-tui-branding` — header, status strip, brand theme, only Gaffer's commands, no Pi patch? (R10) → yes; command refusal relies on an undocumented `onSubmit` seam (regression test)
 - [x] S6 `spikes/s6-prompt-cache` — does rewriting `fpl_context` each prompt defeat caching; do mid-conversation system messages fix it? (lead, real model, **$0.1637** incl. a thinking follow-up run) → yes for follow-up prompts (whole prefix re-written); `compat.supportsMidConvoSystemMessages: true` fixes it on 0.87.1 and 1.3.0 alike, follow-ups −75%
-- [ ] S7 `spikes/s7-rpc-events` — is `pi --mode rpc` enough to render UI 2 without scraping? (R11)
+- [x] S7 `spikes/s7-rpc-events` — is `pi --mode rpc` enough to render UI 2 without scraping? (R11) → yes; `export_html`/`switch_session` reach arbitrary paths (allowlist)
 - [x] S8 `spikes/s8-durable-gaffer` — a Gaffer-shaped run on pi-durable: LOC and crash resume (R8) → 68 lines for the core (same as S1); resume works; `watch()` is single-process; two owners double-run
-- [ ] S9 `spikes/s9-web-terminal` — Pi 1.3 fullscreen through ttyd; is a node-pty server worth it? (R10)
+- [x] S9 `spikes/s9-web-terminal` — Pi 1.3 fullscreen through ttyd; is a node-pty server worth it? (R10) → works; copy silently broken (OSC 52); keep ttyd, fix with ~10 lines
 
 ## Decisions and docs (lead)
 - [x] ADR 0010 (per-prompt context as mid-conversation system messages; prices), ADR 0011 (Durable deferred); ADR 0007 reaffirmed with the isolated-critic note; ADR 0008 amended
-- [ ] Remaining ADRs from 0009: Pi pinning and upgrade policy; Durable; codemode and MCP posture; TUI branding and blocked commands; second UI and transport; changes to 0007/0008 if justified
+- [x] ADR 0009 (Pi version policy), 0012 (built-ins locked off; ADR 0002 amended), 0013 (Gaffer Terminal), 0014 (Gaffer App; supersedes ADR 0005's Phase 3 part)
+- [ ] Remaining: ADR index, ADR 0005 status Pi pinning and upgrade policy; Durable; codemode and MCP posture; TUI branding and blocked commands; second UI and transport; changes to 0007/0008 if justified
 - [ ] `docs/MIGRATION-PI-1X.md`
 - [x] `docs/ui/` branding (mark, ASCII wordmark, tokens), two visual directions as clickable HTML mockups (`mockups/index.html`, `mockups/terminal.html`), spec draft
-- [ ] `docs/ui/README.md` §7–8: event → UI table and what the agent must emit (after R11)
+- [x] `docs/ui/README.md` §7–8: event → UI table and what the agent must emit
 - [ ] ARCHITECTURE, REQUIREMENTS (new IDs), ROADMAP (Phase 1.1 section; Phase 2/3 revisions), REPO_LAYOUT updated in place
 - [ ] Decision log (`docs/decisions/README.md`) lists the new ADRs and spikes
 
 ## Discovered
+- [x] **The scratchpad (a temp directory) was wiped during a pause** (between 2026-10-17 23:00 and 2026-10-18 08:54 UTC): Pi clones and three draft notes were lost. Spike dirs in the repo and the spike/s2 branch survived; R10 and R11 rewrote their notes from context; Pi was re-cloned into gitignored `var/phase11/`. Drafts now live there.
+- [x] **R10's stop-and-ask is resolved, not escalated.** No supported Pi switch removes built-in commands, but `sessionShareDestination: "gist"` makes `/share` skip Radius (`session-share.ts:68`) and need a `gh` CLI the image lacks; `PI_OFFLINE=1` refuses `/bug` uploads; `--no-mcp` neutralises `/login`'s Radius MCP write. The publish and credential paths are closed by supported controls; the undocumented editor hook is defence in depth (ADR 0013).
+- [x] **The local sandbox is shared by every Pi process and releasing a session clears `/work`** (`src/sandbox.ts:17-26`), so a second UI needs a run lock in Phase 1.1 (ADR 0014).
+- [x] **Pi does not lock session files** (R11): two UIs on one session would interleave entries. Gaffer adds a session lock in `gaffer-core` (ADR 0014).
+- [x] **Copy has never worked in the browser terminal** (S9: tmux drops Pi's OSC 52; ttyd 1.7.7 has no handler); ttyd also runs without `--check-origin`, against ADR 0005.
 - [x] **Mid-conversation system messages and prompt-cache warming are not 1.0 features.** Both arrived in **0.86.0** (2026-09-19; coding-agent CHANGELOG `0.86.0` "Transcript-aware prompt and tool updates", "Prompt cache warming"), so Gaffer's 0.87.1 already has them. The brief's version history is wrong on this point; the cache question can be measured on today's pin as well as on 1.3.0.
 - [x] `pi-protocol` and `pi-client` stop at 1.1.0 on npm and are gone from the 1.3.0 tree (1.2.0 "Removed"), confirming the brief.
 - [x] **Gaffer's `harness/models.json` disables mid-conversation system messages for Sonnet 5.5** (it omits `supportsMidConvoSystemMessages`; the adapter defaults it to false and collapses section patches into a rebuilt leading system prompt). Every follow-up prompt re-writes the whole cached prefix (S6). On 1.3.0 a `models.json` entry *replaces* the catalogue entry, so keeping the override keeps the problem.

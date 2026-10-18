@@ -63,7 +63,7 @@ The same Pi TUI, made Gaffer's by one more extension and settings, with no Pi pa
 | Start-up header | Pi logo, version, key hints, loaded resources | Gaffer mark and wordmark, tagline (season, model, "advice only"), two hint lines | `ctx.ui.setHeader()`; `quietStartup` |
 | Footer | cwd `/work`, token and cache counters, model | Status strip: team, GW and live deadline countdown, FT (and whether derived), bank, today's spend vs cap, session spend | `ctx.ui.setFooter()`, refreshed on a 1 s timer and on `turn_end`/`tool_execution_end` |
 | Theme | `gaffer` (dark only) | `gaffer` and `gaffer-light` with the brand tokens; the terminal palette passed to xterm.js so "follow the terminal" means Gaffer's palette | theme JSON + ttyd `-t theme=…` |
-| Commands | Pi's built-ins plus Gaffer's | Gaffer's (`/team /prefs /gw /whatif /explain /export-rec /usage /scorecard`) plus `/new`, `/resume`, `/help` | see ADR 0013 for the hide/block table |
+| Commands | Pi's built-ins plus Gaffer's | Gaffer's (`/team /prefs /gw /whatif /explain /export-rec /usage /scorecard`) plus `/new`, `/resume`, `/copy` and Gaffer's own `/help`; everything else hidden and refused | an allowlist in an autocomplete provider and a `CustomEditor` submit wrapper; supported settings and keybindings close the same actions (ADR 0013) |
 | Tab title | "Gaffer" (ttyd) | "Gaffer · GW8 · 6d" and a working marker while a run is active | `ctx.ui.setTitle()` |
 | Rendering | Gaffer's recommendation renderer; Pi's tool blocks | Unchanged content; brand colours; tool labels in Gaffer's words | `renderResult`, `registerToolRenderer` |
 
@@ -148,10 +148,61 @@ Every state below is drawn in the mockup's **States** screen.
 | Open elsewhere | Run/Result, info line | "Also open in the browser terminal. Only one can send a prompt at a time." |
 
 ## 7. Events to UI
-*Completed in section 7 once the transport is settled (ADR 0014, research 11).*
+The App's agent side is `pi --mode rpc`, one process per open session, behind the `gaffer-web` bridge (ADR 0014). The bridge forwards Pi's events to the page over server-sent events with sequence ids, adds a few events of its own (marked *bridge*), and keeps the current run's events so a reconnect replays from where the page left off. The page builds its state with one reducer from these events, so it doesn't depend on the transport (ADR 0011's seam). Source: spike S7, research 11 §4.
+
+| Source event (RPC unless marked) | Key fields | What the App shows |
+|---|---|---|
+| *bridge* session list (scan of `/sessions`) | session id, name, `gaffer.team` name, `gaffer.run` GW and action, last `gaffer.recommendation`, lock holder | Rail rows grouped team → GW: title, state dot, meta line; "open in the terminal" when the other UI holds the lock |
+| *bridge* pre-run data (Gaffer's `src/`) | next GW and deadline (snapshot store), team name check, saved preferences, today's spend, scorecard rows | Start screen: GW box and countdown, team ✓, options pre-filled, cost line; Scorecard; Preferences |
+| `prompt "/run {json}"` → response `handled` | — | Go pressed: form locks; the run view opens when `agent_start` arrives (not on the response) |
+| `entry_appended gaffer.run` | action, team, GW, options | The brief card at the top of the run |
+| `agent_start` | — | Run state *running*; elapsed timer; rail dot amber |
+| `turn_start` | — | A new model-call group (folded) |
+| `message_update` thinking start / delta / end | `contentIndex`, `delta` | Muted "Thinking" text growing in place; folded to one line when the next step starts; nothing when there is no thinking |
+| `message_update` text start / delta / end | `delta` | Short narration between steps ("Fetching your team…") |
+| `message_update` toolcall start / end | `toolName`, arguments | A step row in *pending*, labelled from the App's `toolName` → label table |
+| `message_update.usage` | cumulative tokens and cost | Cost so far in the run's meta line |
+| `tool_execution_start` | `toolCallId`, `toolName`, `args` | Step *running*: spinner and timer |
+| `tool_execution_update` (bash) | cumulative output | The plan step's progress line from the golden path's stdout ("main solve 31 s of 43 s"); a folded live tail |
+| `tool_execution_end` fpl_snapshot | `details: SnapshotDetails`, `durationMs` | Step done: "Fetched your team and FPL data · fresh · 15 players · bank £0.6m · 2 FT (derived)"; expanded, the snapshot card; stale banner if `stale` |
+| `tool_execution_end` bash (golden path) | `details.step = "plan"` (Gaffer's tag), `structuredContent.exit_code`, `durationMs` | Step done: "Projected points and solved a 6-GW plan · 3 plans · chip scenarios 3 of 4"; failed on a non-zero exit |
+| `tool_execution_end` read / write / edit / other bash | `args.path`, `isError` | Minor steps, folded under the model call ("Read playbook: gaffer-workflow") |
+| `entry_appended gaffer.validation` (`passed: false`) | `attempt`, `stage`, `errors[]` | The check step fails with the rule's code and message, "attempt 1 of 3" |
+| `tool_execution_end` submit_recommendation (`isError`) | text only | Step marked failed; the reason is taken from the validation entry above |
+| `tool_execution_end` submit_recommendation `details.recommendation` | `gaffer.recommendation/1` | The Result screen (§5.3), drawn from this object only |
+| `tool_execution_end` submit_recommendation `details.failed` | `attempts`, `errors` | "No recommendation" banner with the last rule (States: error) |
+| `entry_appended gaffer.budget` | session and day cost, caps, `capped` | Status-strip spend meter; soft-cap and hard-cap banners |
+| `message_start` custom `gaffer.steer` | content | Inline note: "Budget soft cap: Gaffer was asked to wrap up" |
+| `extension_ui_request` notify | message, type | A toast; `error` also becomes a run banner |
+| `extension_ui_request` setStatus / setTitle / string setWidget | key, text | Status chips; document title (Gaffer uses few) |
+| `extension_ui_request` select / confirm / input | id, options | A modal; the bridge answers only ids it was asked (Gaffer uses none) |
+| `queue_update` | steering, follow-up | Queued follow-up shown as pending under the box |
+| `auto_retry_start` / `auto_retry_end` | attempt, delay, error | "Model busy, retrying in 2 s (1 of 3)" |
+| `compaction_start` / `compaction_end` | reason | "Summarising earlier conversation…" (rare) |
+| `extension_error` | extension, error | Error banner, details folded |
+| `agent_settled` | `aborted` | Run *done* or *stopped*; input unlocks; a system notification if the tab is hidden |
+| *bridge* `lock` | holder (terminal or App) | "Also open in the browser terminal. Only one can send a prompt at a time." |
+| *bridge* `reconnecting` / replay | last sequence id | Reconnecting banner, then the transcript fills from the buffer; a "some output may be missing" marker if the buffer was lost |
+| page → bridge: Go | action and options | `prompt "/run {json}"` |
+| page → bridge: Ask | ≤ 280 characters, not starting with `/` or `!` | `prompt` (idle) or `steer` (running) |
+| page → bridge: Stop | — | `abort` |
+| page → bridge: Rename | ≤ 80 characters | `set_session_name` |
+| page → bridge: open, new | session id | The bridge spawns `gaffer-pi --mode rpc --session <path>`; never `switch_session` |
+
+The terminal (UI 1) needs no event table: it is Pi's TUI, and Gaffer's additions are the header, footer and command surface (§3).
 
 ## 8. What the agent must emit
-*Completed with section 7.*
+Everything the Result needs is emitted today: the recommendation is the `submit_recommendation` tool's `details` and a `gaffer.recommendation` entry; validation, budget and snapshot state are custom entries. The App needs five small additions, all inside Gaffer's package (ADR 0014):
+
+| Addition | Why the App needs it | Where |
+|---|---|---|
+| `/run {json}` command and a `gaffer.run` entry (action, team, GW, options) | The run's purpose as data: the brief card, the rail's grouping and titles | `gaffer-core` |
+| Plan-step tag: a `tool_result` handler that adds `{step: "plan", plans, solver, scenarios}` to the golden-path `bash` result's `details` | A one-line plan summary without parsing stdout | `gaffer-sandbox` or `gaffer-recommend` |
+| Golden-path progress lines on stdout | Progress during the longest step (up to 50 s) | `gaffer_lib run` |
+| Session lock and run lock | One writer per session; one run at a time while the local sandbox is shared | `gaffer-core` |
+| Read-only bridge API over Gaffer's `src/` (snapshot store, FPL team check, preferences, usage, outcomes, session scan) | The Start, Scorecard and Preferences screens and the rail, with no model call | `gaffer-web` |
+
+Not needed: a tool label on the wire (the App keeps its own label table), `display: "updates"` thinking (Pi doesn't request it; summarized thinking is shown), or any change to Pi.
 
 ## 9. Accessibility and devices
 - Keyboard: every control reachable in order; visible focus; Esc stops a run (same as the terminal); `/` focuses the follow-up box on the Result.
