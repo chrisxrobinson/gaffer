@@ -1,5 +1,5 @@
 # Gaffer, local single-user (ADR 0006). Run from this directory:
-#   ./init-secrets.sh && docker compose up --build   then open http://127.0.0.1:7681
+#   ./init-secrets.sh && docker compose up --build   then open http://127.0.0.1:7682 (the App) or :7681 (the terminal)
 name: gaffer
 
 services:
@@ -10,7 +10,8 @@ services:
       dockerfile: harness/Dockerfile
     image: gaffer-harness:local
     ports:
-      - "127.0.0.1:7681:7681"   # localhost only (NFR-SEC-04)
+      - "127.0.0.1:7681:7681"   # the Gaffer Terminal; localhost only (NFR-SEC-04)
+      - "127.0.0.1:7682:7682"   # the Gaffer App (ADR 0014); localhost only
     networks: [egress, sandbox_net]
     init: true
     environment:

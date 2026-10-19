@@ -1,4 +1,5 @@
-# Gaffer harness ("brain"): Pi 1.3.0 + the pi-gaffer package, served in the browser by ttyd → tmux.
+# Gaffer harness ("brain"): Pi 1.3.0 + the pi-gaffer package, served in the browser by ttyd → tmux (the Gaffer
+# Terminal) and by gaffer-web (the Gaffer App).
 # Build context: repository root.
 ARG NODE_IMAGE=node:24-trixie-slim@sha256:8ec5d7557396cfe32d21c3f9c13072355ceab22b584578ca4bb28af31120cffe
 
@@ -70,6 +71,11 @@ RUN set -eu; P=/opt/pi/node_modules; \
     ln -s "$P/@earendil-works/pi-ai" /opt/node_modules/@earendil-works/pi-ai; \
     ln -s "$P/@earendil-works/pi-tui" /opt/node_modules/@earendil-works/pi-tui; \
     ln -s "$P/typebox" /opt/node_modules/typebox
+# The Gaffer App's bridge and page (ADR 0014): plain Node, Pi's RpcClient from /opt/node_modules, and Gaffer's
+# src/ through /opt/packages/pi-gaffer; the page is static files (Preact and htm vendored, fonts self-hosted).
+COPY packages/gaffer-web/server.ts /opt/packages/gaffer-web/server.ts
+COPY packages/gaffer-web/src /opt/packages/gaffer-web/src
+COPY packages/gaffer-web/public /opt/packages/gaffer-web/public
 COPY --from=ttyd /out/ttyd-index.html /opt/gaffer/ttyd-index.html
 COPY harness/tmux.conf harness/gaffer-pi harness/entrypoint.sh harness/egress-ip.mjs harness/settings.json /opt/gaffer/
 # The brand tokens: the entrypoint passes their xterm.js palette to ttyd.
@@ -95,5 +101,5 @@ RUN pi install /opt/pi-gaffer \
  && cat /opt/pi-agent/settings.json
 
 WORKDIR /work
-EXPOSE 7681
+EXPOSE 7681 7682
 ENTRYPOINT ["/opt/gaffer/entrypoint.sh"]
