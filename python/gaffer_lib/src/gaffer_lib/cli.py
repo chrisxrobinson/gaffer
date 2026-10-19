@@ -15,8 +15,10 @@ scenario that doesn't fit is reported as not evaluated, with the reason.
 from __future__ import annotations
 
 import json
+import threading
 import time
 from collections.abc import Mapping, Sequence
+from contextlib import contextmanager
 
 from . import __version__, plan as P, rules as R
 from .derive import DeriveError, derive, resolve_player
@@ -83,15 +85,49 @@ def _resolve_prefs(prefs: Mapping, elements: Mapping, teams: Mapping) -> dict:
     return out
 
 
+class Progress:
+    """Golden-path progress lines (docs/ui §8): `progress: <what> …` on stdout while the run works, so the UIs can
+    show the longest step moving ("main solve 31 s of 43 s"). Pi streams the output as tool updates, and Gaffer
+    takes these lines out of the result the model sees. They go to the stream given here (the real stdout),
+    because the solver call redirects sys.stdout. Nothing they print feeds back into the plan."""
+
+    PREFIX = "progress: "
+
+    def __init__(self, out, every: float = 2.0):
+        self.out, self.every = out, every
+
+    def line(self, text: str) -> None:
+        self.out.write(f"{self.PREFIX}{text}\n")
+        self.out.flush()
+
+    @contextmanager
+    def ticking(self, label):
+        """While the block runs, print `label(seconds since it started)` every `every` seconds."""
+        stop, t0 = threading.Event(), time.perf_counter()
+
+        def tick():
+            while not stop.wait(self.every):
+                self.line(label(time.perf_counter() - t0))
+
+        th = threading.Thread(target=tick, daemon=True)
+        th.start()
+        try:
+            yield
+        finally:
+            stop.set()
+            th.join()
+
+
 def golden_path(
     snap: Snapshot, prefs: Mapping | None = None, *, ft: int | None = None, pending=None, horizon: int = P.HORIZON, shown: int = P.SHOWN,
     time_limit: float = P.TIME_LIMIT_S, budget: float = P.TOTAL_BUDGET_S, alternatives: int = 3, chips: bool = True, threads: int | None = None,
-    xmins: Sequence | None = None, hold: bool = False,
+    xmins: Sequence | None = None, hold: bool = False, progress: Progress | None = None,
 ) -> dict:
     """`xmins`: structured minutes overrides (see `load_xmins`). `hold`: plan no transfers at all,
     without solving: the best XI and captain from the current squad (used when transfers can't be
-    finalised, FR-DAT-05)."""
+    finalised, FR-DAT-05). `progress`: where to print progress lines (`run` without `--json`)."""
     t0 = time.perf_counter()
+    say = progress.line if progress else (lambda _text: None)
     timings: dict[str, float] = {}
     b = snap.bootstrap
     elements = {e["id"]: e for e in b["elements"]}
@@ -108,8 +144,10 @@ def golden_path(
 
     t = time.perf_counter()
     xmins = list(xmins or [])
+    say("projecting points")
     proj = project(inputs, horizon, xmins or prefs.get("xmins_overrides"))
     timings["project_s"] = time.perf_counter() - t
+    say(f"projected points over {len(proj.gws)} GWs in {timings['project_s']:.1f} s")
 
     # The main solve gets its full limit; next-best plans are capped so chip scenarios keep a share.
     t = time.perf_counter()
@@ -119,8 +157,17 @@ def golden_path(
         plans = [P.hold_plan(inputs, proj, state, P.SolveInfo("Hold", None, 0.0, 0.0, None, False), len(proj.gws))]
         plans[0].warnings = ["Hold requested (--hold): no transfers are planned and the solver was not run."]
     else:
-        plans = P.solve(inputs, proj, state, horizon=horizon, time_limit=min(time_limit, budget), alternatives=alternatives, prefs=prefs,
-                        threads=threads, alt_time_limit=min(ALTERNATIVE_LIMIT_S, time_limit), deadline=t0 + max(budget - reserve, 1.0))
+        # Which HiGHS run is going, for the progress lines: the main solve, then the next-best plans.
+        run = {"label": "main solve", "limit": min(time_limit, budget), "t": time.perf_counter()}
+
+        def on_run(n: int, limit: float) -> None:
+            run.update(label="main solve" if n == 0 else f"next-best plan {n} of {alternatives - 1}", limit=limit, t=time.perf_counter())
+
+        with progress.ticking(lambda _s: f"{run['label']} {time.perf_counter() - run['t']:.0f} s of {run['limit']:.0f} s") if progress else _no_progress():
+            plans = P.solve(inputs, proj, state, horizon=horizon, time_limit=min(time_limit, budget), alternatives=alternatives, prefs=prefs,
+                            threads=threads, alt_time_limit=min(ALTERNATIVE_LIMIT_S, time_limit), deadline=t0 + max(budget - reserve, 1.0),
+                            on_run=on_run if progress else None)
+        say(f"solved: {plans[0].info.status} in {time.perf_counter() - t:.1f} s, {len(plans)} plan(s)")
     timings["solve_s"] = time.perf_counter() - t
     best = plans[0]
     # FR-REC-03: this GW's bench in the order the auto-sub simulator values most.
@@ -136,9 +183,12 @@ def golden_path(
     if chips:
         t = time.perf_counter()
         remaining = budget - (time.perf_counter() - t0)
-        scenarios = P.chip_scenarios(inputs, proj, state, best, used, horizon=horizon, budget_s=max(remaining, 0.0), save=prefs["save_chips"], prefs=prefs, threads=threads)
+        with progress.ticking(lambda s: f"chip scenarios {s:.0f} s of {max(remaining, 0.0):.0f} s") if progress else _no_progress():
+            scenarios = P.chip_scenarios(inputs, proj, state, best, used, horizon=horizon, budget_s=max(remaining, 0.0), save=prefs["save_chips"], prefs=prefs, threads=threads)
         timings["chips_s"] = time.perf_counter() - t
+        say(f"chip scenarios: {sum(1 for x in scenarios if x['evaluated'])} of {len(scenarios)} evaluated")
 
+    say(f"checking {len(plans)} plan(s) against the rules")
     pend_n = derived["pending"]["count"] if derived["pending"] else 0
     free = derived["free_transfers"]["value"]
     plan_docs = []
@@ -208,6 +258,11 @@ def golden_path(
         "warnings": warnings,
         "timings": {k: round(v, 2) for k, v in timings.items()},
     }
+
+
+@contextmanager
+def _no_progress():
+    yield
 
 
 def render_summary(doc: Mapping, out_path: str | None = None) -> str:

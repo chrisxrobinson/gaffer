@@ -46,6 +46,29 @@ export interface SnapshotEntry {
 	endpoints: unknown[];
 }
 
+/** `gaffer.run`: a structured start from the Gaffer App (`/run {json}`, ADR 0014): what the run is for, as data. */
+export interface RunEntry {
+	action: "recommend";
+	team_id: number;
+	team_id_hash: string;
+	/** The next GW when the run was asked for, from FPL; null if FPL couldn't be reached. */
+	gw: number | null;
+	options: {
+		risk: "safe" | "balanced" | "aggressive";
+		max_hits_per_gw: number | null;
+		save_chips: ("wildcard" | "freehit" | "bboost" | "3xc")[];
+		keep: { id: number; name: string }[];
+		ft?: number;
+		pending?: string;
+		/** Saved as the team's preferences; otherwise they apply to this session only (`prefs_file`). */
+		save: boolean;
+	};
+	/** The session's own preferences file when the options weren't saved (prefs.ts `runPrefsPath`). */
+	prefs_file: string | null;
+	source: "app";
+	started_at: string;
+}
+
 export function latestCustom<T>(entries: readonly EntryLike[], customType: string): T | undefined {
 	for (let i = entries.length - 1; i >= 0; i--) {
 		const e = entries[i];

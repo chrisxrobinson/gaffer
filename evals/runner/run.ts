@@ -63,6 +63,9 @@ const salt = (() => {
 	}
 })();
 process.env.GAFFER_ID_SALT ??= salt;
+// The run lock (ADR 0014): a case waits for a run in the terminal or the App to finish, rather than being refused.
+process.env.GAFFER_UI ??= "headless";
+process.env.GAFFER_RUN_LOCK_WAIT_MS ??= "600000";
 const sandbox = new SandboxSession(providerFromEnv());
 const log = (line: string) => console.log(`[${new Date().toISOString().slice(11, 19)}] ${line}`);
 

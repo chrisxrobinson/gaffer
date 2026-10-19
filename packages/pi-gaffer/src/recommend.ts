@@ -17,7 +17,7 @@ import { appendFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Compile } from "typebox/compile";
 import { gateCommand } from "./derive.ts";
-import { type Preferences, readPrefs } from "./prefs.ts";
+import { type Preferences, readPrefs, readPrefsFile } from "./prefs.ts";
 import { lastJsonLine, type SandboxSession, sandboxReadFile, sandboxRun } from "./sandbox.ts";
 import { Recommendation, SCHEMA_ID, Submission } from "./schema/recommendation.ts";
 import type { SnapshotEntry } from "./session.ts";
@@ -91,6 +91,8 @@ export interface GateDeps {
 	piVersion: string;
 	now?: () => number;
 	signal?: AbortSignal;
+	/** The preferences file the run used (team-prefs.ts `activePrefsFile`); the team's saved file if left out. */
+	prefsFile?: string;
 }
 
 /**
@@ -120,7 +122,7 @@ export async function runGate(submission: unknown, snapshot: SnapshotEntry | und
 	}
 
 	const { plan_file: _p, ...model } = submission;
-	const prefs = readPrefs(deps.dataDir, snapshot.team_id_hash);
+	const prefs = "prefsFile" in deps ? (deps.prefsFile ? readPrefsFile(deps.prefsFile) : undefined) : readPrefs(deps.dataDir, snapshot.team_id_hash);
 	const { schema: _s, updated_at: _u, ...savedPrefs } = prefs ?? { schema: "", updated_at: "" };
 	const inputs: GateInputs = {
 		snapshot_id: snapshot.snapshot_id,

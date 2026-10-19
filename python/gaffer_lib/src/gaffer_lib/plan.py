@@ -354,7 +354,8 @@ class _Recorder:
     """Stands in for the `highspy` module inside dev.solver so each model it creates is ours:
     a `Highs` subclass that applies Gaffer's time limits per run and records status and gap."""
 
-    def __init__(self, highspy, limits: list[float], threads: int | None, start: Mapping[str, float] | None = None, deadline: float | None = None):
+    def __init__(self, highspy, limits: list[float], threads: int | None, start: Mapping[str, float] | None = None, deadline: float | None = None,
+                 on_run=None):
         self._real = highspy
         self.runs: list[dict] = []
         recorder = self
@@ -375,6 +376,8 @@ class _Recorder:
                 self.setOptionValue("time_limit", float(max(limit, 0.05)))  # per run: HiGHS restarts its clock
                 if threads:
                     self.setOptionValue("threads", int(threads))
+                if on_run:
+                    on_run(len(recorder.runs), limit)  # progress lines only (cli.Progress); the solve is unchanged
                 t0 = time.perf_counter()
                 out = super().run()
                 info = self.getInfo()
@@ -519,10 +522,11 @@ def solve(
     inputs: ModelInputs, proj: Projection, state: TeamState, *, horizon: int = HORIZON, time_limit: float = TIME_LIMIT_S,
     alternatives: int = 1, chip: tuple[str, int] | None = None, prefs: Mapping | None = None, threads: int | None = None,
     alt_time_limit: float | None = None, decay: float = DECAY, hit_cost: int = 4, only: Sequence[int] | None = None,
-    deadline: float | None = None,
+    deadline: float | None = None, on_run=None,
 ) -> list[Plan]:
     """Solve the plan, plus `alternatives - 1` next-best plans that differ in this GW's transfers.
     `deadline` (a `time.perf_counter()` value) caps the time limits so every run ends by then.
+    `on_run(n, limit_s)` is told when each HiGHS run starts (n = 0 is the main solve), for progress lines.
 
     Returns at least one Plan: the solver's best incumbent with its gap, or the hold plan if HiGHS
     found nothing feasible in time. Later alternatives that find nothing are dropped.
@@ -538,7 +542,7 @@ def solve(
     if chip is None:
         hold = hold_plan(inputs, proj, state, SolveInfo("", None, 0.0, time_limit, None, False), len(gws))
         start = _hold_start(hold, state, list(data["merged_data"].index), 5)
-    rec = _Recorder(highspy, limits, threads, start, deadline)
+    rec = _Recorder(highspy, limits, threads, start, deadline, on_run)
     saved, solutions, error = solver.highspy, [], None
     solver.highspy = rec
     try:

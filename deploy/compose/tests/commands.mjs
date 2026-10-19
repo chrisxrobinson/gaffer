@@ -31,8 +31,8 @@ export default function (pi) {
   pi.registerProvider(f.provider);
 }
 `);
-const launcher = readFileSync("/opt/gaffer/gaffer-pi", "utf8").replace(/\\\n\s*/g, " ");
-const line = /^set -- (.*)$/m.exec(launcher)[1].trim().split(/\s+/).map((a) => (a === "/sessions" ? sessions : a));
+// The terminal's launch line, printed by gaffer-pi itself with this run's session dir.
+const line = execFileSync("/opt/gaffer/gaffer-pi", { env: { ...process.env, GAFFER_PI_PRINT: "1", GAFFER_SESSIONS_DIR: sessions, GAFFER_MODEL: "", GAFFER_PROVIDER: "", GAFFER_THINKING: "" }, encoding: "utf8" }).trim().split("\n");
 const args = [...line, "--provider", "faux", "--model", "faux-1", "--thinking", "medium", "-e", faux];
 const run = join(root, "run.sh");
 const env = { PI_CODING_AGENT_DIR: agent, GAFFER_SESSIONS_ROOT: sessions, GAFFER_DATA_DIR: data, ANTHROPIC_API_KEY: "sk-ant-commands-dummy" };

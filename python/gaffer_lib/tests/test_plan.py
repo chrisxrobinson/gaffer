@@ -325,6 +325,10 @@ def test_run_golden_path_end_to_end(tmp_path, capsys):
     assert doc["ep_next_comparison"]["players"] > 100 and "correlation" in doc["ep_next_comparison"]
     assert doc["timings"]["total_s"] < 14 + 4  # the budget, plus start-up and validation
     assert doc["assumptions"]["ft_source"] == "derived" and doc["preferences"]["max_hits_per_gw"] == 1
+    # Progress lines first (docs/ui §8; Gaffer strips them before the model sees the output), then the summary.
+    lines = text.splitlines()
+    assert lines[0] == "progress: projecting points" and any(x.startswith("progress: main solve ") for x in lines)
+    text = "\n".join(x for x in lines if not x.startswith(cli.Progress.PREFIX))
     assert text.startswith("Gaffer plan for GW6") and "Plan 1" in text and "odds unavailable — team strength from Dixon-Coles" in text
     assert f"Full plan JSON: {out}" in text and len(text) < 9000
 
@@ -349,6 +353,39 @@ def test_xmins_overrides_change_the_plan_inputs(world):
     assert doc["xmins_overrides"] == [{"player": 426, "gw": 6, "xmins": 0.0}]
     assert all(426 not in s["xi"] for s in doc["plans"][0]["gws"][:1])
     assert doc["plans"][0]["validation"]["valid"]
+
+
+def test_progress_lines_tick_on_the_given_stream():
+    import io
+    import time
+
+    out = io.StringIO()
+    pr = cli.Progress(out, every=0.05)
+    pr.line("projecting points")
+    with pr.ticking(lambda s: f"main solve {s:.1f} s of 1 s"):
+        time.sleep(0.2)
+    lines = out.getvalue().splitlines()
+    assert lines[0] == "progress: projecting points"
+    assert len(lines) >= 3 and all(x.startswith("progress: main solve ") for x in lines[1:])
+
+
+@needs_solver
+def test_progress_lines_leave_the_plan_unchanged(world, capsys):
+    """docs/ui §8: progress lines go to the stream given, never into the plan; without one, nothing is printed."""
+    import io
+
+    snap = world[0]
+    out = io.StringIO()
+    kw = {"horizon": H, "time_limit": 20, "budget": 40, "alternatives": 1, "chips": False}
+    quiet = cli.golden_path(snap, **kw)
+    loud = cli.golden_path(snap, progress=cli.Progress(out, every=0.01), **kw)
+    assert capsys.readouterr().out == ""
+    lines = out.getvalue().splitlines()
+    assert lines[0] == "progress: projecting points" and any(x.startswith("progress: main solve ") for x in lines)
+    assert lines[-1].startswith("progress: checking 1 plan(s)")
+    strip = lambda d: {k: v for k, v in d.items() if k not in ("timings", "solver")}  # noqa: E731
+    assert quiet["plans"][0]["solver"]["status"] == "Optimal"
+    assert [strip(p) for p in quiet["plans"]] == [strip(p) for p in loud["plans"]]
 
 
 # --- the deterministic score (FR-REC-09) ------------------------------------------------------------

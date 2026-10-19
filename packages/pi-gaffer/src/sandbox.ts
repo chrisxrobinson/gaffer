@@ -4,6 +4,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
+import type { FileLock } from "./lock.ts";
 
 export interface SandboxHandle {
 	url: string;
@@ -56,6 +57,12 @@ export class SandboxSession {
 	private idleTimer: NodeJS.Timeout | undefined;
 	private readonly provider: SandboxProvider;
 	private readonly idleMs: number;
+	/**
+	 * Phase 1.1's run lock (lock.ts, ADR 0014): the Compose sandbox and its /work are shared by every Pi process
+	 * in the harness, so releasing (which clears /work) happens only while holding it, and is skipped while
+	 * another process's run has it.
+	 */
+	runLock: FileLock | undefined;
 
 	constructor(provider: SandboxProvider, opts: { idleMs?: number } = {}) {
 		this.provider = provider;
@@ -84,7 +91,14 @@ export class SandboxSession {
 		clearTimeout(this.idleTimer);
 		if (!this.handle) return;
 		this.handle = undefined;
-		await this.provider.release();
+		const lock = this.runLock;
+		if (!lock || lock.held) return this.provider.release();
+		if (!lock.tryAcquire()) return; // another process's run is using /work
+		try {
+			await this.provider.release();
+		} finally {
+			lock.release();
+		}
 	}
 }
 

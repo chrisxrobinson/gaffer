@@ -95,8 +95,9 @@ def main(argv: list[str] | None = None) -> int:
             if args.budget is not None:
                 kw["budget"] = args.budget
             try:
+                # Progress lines only with the summary: --json's stdout stays one JSON document.
                 out = cli.golden_path(snap, cli.load_prefs(args.prefs), ft=args.ft, pending=args.pending, chips=not args.no_chips,
-                                      xmins=cli.load_xmins(args.xmins), hold=args.hold, **kw)
+                                      xmins=cli.load_xmins(args.xmins), hold=args.hold, progress=None if args.json else cli.Progress(sys.stdout), **kw)
             except plan.SolverUnavailable as e:
                 raise DeriveError(str(e)) from e
             code = 0 if out["plans"][0]["validation"]["valid"] else 1
