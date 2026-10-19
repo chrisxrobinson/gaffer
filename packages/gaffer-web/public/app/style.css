@@ -15,7 +15,7 @@
 @font-face { font-family: "IBM Plex Mono"; font-weight: 600; font-display: swap; src: url(/fonts/ibm-plex-mono-latin-600-normal.woff2) format("woff2"); }
 
 :root {
-  --bg: #FFFFFF; --panel: #F1F4F6; --panel-2: #E6EBEF; --ink: #0E1B2B; --ink-2: #4B5A6B; --ink-3: #6B7886;
+  --bg: #FFFFFF; --panel: #F1F4F6; --panel-2: #E6EBEF; --ink: #0E1B2B; --ink-2: #4B5A6B; --ink-3: #5E6B78;
   --line: #D5DDE3; --line-2: #BCC7D0; --brand: #1E7B4F; --brand-ink: #FFFFFF; --accent: #F0B400; --accent-ink: #1A1400;
   --pitch: #1E7B4F; --pitch-2: #1A6E46; --pitch-line: rgba(255,255,255,.7); --counter: #FFFFFF; --counter-ink: #0E1B2B;
   --good: #1E7B4F; --warn: #8F5E12; --bad: #B23426; --good-bg: #E3F2EA; --warn-bg: #FBF0D9; --bad-bg: #F8E1DE;

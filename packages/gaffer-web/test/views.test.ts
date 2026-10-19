@@ -217,7 +217,7 @@ describe("FR-UI-09: a run as it streams, as steps from data", () => {
 			const a = c.assistantMessageEvent;
 			if (a && typeof a.delta === "string") a.delta = a.delta.replace(/\S/g, "x");
 			if (a && typeof a.content === "string") a.content = a.content.replace(/\S/g, "x");
-			if (c.type === "message_end" && c.message?.content) c.message.content = c.message.content.map((b: any) => (b.text ? { ...b, text: "x" } : b.thinking ? { ...b, thinking: "x" } : b));
+			if (c.type === "message_end" && Array.isArray(c.message?.content)) c.message.content = c.message.content.map((b: any) => (b.text ? { ...b, text: "x" } : b.thinking ? { ...b, thinking: "x" } : b));
 			return c;
 		};
 		const view = (events: any[]) => steps(state(events)).map((st: any) => {
