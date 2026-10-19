@@ -152,8 +152,10 @@ You need Node ≥ 22.19 (24 LTS recommended), [uv](https://docs.astral.sh/uv/) f
 
 ```bash
 npx pnpm@12.6.0 install        # workspace dependencies (versions pinned exactly)
-npx pnpm@12.6.0 test           # vitest: unit tests, S1 extension checks, extension behaviour
+npx pnpm@12.6.0 test           # vitest: unit tests, S1 extension checks, extension behaviour, the App (gaffer-web)
 ```
+
+The App's tests (`packages/gaffer-web`) render its views with the vendored Preact: the result over every eval recommendation, the run's steps and states from a recorded faux run, the exports; and they fuzz the bridge with every RPC command, paths and origins.
 
 The TypeScript tests run the real extensions in a headless Pi session. The model is Pi's scripted `fauxProvider`, the sandbox is a real `sandboxd` on your host's Python, and the FPL API is a local mock. `fpl_snapshot` runs the repo's `gaffer_lib` on Python 3.14, found with `uv python find 3.14` (override with `GAFFER_TEST_PYTHON`). They don't need an API key. The submit-gate tests run `gaffer_lib validate` with the sandbox image's numpy and scipy: the first run builds a small venv with uv under `node_modules/.cache/` (network needed once; override with `GAFFER_TEST_ANALYTICS_PYTHON`). They use a frozen real snapshot and its plan from `python/gaffer_lib/tests/data/`, so they don't need the solver.
 
