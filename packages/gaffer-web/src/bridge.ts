@@ -286,8 +286,14 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 			const out = forwardEvent(e, (id) => pi.cancelDialog(id));
 			if (out && l.id) broadcast(l, out);
 		});
-		await pi.start();
-		const state = await pi.getState();
+		let state: Awaited<ReturnType<Pi["getState"]>>;
+		try {
+			await pi.start();
+			state = await pi.getState();
+		} catch (e) {
+			await pi.stop().catch(() => undefined);
+			throw new HttpError(502, `Gaffer could not start (${(e as Error).message.split("\n")[0]})`);
+		}
 		if (l.readOnly) {
 			await pi.stop().catch(() => undefined);
 			throw new HttpError(409, `This session is ${l.readOnly.replace(/^read-only: /, "")}. Only one can send a prompt at a time.`);
@@ -319,7 +325,11 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 				else if (e.type === "extension_ui_request" && e.method === "notify" && (e.notifyType === "error" || e.notifyType === "warning")) finish(new HttpError(409, String(e.message)));
 			};
 			l.waiters.push(waiter);
-			l.pi.prompt(text).catch((err: Error) => finish(new HttpError(502, err.message.split("\n")[0])));
+			l.pi.prompt(text).catch((err: Error) => {
+				// A Pi that has exited is no longer this session's writer: let the next command spawn another.
+				if (/exited|not started|not writable/.test(err.message)) void stop(l, "exited");
+				finish(new HttpError(502, err.message.split("\n")[0]));
+			});
 		});
 
 	const once = async (req: IncomingMessage, res: ServerResponse, body: Record<string, any>, act: () => Promise<{ status: number; body: unknown }>) => {
@@ -338,19 +348,20 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 		send(res, out.status, out.body);
 	};
 
-	const pending = () => [...live.values()].filter((l) => !sessions().some((s) => s.id === l.id)).map((l) => ({ id: l.id, live: l.running ? "running" : "open" }));
+	const pending = (listed = sessions()) => [...live.values()].filter((l) => !listed.some((s) => s.id === l.id)).map((l) => ({ id: l.id, live: l.running ? "running" : "open" }));
 	const home = async () => {
 		if (opts.replay) return { ...opts.replay.home(), pending: pending() };
 		const cfg = budgetConfig();
 		gwCache = gwCache && Date.now() - gwCache.at < 5 * 60_000 ? gwCache : { at: Date.now(), value: fplBootstrap(new SnapshotStore(opts.dataDir), fpl, fplNow()).then(gwInfo).catch(() => null) };
 		const busy = lockHolder(runLockPath(opts.sessionsDir));
+		const listed = sessions();
 		return {
 			gw: await gwCache.value,
 			now: fplNow(),
 			spend: { today: Math.round(dayCost(opts.sessionsDir, new Date()) * 1e6) / 1e6, daily: cfg.daily, soft: cfg.soft, hard: cfg.hard },
 			busy: busy ? { ui: busy.ui } : null,
-			sessions: sessions().map(({ file: _f, ...s }) => ({ ...s, live: live.get(s.id)?.running ? "running" : live.has(s.id) ? "open" : null })),
-			pending: pending(),
+			sessions: listed.map(({ file: _f, ...s }) => ({ ...s, live: live.get(s.id)?.running ? "running" : live.has(s.id) ? "open" : null })),
+			pending: pending(listed),
 		};
 	};
 

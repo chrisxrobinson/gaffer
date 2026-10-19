@@ -18,7 +18,7 @@ import { states } from "./fixtures/states.mjs";
 
 const S = states() as Record<string, { t: number; rec: unknown }[]>;
 const view = (name: string) => {
-	const s = S[name].map((e) => e.rec).reduce(reduce, initialState());
+	const s: any = S[name].map((e) => e.rec).reduce(reduce, initialState());
 	const page = renderToString(html`<${RunView} s=${s} now=${Date.now()} canStop=${true} />${s.result ? html`<${ResultView} rec=${s.result} />` : null}`);
 	return { s, page, text: page.replace(/<[^>]+>/g, " ").replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/\s+/g, " ") };
 };
