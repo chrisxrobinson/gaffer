@@ -203,7 +203,7 @@ describe("FR-UI-09: a run as it streams, as steps from data", () => {
 		expect(plan.summary).toMatch(/^\d plans? · solver \w+/);
 		expect(rejected.summary).toMatch(/^rejected: [A-Z_]+, attempt 1 of 3 · the model will retry$/);
 		expect(rejected.errors.length).toBeGreaterThan(0);
-		expect(passed.summary).toMatch(/^valid on attempt 2 · \d+ numbers recomputed$/);
+		expect(passed.summary).toMatch(/^valid on attempt 2 · every number recomputed/);
 		expect(s.result?.schema).toBe("gaffer.recommendation/1");
 		const page = textOf(renderToString(html`<${RunView} s=${s} now=${Date.now()} />`));
 		const order = ["Fetched your team and FPL data", "Projected points and solved a 6-GW plan", `rejected: ${rejected.errors[0].code}`, "valid on attempt 2"].map((x) => page.indexOf(x));

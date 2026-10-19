@@ -48,7 +48,8 @@ function entry(s, en, at) {
 		case "gaffer.snapshot":
 			return { ...s, snapshot: d };
 		case "gaffer.budget":
-			return { ...s, budget: d };
+			// The latest figures; once steered at the soft cap, the session stays steered (gaffer-budget steers once).
+			return { ...s, budget: { ...d, steered: !!(d?.steered || s.budget?.steered), session_cost: Math.max(d?.session_cost ?? 0, s.budget?.session_cost ?? 0) } };
 		case "gaffer.recommendation":
 			return { ...s, result: d, failure: null };
 		case "gaffer.validation": {

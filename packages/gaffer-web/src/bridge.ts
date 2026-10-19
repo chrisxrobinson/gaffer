@@ -488,7 +488,7 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 			throw new HttpError(404, "not found");
 		}
 		const html = extname(file) === ".html";
-		res.writeHead(200, { "content-type": CONTENT_TYPES[extname(file)], "cache-control": html ? "no-store" : "no-cache", ...(html && { "content-security-policy": csp }) }).end(body);
+		res.writeHead(200, { "content-type": CONTENT_TYPES[extname(file)], "cache-control": "no-store", ...(html && { "content-security-policy": csp }) }).end(body);
 	};
 
 	const server = createServer(async (req, res) => {

@@ -22,7 +22,7 @@ export function describeStep(step) {
 				Array.isArray(d.squad) ? `${d.squad.length} players` : null,
 				typeof d.bank === "number" ? `bank ${money(d.bank)}` : null,
 				ft && ft.value !== null && ft.value !== undefined ? `${ft.unlimited ? "unlimited" : ft.value} FT (${ft.source === "user" ? "yours" : "derived"})` : null,
-				d.odds && !d.odds.available ? "no bookmaker odds" : null,
+				d.odds?.requested && (!d.odds.available || !d.odds.fixtures) ? "no bookmaker odds yet" : null,
 			].filter(Boolean).join(" · ");
 			const chips = (d.chips ?? []).filter((c) => c.available).map((c) => CHIP[c.name] ?? c.name);
 			const detail = [
@@ -30,7 +30,7 @@ export function describeStep(step) {
 				d.gw ? `GW${d.gw.current ?? "–"} current · GW${d.gw.next ?? "–"} next · deadline ${d.gw.deadline ?? "–"}` : null,
 				d.team_name ? `Team: ${d.team_name}` : null,
 				chips.length ? `Chips left: ${chips.join(", ")}` : null,
-				d.odds ? (d.odds.available ? `Odds: ${d.odds.fixtures} fixtures priced` : `Odds: unavailable (${d.odds.reason ?? "football-data.co.uk"})`) : null,
+				d.odds ? (d.odds.available && d.odds.fixtures ? `Odds: ${d.odds.fixtures} fixtures priced` : `Odds: none for the next round${d.odds.reason ? ` (${d.odds.reason})` : ""}: team strength from Dixon-Coles`) : null,
 				...(d.warnings ?? []).map((w) => `Warning: ${w}`),
 			].filter(Boolean);
 			return { label: "Fetched your team and FPL data", summary, detail };
@@ -62,7 +62,8 @@ export function describeStep(step) {
 			if (running && !c) return { label: "Checking the plan", summary: "rules, your preferences, the solver's best", detail: [] };
 			if (rec) {
 				const v = rec.validation ?? {};
-				return { label: "Submitted the recommendation", summary: `valid on attempt ${v.attempts ?? c?.attempt ?? 1} · ${v.numbers_checked ?? 0} numbers recomputed`, detail: [`rec ${rec.rec_id}`], check: "passed" };
+				const fixed = v.drift?.length ? ` · ${v.drift.length} of the model's figures corrected` : "";
+				return { label: "Submitted the recommendation", summary: `valid on attempt ${v.attempts ?? c?.attempt ?? 1} · every number recomputed${fixed}`, detail: [`rec ${rec.rec_id}`], check: "passed" };
 			}
 			if (d.failed) return { label: "No valid recommendation", summary: `${d.attempts} submissions failed the check`, detail: [], errors: d.errors ?? [], check: "failed" };
 			const attempt = c?.attempt ?? null;
@@ -131,6 +132,7 @@ export function runBanners(s) {
 	else if (b?.capped === "turns") out.push({ kind: "bad", text: `Run stopped after ${b.max_turns} turns. Anything above is a partial result.` });
 	else if (b && (b.steered || b.session_cost >= b.soft)) out.push({ kind: "warn", text: `This run has cost ${usd(b.session_cost)}. Gaffer has asked the model to wrap up and submit. The hard stop is ${usd(b.hard)}.` });
 	if (s.snapshot?.stale) out.push({ kind: "warn", text: `FPL is updating: using data from ${s.snapshot.fetched_at?.slice(11, 16) ?? "earlier"} UTC. Confidence is capped at medium, and within an hour of the deadline Gaffer won't finalise transfers on old data.` });
+	if (s.snapshot?.odds?.requested && (!s.snapshot.odds.available || !s.snapshot.odds.fixtures)) out.push({ kind: "info", text: "Bookmaker odds are unavailable (football-data.co.uk). Team strength comes from the Dixon-Coles model instead." });
 	if (s.failure) out.push({ kind: "bad", text: `No recommendation. ${s.failure.attempts} submissions failed the rules check, so nothing is shown or saved. Last error: ${s.failure.errors?.[0] ? `${s.failure.errors[0].code}: ${s.failure.errors[0].message}` : "unknown"}.`, retry: true });
 	for (const n of s.notices) if (n.type === "error" && !/could not produce a valid recommendation|Gaffer stopped this run/.test(n.message)) out.push({ kind: "bad", text: n.message });
 	for (const e of s.errors) out.push({ kind: "bad", text: `The model call failed: ${e}` });

@@ -83,7 +83,7 @@ a { color: var(--brand); }
 .state-dot.fail { background: var(--bad); }
 .state-dot.idle { background: var(--ink-3); }
 .rail-foot { border-top: 1px solid var(--line); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; font-size: 12.5px; }
-.seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; border: 1px solid var(--line-2); border-radius: var(--radius); overflow: hidden; }
+.seg { display: inline-flex; flex-wrap: wrap; justify-self: start; max-width: 100%; border: 1px solid var(--line-2); border-radius: var(--radius); overflow: hidden; }
 .seg button { border: 0; background: transparent; padding: 4px 9px; cursor: pointer; }
 .seg button + button { border-left: 1px solid var(--line-2); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
@@ -99,6 +99,8 @@ a { color: var(--brand); }
 .meter i { display: block; height: 100%; background: var(--brand); }
 .meter.over i { background: var(--bad); }
 .content { padding: 20px 20px 40px; display: grid; gap: 20px; max-width: 1180px; width: 100%; align-content: start; }
+/* Grid children shrink to the column: a folded one-line summary must not widen the page (nothing scrolls sideways). */
+.content > *, .transcript > *, .start > *, .result > * { min-width: 0; }
 
 /* Surfaces */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 16px; min-width: 0; }
@@ -150,6 +152,7 @@ a { color: var(--brand); }
 .brief strong { font: 700 17px/1.2 var(--f-display); }
 .brief .when { margin-left: auto; }
 .transcript { display: grid; gap: 10px; }
+.result { display: grid; gap: 20px; }
 .think { color: var(--think); padding-left: 14px; border-left: 2px dotted var(--line-2); max-width: 70ch; overflow-wrap: anywhere; white-space: pre-wrap; }
 .think .lbl { display: block; margin-bottom: 2px; }
 details.think summary { cursor: pointer; list-style: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

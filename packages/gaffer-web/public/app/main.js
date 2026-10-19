@@ -4,7 +4,7 @@
 import { render } from "preact";
 import { useCallback, useEffect, useReducer, useRef, useState } from "preact/hooks";
 import { html } from "./html.js";
-import { ago, countdown, Mark, money, usd, utcTime } from "./format.js";
+import { ago, countdown, localTime, Mark, money, usd, utcTime } from "./format.js";
 import { historyEvents, initialState, reduce } from "./reduce.js";
 import { ResultView } from "./result.js";
 import { Banner, RunView, runTitle } from "./run.js";
@@ -30,8 +30,13 @@ const api = {
 	},
 };
 
-// NFR-LAT-04: how long each event took from the bridge to this page (the bridge stamps `at` when Pi's event arrives).
+// NFR-LAT-04: how long each event took from the bridge to this page (the bridge stamps `at` when Pi's event arrives),
+// and when the first thinking or text delta of a run arrived after Go (window.__gafferGo, set by Start).
 const latency = (window.__gafferLatency = []);
+const firstDelta = (e) => {
+	const t = e.assistantMessageEvent?.type;
+	if (window.__gafferGo && !window.__gafferFirstDelta && (t === "thinking_delta" || t === "text_delta")) window.__gafferFirstDelta = { ms: Date.now() - window.__gafferGo, at: e.at };
+};
 
 const route = () => {
 	const m = /^#\/s\/([0-9a-f-]{36})$/.exec(location.hash);
@@ -126,7 +131,7 @@ function Strip({ home, session, now }) {
 	const team = session?.team?.team_name ?? snap?.team_name;
 	const spend = home?.spend;
 	const pct = spend ? Math.min(100, (spend.today / spend.daily) * 100) : 0;
-	return html`<div class="strip" aria-label="Team status">
+	return html`<div class="strip" role="group" aria-label="Team status">
 		${team ? html`<span class="kv"><span class="lbl">Team</span><span class="v">${team}</span></span>` : null}
 		${gw?.next ? html`<span class="kv"><span class="lbl">GW${gw.next} deadline</span><span class="v big" title=${utcTime(gw.deadline)}>${countdown(left)}</span></span>` : null}
 		${snap && snap.free_transfers !== null && snap.free_transfers !== undefined ? html`<span class="kv"><span class="lbl">FT</span><span class="v">${snap.free_transfers}</span><span class="muted">${snap.ft_source === "user" ? "(yours)" : "(derived)"}</span></span>` : null}
@@ -155,6 +160,7 @@ function SessionView({ id, home, now, refreshHome, onState }) {
 		src.onmessage = (m) => {
 			const e = JSON.parse(m.data);
 			if (e.at) latency.length < 20000 && latency.push(Date.now() - e.at);
+			firstDelta(e);
 			batch.push(e);
 			// One render per frame however fast the deltas come.
 			raf ||= requestAnimationFrame(() => {
@@ -244,7 +250,7 @@ function App() {
 			<div class="topbar"><h1>${title}</h1><${Strip} home=${home} session=${session} now=${now} /></div>
 			<div class="content">
 				${r.view === "start"
-					? html`${empty ? html`<div class="empty"><${Mark} mono /><b>No sessions yet</b><span>Enter your FPL team ID below to get a recommendation${home.gw?.next ? ` for GW${home.gw.next}` : ""}.</span></div>` : null}
+					? html`${empty ? html`<div class="empty"><${Mark} mono /><b>No sessions yet</b><span>Enter your FPL team ID below to get a recommendation${home.gw?.next ? ` for GW${home.gw.next}` : ""}.${home.gw?.deadline ? html`<br />Deadline ${localTime(home.gw.deadline)}.` : null}</span></div>` : null}
 						<${StartView} home=${home} api=${api} onStarted=${(id) => { location.hash = `#/s/${id}`; void refreshHome(); }} />`
 					: html`<${SessionView} key=${r.id} id=${r.id} home=${home} now=${now} refreshHome=${refreshHome} onState=${setSession} />`}
 			</div>

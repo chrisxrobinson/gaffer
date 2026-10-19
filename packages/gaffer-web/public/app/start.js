@@ -73,6 +73,8 @@ export function StartView({ home, api, onStarted }) {
 
 	const submit = async () => {
 		setGo({ state: "sending" });
+		window.__gafferGo = Date.now();
+		window.__gafferFirstDelta = undefined;
 		const options = { risk: opts.risk, max_hits_per_gw: opts.max_hits_per_gw, save_chips: opts.save_chips, keep: opts.keep, save: opts.save };
 		if (opts.ft !== "") options.ft = Number(opts.ft);
 		if (opts.pending.trim()) options.pending = opts.pending.trim();
