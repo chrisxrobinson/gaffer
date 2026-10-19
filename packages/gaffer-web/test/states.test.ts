@@ -69,10 +69,12 @@ describe("docs/ui §6: the states a Recommend run reaches", () => {
 	});
 
 	it("error, no valid plan: the last rule that failed, and Try again", () => {
-		const { s, text } = view("novalid");
+		const { s, page, text } = view("novalid");
 		expect(s.result).toBeNull();
 		expect(text).toMatch(/No recommendation\. 3 submissions failed the rules check, so nothing is shown or saved\. Last error: CAPTAIN_IS_VICE/);
 		expect(text).toContain("No valid recommendation · 3 submissions failed the check");
+		expect(page).toMatch(/data-tool="submit_recommendation" data-status="err"><summary><span class="ico err">[\s\S]*No valid recommendation/);
+		expect(page).not.toMatch(/data-status="(pending|running)"/);
 	});
 
 	it("stopped by the user: what ran, and that nothing was saved", () => {

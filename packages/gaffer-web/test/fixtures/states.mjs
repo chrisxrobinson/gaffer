@@ -47,14 +47,14 @@ export function states() {
 	const reject = ev.slice(firstSubmit, at(ev, isEnd("submit_recommendation")) + 1);
 	const again = (n, t) => reject.map((e) => {
 		const r = structuredClone(e.rec);
-		if (r.toolCallId) r.toolCallId = `${r.toolCallId}-${n}`;
+		if (r.toolCallId && n > 1) r.toolCallId = `${r.toolCallId}-${n}`;
 		if (r.entry?.customType === "gaffer.validation") r.entry.data.attempt = n;
 		return { t: e.t + t, rec: r };
 	});
 	const last = again(3, 2600).map((e) => (e.rec.type === "tool_execution_end" ? { ...e, rec: { ...e.rec, isError: false, result: { content: "", details: { failed: true, attempts: 3, errors: e.rec.result?.details?.errors ?? [{ code: "CAPTAIN_IS_VICE", message: "The vice-captain can't be the captain." }] } } } } : e));
 	out.novalid = [...ev.slice(0, firstSubmit), ...again(1, 0), ...again(2, 1300), ...last,
 		{ t: last.at(-1).t + 5, rec: { type: "extension_ui_request", id: "n2", method: "notify", notifyType: "error", message: "Gaffer could not produce a valid recommendation: 3 submissions failed validation, so no plan is shown." } },
-		{ t: last.at(-1).t + 10, rec: { type: "agent_settled", aborted: true } }];
+		{ t: last.at(-1).t + 10, rec: { type: "agent_settled", aborted: false } }];
 	// Stopped by the user during the golden path.
 	out.stopped = [...ev.slice(0, bashStart + 8), { t: ev[bashStart + 8].t + 100, rec: { type: "agent_settled", aborted: true } }];
 	return out;

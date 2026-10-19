@@ -116,7 +116,8 @@ export function reduce(s, e) {
 		case "tool_execution_end": {
 			const r = e.result ?? {};
 			const exit = r.structuredContent?.exit_code;
-			const failed = !!e.isError || (typeof exit === "number" && exit !== 0);
+			// The gate's give-up (details.failed) is a result, not an error, but the step failed.
+			const failed = !!e.isError || (typeof exit === "number" && exit !== 0) || !!r.details?.failed;
 			const prev = s.steps[e.toolCallId];
 			let next = withStep(s, e.toolCallId, {
 				tool: e.toolName, status: failed ? "err" : "ok", text: textOf(r.content), details: r.details ?? null, exit: exit ?? null, partial: undefined,

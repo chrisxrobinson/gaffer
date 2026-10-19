@@ -54,7 +54,7 @@ const js = async (expression) => (await cdp("Runtime.evaluate", { expression, aw
 await cdp("Page.enable");
 await cdp("Runtime.enable");
 
-/** Rewrite the bridge's answers: [urlPattern, (json) => json] for responses, or "fail" to break a request. */
+/** Rewrite the bridge's answers: [urlPattern, (json) => json]. */
 let rewrites = [];
 handlers.push(async (msg) => {
 	if (msg.method !== "Fetch.requestPaused") return;
@@ -62,7 +62,6 @@ handlers.push(async (msg) => {
 	const rule = rewrites.find(([pat]) => request.url.includes(pat));
 	try {
 		if (!rule) return void (await cdp("Fetch.continueRequest", { requestId }));
-		if (rule[1] === "fail") return void (await cdp("Fetch.failRequest", { requestId, errorReason: "ConnectionReset" }));
 		if (responseStatusCode === undefined) return void (await cdp("Fetch.continueRequest", { requestId }));
 		const { body, base64Encoded } = await cdp("Fetch.getResponseBody", { requestId });
 		const json = rule[1](JSON.parse(base64Encoded ? Buffer.from(body, "base64").toString() : body));
@@ -74,7 +73,7 @@ handlers.push(async (msg) => {
 async function setRewrites(rules) {
 	rewrites = rules;
 	await cdp("Fetch.disable");
-	if (rules.length) await cdp("Fetch.enable", { patterns: rules.flatMap(([pat, f]) => (f === "fail" ? [{ urlPattern: `*${pat}*`, requestStage: "Request" }] : [{ urlPattern: `*${pat}*`, requestStage: "Response" }])) });
+	if (rules.length) await cdp("Fetch.enable", { patterns: rules.map(([pat]) => ({ urlPattern: `*${pat}*`, requestStage: "Response" })) });
 }
 
 async function view(width, theme) {
@@ -154,17 +153,15 @@ try {
 			await sleep(1800);
 			await shot(`${tag}-09-state-open-in-terminal`);
 			fast.stop();
+			// Reconnecting: the connection drops mid-run (here the server goes away); the transcript stays.
 			const slow = await replay(join(states, "running.jsonl"), 1);
 			await setRewrites([]);
 			await go(`${slow.url}/#/`);
 			await startRun();
-			await sleep(2000);
-			await setRewrites([["/events", "fail"]]);
-			await js("location.reload(); true");
+			await sleep(12_000);
+			slow.stop();
 			await sleep(2500);
 			await shot(`${tag}-10-state-reconnecting`);
-			slow.stop();
-			await setRewrites([]);
 			for (const [name, sel, wait] of STATES) {
 				const r = await replay(join(states, `${name}.jsonl`), 20);
 				await go(`${r.url}/#/`);

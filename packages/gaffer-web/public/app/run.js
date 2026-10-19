@@ -133,7 +133,7 @@ export function runBanners(s) {
 	else if (b && (b.steered || b.session_cost >= b.soft)) out.push({ kind: "warn", text: `This run has cost ${usd(b.session_cost)}. Gaffer has asked the model to wrap up and submit. The hard stop is ${usd(b.hard)}.` });
 	if (s.snapshot?.stale) out.push({ kind: "warn", text: `FPL is updating: using data from ${s.snapshot.fetched_at?.slice(11, 16) ?? "earlier"} UTC. Confidence is capped at medium, and within an hour of the deadline Gaffer won't finalise transfers on old data.` });
 	if (s.snapshot?.odds?.requested && (!s.snapshot.odds.available || !s.snapshot.odds.fixtures)) out.push({ kind: "info", text: "Bookmaker odds are unavailable (football-data.co.uk). Team strength comes from the Dixon-Coles model instead." });
-	if (s.failure) out.push({ kind: "bad", text: `No recommendation. ${s.failure.attempts} submissions failed the rules check, so nothing is shown or saved. Last error: ${s.failure.errors?.[0] ? `${s.failure.errors[0].code}: ${s.failure.errors[0].message}` : "unknown"}.`, retry: true });
+	if (s.failure) out.push({ kind: "bad", text: `No recommendation. ${s.failure.attempts} submissions failed the rules check, so nothing is shown or saved. Last error: ${s.failure.errors?.[0] ? `${s.failure.errors[0].code}: ${s.failure.errors[0].message.replace(/\.$/, "")}` : "unknown"}.`, retry: true });
 	for (const n of s.notices) if (n.type === "error" && !/could not produce a valid recommendation|Gaffer stopped this run/.test(n.message)) out.push({ kind: "bad", text: n.message });
 	for (const e of s.errors) out.push({ kind: "bad", text: `The model call failed: ${e}` });
 	if (s.retry) out.push({ kind: "info", text: `Model busy, retrying in ${secs(s.retry.delayMs)} (${s.retry.attempt} of ${s.retry.maxAttempts}).` });
