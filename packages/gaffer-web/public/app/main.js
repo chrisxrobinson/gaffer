@@ -181,6 +181,7 @@ function SessionView({ id, home, now, refreshHome, onState }) {
 
 	useEffect(() => {
 		void load();
+		void refreshHome(); // the rail shows this session (a run just started) at once
 		return () => es.current?.close();
 	}, [load]);
 	useEffect(() => onState(s), [s]);
