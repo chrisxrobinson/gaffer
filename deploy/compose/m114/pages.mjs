@@ -151,7 +151,7 @@ async function screen(name, { scrollTo, full = false } = {}) {
 
 // ---- The keyboard walk ---------------------------------------------------------------------------------------
 /** Tab from the top of the page `n` times: each stop, in DOM order or not, with its focus visible or not. */
-async function walk(name, n) {
+async function walk(name, n, scope = "document") {
 	await js("document.activeElement?.blur(); window.scrollTo(0, 0); true");
 	await js("(document.body.tabIndex = -1, document.body.focus(), document.body.removeAttribute('tabindex'), true)");
 	const stops = [];
@@ -162,7 +162,7 @@ async function walk(name, n) {
 			if (!el || el === document.body) return null;
 			const cs = getComputedStyle(el);
 			const visible = el.matches(":focus-visible") && ((cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0) || cs.boxShadow !== "none");
-			const all = [...document.querySelectorAll("a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])")].filter((e) => !e.disabled && e.checkVisibility({ visibilityProperty: true }) && !e.closest("[inert]"));
+			const all = [...${scope}.querySelectorAll("a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])")].filter((e) => !e.disabled && e.checkVisibility({ visibilityProperty: true }) && !e.closest("[inert]"));
 			const label = (el.getAttribute("aria-label") || el.labels?.[0]?.textContent || el.textContent || el.placeholder || el.id || el.tagName).trim().replace(/\\s+/g, " ").slice(0, 60);
 			return { tag: el.tagName.toLowerCase(), label, index: all.indexOf(el), of: all.length, visible };
 		})()`));
@@ -171,7 +171,7 @@ async function walk(name, n) {
 	const inOrder = real.every((s, i) => i === 0 || s.index > real[i - 1].index || s.index === 0);
 	const reached = new Set(real.map((s) => s.index)).size;
 	const seen = new Set(real.map((s) => s.index));
-	const missed = (await js(`[...document.querySelectorAll("a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])")].filter((e) => !e.disabled && e.checkVisibility({ visibilityProperty: true }) && !e.closest("[inert]")).map((e) => (e.getAttribute("aria-label") || e.textContent || e.id || e.tagName).trim().replace(/\\s+/g, " ").slice(0, 50))`)).filter((_, i) => !seen.has(i));
+	const missed = (await js(`[...${scope}.querySelectorAll("a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])")].filter((e) => !e.disabled && e.checkVisibility({ visibilityProperty: true }) && !e.closest("[inert]")).map((e) => (e.getAttribute("aria-label") || e.textContent || e.id || e.tagName).trim().replace(/\\s+/g, " ").slice(0, 50))`)).filter((_, i) => !seen.has(i));
 	const result = { walk: `${tag}-${name}`, stops: real, inOrder, allVisible: real.every((s) => s.visible), reached, focusable: real[0]?.of ?? 0, missed };
 	console.log(`${tag}-${name}: ${real.length} Tab stops, ${reached} of ${result.focusable} controls, in order ${inOrder}, focus visible on all ${result.allVisible}${missed.length ? `; not reached: ${missed.join(" | ")}` : ""}`);
 	return result;
@@ -323,7 +323,7 @@ try {
 				await js(`document.querySelector("button.menu").focus(); true`);
 				await key("Enter");
 				await sleep(300);
-				keyboard.push(await walk("drawer-open", 12));
+				keyboard.push(await walk("drawer-open", 14, 'document.getElementById("rail")'));
 				d.stop();
 			}
 		}

@@ -184,11 +184,12 @@ export function registerRun(pi: ExtensionAPI, guard: SessionGuard, setTeam: SetT
 					if (o.against === "recommendation") {
 						const latest = latestRecommendation(ctx.sessionManager.getSessionDir(), spec.team_id);
 						rec = latest ? { rec_id: latest.rec_id, gw: latest.gw, role: roleIn(latest, p.id) } : null;
-						context = rec ? `In my latest recommendation (GW${rec.gw}, rec ${rec.rec_id}) he is ${rec.role}.` : "There is no earlier recommendation for my team, so explain it against my squad.";
+						context = rec ? `In my latest recommendation (GW${rec.gw}, rec ${rec.rec_id}) he is ${rec.role}` : "There is no earlier recommendation for my team, so explain it against my squad";
 					} else {
 						const mine = await squad();
-						context = mine.length ? `Against my current squad: he is ${mine.includes(p.id) ? "in it" : "not in it"}.` : "Against my current squad.";
+						context = mine.length ? `Against my current squad: he is ${mine.includes(p.id) ? "in it" : "not in it"}` : "Against my current squad";
 					}
+					// The template ends the sentence itself ("Explain your projection for ${@}.").
 					plan = { template: `/explain ${label(p)}. ${context}`, options: { player: p, against: o.against, rec } };
 					break;
 				}

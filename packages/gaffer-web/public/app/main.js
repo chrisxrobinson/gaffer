@@ -183,6 +183,8 @@ function App() {
 	const [home, setHome] = useState(null);
 	const [session, setSession] = useState(null);
 	const [drawer, setDrawer] = useState(false);
+	// Names given here, by session: shown at once (Pi's RPC doesn't send the rename as an event; the file has it).
+	const [named, setNamed] = useState({});
 	const menu = useRef(null);
 	const main = useRef(null);
 	const now = useNow();
@@ -220,12 +222,13 @@ function App() {
 	useEffect(() => {
 		if (main.current) main.current.inert = drawer;
 	}, [drawer]);
-	const title = r.view === "start" ? "New session" : r.view === "scorecard" ? "Scorecard" : r.view === "prefs" ? "Preferences" : session ? runTitle(session) : "Session";
+	const title = r.view === "start" ? "New session" : r.view === "scorecard" ? "Scorecard" : r.view === "prefs" ? "Preferences" : named[r.id] ?? (session ? runTitle(session) : "Session");
 	useEffect(() => {
 		document.title = `Gaffer · ${title}${session?.running ? " · working" : ""}`;
 	}, [title, session?.running]);
 	const rename = async (id, name) => {
 		const res = await api.post(`/api/sessions/${id}/commands`, { type: "rename", text: name });
+		if (res.ok) setNamed((n) => ({ ...n, [id]: name }));
 		void refreshHome();
 		return res.ok ? { ok: true } : { ok: false, error: res.body.error ?? "The session could not be renamed." };
 	};

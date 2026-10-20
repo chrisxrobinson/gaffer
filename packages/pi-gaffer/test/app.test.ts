@@ -365,11 +365,12 @@ describe("/run's other actions (FR-UI-08 for What-if, Explain, Chip planner and 
 
 	it("Explain a pick: against the squad, and against the team's latest recommendation as data", async () => {
 		const squad = await answered(run("explain", { player: SQUAD[0], against: "squad" }));
-		expect(squad.users).toEqual([expand("explain", `${name(SQUAD[0])} (${club(SQUAD[0])}, id ${SQUAD[0]}). Against my current squad: he is in it.`)]);
+		expect(squad.users).toEqual([expand("explain", `${name(SQUAD[0])} (${club(SQUAD[0])}, id ${SQUAD[0]}). Against my current squad: he is in it`)]);
 		expect(squad.run.title).toBe(`Explain ${name(SQUAD[0])}`);
 		// No recommendation for this team in the store yet: said so, and the squad is used.
 		const none = await answered(run("explain", { player: OUTSIDE, against: "recommendation" }));
 		expect(none.users[0]).toContain("There is no earlier recommendation for my team");
+		for (const u of [...squad.users, ...none.users]) expect(u).not.toMatch(/\.\./); // one full stop, the template's
 		expect(none.run.options).toMatchObject({ against: "recommendation", rec: null });
 		// A recommendation for the team in the store (a session both UIs list): where the player stands in it.
 		const doc = planDoc();
@@ -379,7 +380,7 @@ describe("/run's other actions (FR-UI-08 for What-if, Explain, Chip planner and 
 		try {
 			const cap = rec.captain.id;
 			const latest = await answered(run("explain", { player: cap, against: "recommendation" }));
-			expect(latest.users).toEqual([expand("explain", `${name(cap)} (${club(cap)}, id ${cap}). In my latest recommendation (GW6, rec 01TESTREC0000000000000000) he is the captain.`)]);
+			expect(latest.users).toEqual([expand("explain", `${name(cap)} (${club(cap)}, id ${cap}). In my latest recommendation (GW6, rec 01TESTREC0000000000000000) he is the captain`)]);
 			expect(latest.run.options).toMatchObject({ rec: { rec_id: "01TESTREC0000000000000000", gw: 6, role: "the captain" } });
 		} finally {
 			rmSync(file);
