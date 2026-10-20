@@ -54,7 +54,7 @@ function Counter({ rec, id }) {
 
 const conf = (level) => html`<span class=${`tag ${level}`}>${level}</span>`;
 
-export function ResultView({ rec, teamName, now = Date.now() }) {
+export function ResultView({ rec, teamName, now = Date.now(), terminal }) {
 	const P = rec.players;
 	const xi = rec.starting_xi;
 	const rowsOf = (n) => xi.filter((id) => pos(P[String(id)]) === n);
@@ -158,8 +158,9 @@ export function ResultView({ rec, teamName, now = Date.now() }) {
 			<span class="row">
 				<button type="button" class="btn small" onClick=${() => download(`gaffer-${rec.rec_id}.json`, "application/json", exportJson(rec))}>Export JSON</button>
 				<button type="button" class="btn small" onClick=${() => download(`gaffer-gw${rec.gw}-${rec.rec_id}.csv`, "text/csv", exportCsv(rec))}>Export CSV</button>
+				${terminal ? html`<a class="btn small" href=${terminal} target="_blank" rel="noopener noreferrer">Open in terminal</a>` : null}
 			</span>
 		</div>
-		<p class="muted" style="font-size:12.5px">In the browser terminal this session is under /resume.</p>
+		<p class="muted" style="font-size:12.5px">${terminal ? "Open in terminal opens the browser terminal's own page in a new tab; " : "In the browser terminal "}this session is under /resume there. The App itself has no terminal.</p>
 	</article>`;
 }

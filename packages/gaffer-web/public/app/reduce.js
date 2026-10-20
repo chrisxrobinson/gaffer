@@ -7,6 +7,9 @@ export function initialState() {
 		brief: null, team: null, snapshot: null, budget: null, name: null, result: null, failure: null,
 		items: [], steps: {}, validations: [], notices: [], queue: [], retry: null, compacting: false, readOnly: null,
 		running: false, startedAt: null, endedAt: null, aborted: false, cost: 0, liveCost: 0, msg: 0, briefPending: false, errors: [],
+		// Follow-ups asked about a result (FR-UI-13): each with the item it starts at and the session's cost then;
+		// and the run's own start, end and cost, kept when the first follow-up starts.
+		asks: [], run: null,
 	};
 }
 
@@ -67,8 +70,10 @@ export function reduce(s, e) {
 	switch (e.type) {
 		case "entry_appended":
 			return entry(s, e.entry, at);
-		case "agent_start":
-			return { ...s, running: true, startedAt: at, endedAt: null, aborted: false, retry: null };
+		case "agent_start": {
+			const run = s.run ?? (s.result && s.endedAt ? { startedAt: s.startedAt, endedAt: s.endedAt, cost: s.cost, aborted: s.aborted } : null);
+			return { ...s, run, running: true, startedAt: at, endedAt: null, aborted: false, retry: null };
+		}
 		case "agent_settled":
 			return { ...s, running: false, endedAt: at, aborted: !!e.aborted, retry: null, queue: [] };
 		case "message_start": {
@@ -77,7 +82,10 @@ export function reduce(s, e) {
 			if (m.role === "user") {
 				// A run the App started shows its brief, not the template text it was sent as.
 				if (s.briefPending) return { ...s, briefPending: false };
-				return { ...s, items: [...s.items, { kind: "user", key: `u${s.items.length}`, text: textOf(m.content) }] };
+				const item = { kind: "user", key: `u${s.items.length}`, text: textOf(m.content) };
+				// After a result, a question is a follow-up: its answer is drawn under the result.
+				if (s.result) return { ...s, items: [...s.items, { ...item, ask: true }], asks: [...s.asks, { key: item.key, at, cost: s.cost }] };
+				return { ...s, items: [...s.items, item] };
 			}
 			if (m.role === "custom" && m.customType === "gaffer.steer") return { ...s, items: [...s.items, { kind: "note", key: `n${s.items.length}`, note: "steer" }] };
 			return s;

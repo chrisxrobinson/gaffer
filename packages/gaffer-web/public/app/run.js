@@ -3,6 +3,7 @@
 // table by tool name; summaries from structured details and gaffer.* entries; never from the model's prose.
 import { html } from "./html.js";
 import { CHIP, ICON, money, RISK, secs, usd } from "./format.js";
+import { markdown } from "./md.js";
 
 const MAX_ATTEMPTS = 3;
 const skillOf = (path) => /skills\/([^/]+)\/SKILL\.md$/.exec(String(path ?? ""))?.[1];
@@ -103,13 +104,22 @@ function progressPct(p) {
 }
 
 function Thinking({ item, live }) {
-	if (live) return html`<div class="think" aria-live="polite"><span class="lbl">Thinking</span>${item.text}<span class="cursor" aria-hidden="true">▍</span></div>`;
+	if (live) return html`<div class="think"><span class="lbl">Thinking</span>${item.text}<span class="cursor" aria-hidden="true">▍</span></div>`;
 	return html`<details class="think"><summary><span class="lbl">Thinking</span>${item.text}</summary></details>`;
 }
+
+const who = (p) => (p ? `${p.name}${p.team ? ` (${p.team})` : ""}` : "?");
 
 export function briefLine(b) {
 	if (!b) return "";
 	const o = b.options ?? {};
+	if (b.action === "whatif") {
+		if (o.kind === "transfer") return `${who(o.out)} out, ${who(o.in)} in, in GW${o.gw} · against the best plan, over 4 and 6 GWs`;
+		if (o.kind === "chip") return `${CHIP[o.chip] ?? o.chip} in GW${o.gw} · against the chip-free plan`;
+		return `keep ${who(o.player)} · against the best plan`;
+	}
+	if (b.action === "explain") return `${who(o.player)} · ${o.against === "recommendation" ? (o.rec ? `against the GW${o.rec.gw} recommendation, where he is ${o.rec.role}` : "no earlier recommendation, so against the squad") : "against the squad"}`;
+	if (b.action === "chips") return `the chips left, GW${o.from_gw} to GW${o.to_gw}`;
 	return [
 		RISK[o.risk] ? `risk ${o.risk}` : null,
 		o.max_hits_per_gw === null || o.max_hits_per_gw === undefined ? "hits: no limit" : `max ${o.max_hits_per_gw} hit${o.max_hits_per_gw === 1 ? "" : "s"}`,
@@ -121,7 +131,23 @@ export function briefLine(b) {
 	].filter(Boolean).join(" · ");
 }
 
-export const runTitle = (s) => s.name ?? (s.brief ? `Recommend GW${s.brief.gw ?? s.result?.gw ?? "?"}` : s.result ? `GW${s.result.gw} recommendation` : s.snapshot?.gw?.next ? `GW${s.snapshot.gw.next} session` : "Session");
+export const runTitle = (s) => s.name ?? (s.brief ? (s.brief.title || `Recommend GW${s.brief.gw ?? s.result?.gw ?? "?"}`) : s.result ? `GW${s.result.gw} recommendation` : s.snapshot?.gw?.next ? `GW${s.snapshot.gw.next} session` : "Session");
+
+/** The items of the run itself: everything before the first follow-up (those are drawn under the result). */
+export const runItems = (s) => {
+	const first = s.items.findIndex((x) => x.ask);
+	return first < 0 ? s.items : s.items.slice(0, first);
+};
+
+/** A step's state in words, for the screen reader's log: "Fetched your team and FPL data: done". */
+export function stepWords(step) {
+	const v = describeStep(step);
+	const state = step.status === "ok" ? "done" : step.status === "err" ? "failed" : step.status === "running" ? "started" : "waiting";
+	return `${v.label}${v.summary ? `, ${v.summary}` : ""}: ${state}`;
+}
+
+/** Model text as Markdown (paragraphs, lists, bold, tables), as text: never HTML. */
+export const Said = ({ text, cls = "say" }) => html`<div class=${`${cls} md`}>${markdown(text)}</div>`;
 
 /** Banners for the states docs/ui §6 lists that a Recommend run can reach. */
 export function runBanners(s) {
@@ -146,30 +172,35 @@ export function Banner({ kind, text, children }) {
 }
 
 export function RunView({ s, now, onStop, onRetry, canStop, elsewhere }) {
-	const visible = s.items.filter((x) => x.kind !== "step" || s.steps[x.id]);
+	const visible = runItems(s).filter((x) => x.kind !== "step" || s.steps[x.id]);
+	// The step list as a live region: one line per step as it starts and ends, not the streaming text.
+	const log = visible.filter((x) => x.kind === "step" && !describeStep(s.steps[x.id]).minor && s.steps[x.id].status !== "pending").map((x) => stepWords(s.steps[x.id]));
 	const lastThink = [...visible].reverse().find((x) => x.kind === "think");
-	const elapsed = s.startedAt ? ((s.endedAt ?? now) - s.startedAt) / 1000 : null;
-	const cost = s.cost + (s.running ? s.liveCost : 0);
+	// After a follow-up, this line is the run's own: its time and cost, not the follow-ups' (shown under the result).
+	const r = s.run ?? { startedAt: s.startedAt, endedAt: s.endedAt, cost: s.cost + (s.running ? s.liveCost : 0), aborted: s.aborted, running: s.running };
+	const elapsed = r.startedAt ? ((r.endedAt ?? now) - r.startedAt) / 1000 : null;
+	const cost = r.cost;
 	const meta = elsewhere
 		? `${elsewhere === "running" ? "Running in the browser terminal" : "Open in the browser terminal"} · ${usd(cost, 3)} so far`
-		: s.running
+		: r.running
 		? `Running · ${elapsed !== null ? `${Math.round(elapsed)} s` : "…"} · ${usd(cost, 3)} so far`
-		: s.aborted
+		: r.aborted
 			? `Stopped${elapsed !== null ? ` after ${Math.round(elapsed)} s` : ""} · ${usd(cost, 3)}${s.result ? "" : " · nothing was saved"}`
-			: `${s.result ? "Done" : "Finished"}${elapsed !== null ? ` in ${Math.round(elapsed)} s` : ""} · ${usd(cost, 3)}`;
+			: `${s.result ? "Done" : s.brief && s.brief.action !== "recommend" ? "Answered" : "Finished"}${elapsed !== null ? ` in ${Math.round(elapsed)} s` : ""} · ${usd(cost, 3)}`;
 	return html`<section class="transcript" aria-label="The run">
 		<div class=${`brief${s.running ? " live" : ""}`}><strong>${runTitle(s)}</strong><span class="muted">${[s.team?.team_name, briefLine(s.brief)].filter(Boolean).join(" · ")}</span>${s.startedAt ? html`<span class="muted mono when">started ${new Date(s.startedAt).toLocaleTimeString()}</span>` : null}</div>
 		${runBanners(s).map((b) => html`<${Banner} kind=${b.kind} text=${b.text}>${b.retry && onRetry ? html` <button type="button" class="btn small" onClick=${onRetry}>Try again</button>` : null}<//>`)}
 		${visible.map((x) => {
 			if (x.kind === "think") return html`<${Thinking} key=${x.key} item=${x} live=${s.running && !x.done && x === lastThink} />`;
-			if (x.kind === "say") return html`<p class="say" key=${x.key}>${x.text}</p>`;
+			if (x.kind === "say") return html`<${Said} key=${x.key} text=${x.text} />`;
 			if (x.kind === "user") return html`<p class="you" key=${x.key}><span class="lbl">You</span> ${x.text}</p>`;
 			if (x.kind === "note") return html`<p class="note" key=${x.key}>Budget soft cap: Gaffer asked the model to wrap up.</p>`;
 			const step = s.steps[x.id];
 			return html`<${Step} key=${x.id} step=${step} open=${step.status === "running" && !describeStep(step).minor} />`;
 		})}
-		${s.queue.length ? html`<p class="muted">Queued: ${s.queue.join(" · ")}</p>` : null}
-		<div class="runbar"><span class="muted" role="status">${meta}</span>${s.running && canStop ? html`<button type="button" class="btn small" onClick=${onStop}>Stop run <span class="muted">(Esc)</span></button>` : null}</div>
+		${s.queue.length && !s.result ? html`<p class="muted">Queued: ${s.queue.join(" · ")}</p>` : null}
+		<ol class="sr" role="log" aria-label="Steps" aria-live="polite">${log.map((t, i) => html`<li key=${i}>${t}</li>`)}</ol>
+		<div class="runbar"><span class="muted" role="status">${meta}</span>${s.running && canStop ? html`<button type="button" class="btn small" onClick=${onStop}>${s.run ? "Stop the answer" : "Stop run"} <span class="muted">(Esc)</span></button>` : null}</div>
 	</section>`;
 }
 
