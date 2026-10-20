@@ -1,25 +1,27 @@
 #!/bin/sh
 # Stack checks against a running `docker compose up` (run from deploy/compose):
-# NFR-SEC-04 port binding, NFR-SEC-01/02 sandbox isolation, NFR-SEC-08 the built-ins locked off, FR-UI-06
-# the command allowlist in the real TUI, a live
+# NFR-SEC-04 port bindings, NFR-SEC-01/02 sandbox isolation, NFR-SEC-08 the built-ins locked off, FR-UI-06
+# the command allowlist in the real TUI, the Gaffer App's bridge (tests/app.mjs, M1.1-3), a live
 # fpl_snapshot round trip with odds, the gaffer_lib golden path in the sandbox within NFR-LAT-03's 60 s,
 # FR-DAT-09's fallback with the odds source down, and (M4) a scripted model's recommendation through the
 # submit gate: rejected, corrected, stored, exported and replayed. No LLM key is needed: the model is Pi's
 # scripted faux provider.
-# The live stack by default; another Compose project with its own file and host port, for example:
-#   GAFFER_PROJECT=gaffer-m111 GAFFER_PORT=17683 COMPOSE_FILE=m111/docker-compose.m111.yml ./tests/verify.sh
+# The live stack by default; another Compose project with its own file and host ports, for example:
+#   GAFFER_PROJECT=gaffer-m113 GAFFER_PORT=17685 GAFFER_APP_PORT=17686 COMPOSE_FILE=m113/docker-compose.m113.yml ./tests/verify.sh
 set -eu
 cd "$(dirname "$0")/.."
-PROJECT="${GAFFER_PROJECT:-gaffer}"; PORT="${GAFFER_PORT:-7681}"
+PROJECT="${GAFFER_PROJECT:-gaffer}"; PORT="${GAFFER_PORT:-7681}"; APP_PORT="${GAFFER_APP_PORT:-7682}"
 dc() { docker compose -p "$PROJECT" "$@"; }
 
-echo "== NFR-SEC-04: web TUI published on 127.0.0.1 only ($PROJECT)"
+echo "== NFR-SEC-04: the web TUI and the Gaffer App published on 127.0.0.1 only ($PROJECT)"
 bindings="$(docker inspect "$(dc ps -q gaffer)" --format '{{json .HostConfig.PortBindings}}')"
 echo "$bindings"
-[ "$bindings" = "{\"7681/tcp\":[{\"HostIp\":\"127.0.0.1\",\"HostPort\":\"$PORT\"}]}" ] || { echo "FAIL: unexpected port binding"; exit 1; }
+[ "$bindings" = "{\"7681/tcp\":[{\"HostIp\":\"127.0.0.1\",\"HostPort\":\"$PORT\"}],\"7682/tcp\":[{\"HostIp\":\"127.0.0.1\",\"HostPort\":\"$APP_PORT\"}]}" ] || { echo "FAIL: unexpected port binding"; exit 1; }
 [ "$(docker inspect "$(dc ps -q sandbox)" --format '{{json .HostConfig.PortBindings}}')" = "{}" ] || { echo "FAIL: sandbox publishes ports"; exit 1; }
 code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/")"
 echo "GET http://127.0.0.1:$PORT/ -> $code"; [ "$code" = 200 ]
+code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$APP_PORT/")"
+echo "GET http://127.0.0.1:$APP_PORT/ (the App) -> $code"; [ "$code" = 200 ]
 
 echo "== NFR-SEC-01/02: sandbox isolation"
 dc exec -T gaffer node --input-type=module - < tests/isolation.mjs
@@ -29,6 +31,9 @@ dc exec -T gaffer node --input-type=module - < tests/lockdown.mjs
 
 echo "== FR-UI-06: only Gaffer's commands in the real TUI (tmux, 100 columns); the shortcuts do nothing"
 dc exec -T gaffer node --input-type=module - < tests/commands.mjs
+
+echo "== The Gaffer App's bridge: NFR-SEC-05/07 fuzz, a Recommend run with a scripted model (FR-UI-08/09/11), NFR-LAT-04, the locks (NFR-REL-03)"
+dc exec -T -e TEAM_ID="${TEAM_ID:-1}" gaffer node --input-type=module - < tests/app.mjs
 
 echo "== fpl_snapshot live round trip and the golden path in the sandbox (team ${TEAM_ID:-1})"
 dc exec -T -e TEAM_ID="${TEAM_ID:-1}" gaffer node --input-type=module - < tests/live-snapshot.mjs

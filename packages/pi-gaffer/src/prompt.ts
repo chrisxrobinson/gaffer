@@ -1,5 +1,5 @@
 /** Gaffer's system prompt preamble and per-turn sections (ARCHITECTURE §1.3). */
-import { describePrefs, prefsPath, readPrefs } from "./prefs.ts";
+import { describePrefs, prefsPath, readPrefsFile } from "./prefs.ts";
 import type * as S from "./schema/fpl.ts";
 import type { SnapshotStore } from "./store.ts";
 
@@ -86,10 +86,15 @@ export function fplContextSection(state: SessionFplState, store: SnapshotStore |
 	return lines.join("\n");
 }
 
-/** The `user_preferences` section, from /data/users/<hash>/prefs.json (written by set_preferences and /prefs). */
-export function userPreferencesSection(dataDir: string, teamIdHash: string | undefined): string {
+/**
+ * The `user_preferences` section, from /data/users/<hash>/prefs.json (written by set_preferences and /prefs), or
+ * from the session's own file when a Gaffer App run set options without saving them (`file`).
+ */
+export function userPreferencesSection(dataDir: string, teamIdHash: string | undefined, file?: string): string {
 	if (!teamIdHash) return "none (no team set)";
-	const prefs = readPrefs(dataDir, teamIdHash);
+	const path = file ?? prefsPath(dataDir, teamIdHash);
+	const prefs = readPrefsFile(path);
 	if (!prefs) return "none saved (defaults: risk balanced, maximise expected points)";
-	return `${describePrefs(prefs)}\nfile: ${prefsPath(dataDir, teamIdHash)} (the golden-path command passes it with --prefs; submit_recommendation enforces it)`;
+	const scope = file && file !== prefsPath(dataDir, teamIdHash) ? " (set for this session in the Gaffer App)" : "";
+	return `${describePrefs(prefs)}\nfile: ${path}${scope} (the golden-path command passes it with --prefs; submit_recommendation enforces it)`;
 }

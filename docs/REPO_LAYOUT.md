@@ -14,17 +14,21 @@ gaffer/
 │   │   │   ├── gaffer-data/       #   fpl_snapshot tool: fetch, cache-bust, TTL, retry+jitter, validate, snapshot
 │   │   │   ├── gaffer-recommend/  #   submit_recommendation (validate + recompute + terminate), set_preferences, renderer
 │   │   │   └── gaffer-budget/     #   per-session/day cost caps, soft-cap steering
-│   │   ├── src/                   #   shared code; 1.1: commands.ts, the command allowlist and refusals (for both UIs)
+│   │   ├── src/                   #   shared code; 1.1: commands.ts, the command allowlist and refusals; lock.ts (session and run locks), app-data.ts (what the App reads: next GW, team check, squad, session list), plan-step.ts (the golden path's tag)
 │   │   ├── src/schema/            #   TypeBox schemas: recommendation/1 (with the submission and prefs), FPL response subsets
-│   │   ├── scripts/               #   export-schema.ts (→ schemas/recommendation-1.json), replay.ts (rec_id → rerun the gate, NFR-OBS-01)
+│   │   ├── scripts/               #   export-schema.ts (→ schemas/recommendation-1.json), replay.ts (rec_id → rerun the gate, NFR-OBS-01), continue-session.ts (the terminal's lock-aware --continue)
 │   │   ├── skills/                #   SKILL.md directories (see list below)
 │   │   ├── prompts/               #   prompt templates: gw.md, whatif.md, explain.md; 1.1 adds chips.md (Chip planner)
 │   │   ├── themes/                #   gaffer-dark.json (today's gaffer.json) and gaffer-light.json (1.1, ADR 0013)
 │   │   └── test/                  #   vitest: S1 checks as tests, tool unit tests with fauxProvider
-│   └── gaffer-web/                # Phase 1.1: the Gaffer App (ADR 0014)
-│       ├── server/                #   bridge: node: built-ins + Pi's RpcClient; RPC process per open session; command allowlist; SSE + POST; --replay
-│       ├── public/                #   no-build frontend: Preact + htm vendored, the App's modules and CSS (tokens from docs/ui/brand), self-hosted fonts
-│       └── test/                  #   allowlist fuzz (NFR-SEC-05/07), renderer over the 30 eval recommendations (FR-UI-10), replay fixtures (S7's log)
+│   └── gaffer-web/                # Phase 1.1: the Gaffer App (ADR 0014; as built in M1.1-3)
+│       ├── server.ts              #   entry: --host/--port, or --replay <events.jsonl> (no Pi, no model)
+│       ├── src/                   #   bridge.ts: node: built-ins + Pi's RpcClient; one gaffer-pi --mode rpc per open session; command allowlist; SSE + POST; Origin/Host checks;
+│       │                          #   replay.ts: a recorded run served as a session
+│       ├── public/                #   no-build frontend: index.html (import map), app/ (main, start, run, result, reduce, format; style.css from docs/ui/brand),
+│       │                          #   vendor/ (Preact 10.29.8 + hooks, htm 3.1.1, as published), fonts/ (Barlow Condensed, IBM Plex Sans and Mono, WOFF2)
+│       └── test/                  #   bridge.test.ts (allowlist fuzz NFR-SEC-05/07, SSE replay, latency), views.test.ts (renderer over every eval recommendation FR-UI-10,
+│                                  #   export FR-UI-11, run steps FR-UI-09), fixtures/ (a recorded faux run, the eval recommendations)
 ├── python/
 │   └── gaffer_lib/                # Tested analytics library, installed read-only in the sandbox image
 │       ├── src/gaffer_lib/        #   rules, derive, strength, minutes, xp, plan, ownership, validate, backtest, cli
@@ -33,7 +37,7 @@ gaffer/
 ├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux + gaffer-web), tmux.conf, entrypoint (ttyd and gaffer-web), gaffer-pi launcher (TUI and --mode rpc), ttyd page script (keys, OSC 52 copy, title, viewport) and ttyd's palette from docs/ui/brand/tokens.json;
 │                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013; M1.1-1); models.json only for models the catalogue lacks (none today)
 ├── deploy/
-│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs and commands.mjs, the NFR-SEC-08 and FR-UI-06 gates), m1xx/ (each milestone's separate evidence stack)
+│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs, commands.mjs and app.mjs, the NFR-SEC-08, FR-UI-06 and App gates), m1xx/ (each milestone's separate evidence stack)
 │   ├── aws/                       #   Phase 2 IaC: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager
 │   └── generic/                   #   Caddy + oauth2-proxy compose override for Hetzner/Fly-style hosts
 ├── evals/                         # A workspace package: `pnpm eval` (runner/cli.ts)

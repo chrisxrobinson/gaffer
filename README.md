@@ -1,8 +1,8 @@
 # Gaffer
 
-A Fantasy Premier League advisor built as a [Pi](https://pi.dev) package. Pi's agent loop runs unchanged. Everything FPL-specific lives in Gaffer's extensions, skills and theme, a tested Python library, and a sandbox with no network where the model's code runs. You use it through the Pi terminal UI in your browser.
+A Fantasy Premier League advisor built as a [Pi](https://pi.dev) package. Pi's agent loop runs unchanged. Everything FPL-specific lives in Gaffer's extensions, skills and theme, a tested Python library, and a sandbox with no network where the model's code runs. You use it in your browser, through the Gaffer App or the Gaffer Terminal (Pi's terminal UI).
 
-**Status: ROADMAP milestone M5.** Gaffer loads your team from the public FPL API and recommends what to do for the next gameweek: transfers, starting XI and bench, captain and vice-captain, chip, and a plan for the next four gameweeks. Its model (bookmaker odds and a Dixon-Coles team model, expected minutes, component expected points) feeds an optimiser; the language model reads the team news, chooses between the optimiser's plans and explains the choice. Nothing is shown as a recommendation until deterministic code has checked it against FPL's rules and your preferences and recomputed every number in it. Once a GW is finished, Gaffer can score its recommendations against what you actually scored and two simple baselines (`/scorecard`), and a static admin report shows sessions, cost, latency, errors and data-source health. A 30-case eval suite tests the whole agent. See [docs/ROADMAP.md](docs/ROADMAP.md) and [BUILD.md](BUILD.md).
+**Status: ROADMAP milestone M1.1-3** (Phase 1 built; Phase 1.1 brings Pi 1.3.0, the Gaffer Terminal and the Gaffer App). Gaffer loads your team from the public FPL API and recommends what to do for the next gameweek: transfers, starting XI and bench, captain and vice-captain, chip, and a plan for the next four gameweeks. Its model (bookmaker odds and a Dixon-Coles team model, expected minutes, component expected points) feeds an optimiser; the language model reads the team news, chooses between the optimiser's plans and explains the choice. Nothing is shown as a recommendation until deterministic code has checked it against FPL's rules and your preferences and recomputed every number in it. Once a GW is finished, Gaffer can score its recommendations against what you actually scored and two simple baselines (`/scorecard`), and a static admin report shows sessions, cost, latency, errors and data-source health. A 31-case eval suite tests the whole agent. See [docs/ROADMAP.md](docs/ROADMAP.md) and [BUILD.md](BUILD.md).
 
 Gaffer is read-only. It never logs in to FPL and never changes your team.
 
@@ -21,7 +21,12 @@ Paste your API key into `deploy/compose/secrets/anthropic_api_key`. The script a
 docker compose up -d --build
 ```
 
-Open **http://127.0.0.1:7681**. You get the Gaffer Terminal: Pi's terminal UI with Gaffer's header, status strip, theme and commands. Then:
+Gaffer has two UIs over one agent and one session store (ADR 0014):
+
+- **http://127.0.0.1:7682**, the **Gaffer App**: pick your team and *Recommend this GW*, watch the run, and read the recommendation as a page (see [Using the Gaffer App](#using-the-gaffer-app)).
+- **http://127.0.0.1:7681**, the **Gaffer Terminal**: Pi's terminal UI with Gaffer's header, status strip, theme and commands.
+
+A session started in either appears in the other. In the terminal:
 
 1. `/team <your FPL team ID>`. The ID is the number in the URL of your Points page on the FPL site, for example `/team 1234567`.
    FPL doesn't publish free transfers or transfers you've made for the next GW, so Gaffer derives the free-transfer count and shows it as assumed. If it's wrong, or you've already made transfers, say so: `/team 1234567 --ft 2 --pending "Salah>Palmer, Saka>Foden"` (names or player IDs, OUT>IN). Each `/team` replaces the last, so restate options you want to keep.
@@ -71,12 +76,21 @@ docker compose exec gaffer cat /data/admin/admin.html > admin.html
 
 To stop the stack, run `docker compose down`. Your sessions and snapshots are kept in Docker volumes. To wipe them as well, run `docker compose down -v`.
 
+### Using the Gaffer App
+
+- **Start:** type your FPL team ID (the number in the address of your Points page). Gaffer checks it with FPL as you type, shows the team's name, and remembers the ID in this browser; the server keeps only its hash. The gameweek and its deadline come from FPL. *Recommend this GW* is the one action so far; the other five tiles say "coming soon" (M1.1-4).
+- **Options:** risk, most hits this GW, chips to save, players to keep (from your squad), your free transfers (leave it empty to use the count Gaffer derives) and transfers you've already made (`Salah>Palmer, Saka>Foden`). They apply to that session only, unless you tick *Save these as my preferences*. Your saved preferences fill the form.
+- **Go** starts the run: the same `/gw` template the terminal sends, so both UIs run one workflow. The run streams as steps in Gaffer's words, each with its time and a one-line summary: the data fetch, the projection and solve (with the solver's progress), the plan check (a rejected submission shows the rule and that the model will retry), and the model's short reasoning, folded. **Stop run** (or Esc) aborts it. Closing the tab doesn't stop anything; reopening the session fills the transcript in from where it left off.
+- **The result** is drawn from the recommendation's JSON: the headline figures, the summary, the transfers with their gains against any hit, the XI on a pitch with the bench in auto-sub order, captaincy and the team news applied, the chip advice with its scenarios, the 4-GW plan and what to check before the deadline. **Export JSON** saves the stored recommendation exactly as Gaffer saved it; **Export CSV** has a row per transfer, the captain, the vice and each plan GW.
+- **Sessions** are on the left, by team then GW, newest first, with a dot for running, done, failed or idle. Double-click a title to rename it. **One writer per session:** a session open in the terminal is read-only in the App (and the other way round), with a notice; and while the local sandbox is shared, **one run at a time**: if the terminal is running, Go waits for it.
+- The App has no terminal of any kind and sends Pi only its own few commands; it loads nothing from outside the stack (fonts included). The theme follows your system, or pick Light or Dark at the bottom of the rail. For UI work without a model: `node packages/gaffer-web/server.ts --replay spikes/s7-rpc-events/events.jsonl --port 7790`.
+
 ### Using the terminal UI
 
 - The header shows Gaffer's wordmark and model; the two lines at the bottom are the status strip: your team, the next GW with a live countdown to its deadline, free transfers ("derived" when Gaffer worked them out), bank, and today's and this session's spend against the caps. They come from the latest snapshot and the same figures as `/usage`. The tab title is "Gaffer · GW8 · 6d", with "working" during a run.
 - It behaves like the Pi CLI in its fullscreen mode. To see earlier output, scroll with PageUp and PageDown (Ctrl+Home and Ctrl+End jump to the start and to the latest message) or the mouse wheel; a recommendation is usually taller than the window, so its transfers table is a PageUp away. `/` lists commands, Up and Down browse history, Shift+Enter inserts a newline, Escape interrupts a run, and Ctrl+C clears the input (press it twice to exit; reopening the page resumes the session). To copy, drag over text (Pi says "Copied!") or type `/copy` for the last answer; the page puts it on your clipboard. Holding Shift while dragging uses the browser's own selection instead.
 - `!` shell commands are disabled, because the harness container holds the API key. Gaffer's own code runs in the sandbox.
-- Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session.
+- Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session, unless the Gaffer App has it open: then the newest one it doesn't. A session the App has open is read-only here; `/new` starts another.
 - **Only one browser tab can be connected at a time.** A second tab shows "Press ⏎ to Reconnect" and won't connect until the first tab is closed. See [Troubleshooting](#troubleshooting).
 
 ### Configuration
@@ -106,17 +120,19 @@ docker compose -f docker-compose.yml -f docker-compose.gvisor.yml up -d
 ## How it fits together
 
 ```
-browser ──ws──> ttyd ─> tmux ─> pi + pi-gaffer          (gaffer container: LLM key, FPL access)
-                                   │  fpl_snapshot ──> fantasy.premierleague.com, football-data.co.uk (GET only)
-                                   │  bash/read/write/edit ──HTTP──> sandboxd  (sandbox container:
-                                   │                                  no network, no secrets,
-                                   └─ /sessions, /data (snapshots) ──ro──>  non-root, read-only root)
+browser ──ws──> ttyd ─> tmux ─> pi + pi-gaffer ─┐       (gaffer container: LLM key, FPL access)
+browser ──SSE/POST──> gaffer-web ─rpc─> pi + pi-gaffer (one per open session)
+                                        │  fpl_snapshot ──> fantasy.premierleague.com, football-data.co.uk (GET only)
+                                        │  bash/read/write/edit ──HTTP──> sandboxd  (sandbox container:
+                                        │                                  no network, no secrets,
+                                        └─ /sessions, /data (snapshots) ──ro──>  non-root, read-only root)
 ```
 
-- **Harness (`harness/`):** Node 24, Pi 1.3.0 from npm (`npm ci` from `harness/pi/package-lock.json`), the `pi-gaffer` package installed with `pi install`, the agent settings and keybindings in `harness/` (built-ins locked off, ADR 0012), and ttyd with tmux.
+- **Harness (`harness/`):** Node 24, Pi 1.3.0 from npm (`npm ci` from `harness/pi/package-lock.json`), the `pi-gaffer` package installed with `pi install`, the agent settings and keybindings in `harness/` (built-ins locked off, ADR 0012), ttyd with tmux, and `gaffer-web`. `harness/gaffer-pi` is the one launch line for both UIs.
+- **App (`packages/gaffer-web/`):** the bridge (plain Node and Pi's `RpcClient`: one `gaffer-pi --mode rpc` per open session, server-sent events with replay, an allowlist of Pi commands, the Origin check, read-only calls into Gaffer's `src/`) and the page (`public/`: Preact and htm vendored, no build step, fonts self-hosted).
 - **Package (`packages/pi-gaffer/`):** five extensions, six skills and three prompt templates. The model sees seven tools: Pi's `read`, `write`, `edit` and `bash` (all running in the sandbox), `fpl_snapshot`, `submit_recommendation` and `set_preferences`.
-  - `gaffer-core`: the prompt, the tool allowlist, the `!` shell block, `/team`, `/prefs`, `/export-rec`, `/usage` and `/scorecard`.
-  - `gaffer-sandbox`: Pi's four file and shell tools, routed to the sandbox.
+  - `gaffer-core`: the prompt, the tool allowlist, the `!` shell block, `/team`, `/prefs`, `/export-rec`, `/usage` and `/scorecard`; the terminal's identity and command surface; the App's `/run {json}`; and the session and run locks (one writer per session file, one run at a time on the shared sandbox).
+  - `gaffer-sandbox`: Pi's four file and shell tools, routed to the sandbox; it tags the golden path's result with its plan's summary for the App.
   - `gaffer-data`: the `fpl_snapshot` tool (FPL data, and bookmaker odds with `include: ["odds"]`) and the read-only guard.
   - `gaffer-recommend`: `submit_recommendation`, the gate every recommendation passes (schema, then `gaffer_lib validate` in the sandbox against the snapshot the run used, every number recomputed, at most two retries), the recommendation's rendering, and `set_preferences`.
   - `gaffer-budget`: the cost caps, and one "wrap up and submit" steer when a session passes the soft cap.
@@ -136,8 +152,10 @@ You need Node ≥ 22.19 (24 LTS recommended), [uv](https://docs.astral.sh/uv/) f
 
 ```bash
 npx pnpm@12.6.0 install        # workspace dependencies (versions pinned exactly)
-npx pnpm@12.6.0 test           # vitest: unit tests, S1 extension checks, extension behaviour
+npx pnpm@12.6.0 test           # vitest: unit tests, S1 extension checks, extension behaviour, the App (gaffer-web)
 ```
+
+The App's tests (`packages/gaffer-web`) render its views with the vendored Preact: the result over every eval recommendation, the run's steps and states from a recorded faux run, the exports; and they fuzz the bridge with every RPC command, paths and origins.
 
 The TypeScript tests run the real extensions in a headless Pi session. The model is Pi's scripted `fauxProvider`, the sandbox is a real `sandboxd` on your host's Python, and the FPL API is a local mock. `fpl_snapshot` runs the repo's `gaffer_lib` on Python 3.14, found with `uv python find 3.14` (override with `GAFFER_TEST_PYTHON`). They don't need an API key. The submit-gate tests run `gaffer_lib validate` with the sandbox image's numpy and scipy: the first run builds a small venv with uv under `node_modules/.cache/` (network needed once; override with `GAFFER_TEST_ANALYTICS_PYTHON`). They use a frozen real snapshot and its plan from `python/gaffer_lib/tests/data/`, so they don't need the solver.
 

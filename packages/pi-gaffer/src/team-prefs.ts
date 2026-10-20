@@ -1,10 +1,27 @@
 /** Saving preferences for the session's team: shared by the set_preferences tool and /prefs. */
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { dataDir, idSalt } from "./config.ts";
-import { prefsPath, type StoredPrefs, writePrefs } from "./prefs.ts";
+import { prefsPath, readPrefsFile, type StoredPrefs, writePrefs, writePrefsFile } from "./prefs.ts";
 import type * as S from "./schema/fpl.ts";
 import type { Preferences } from "./schema/recommendation.ts";
-import { fplState, latestCustom, type SnapshotEntry } from "./session.ts";
+import { fplState, latestCustom, type RunEntry, type SnapshotEntry } from "./session.ts";
+
+interface EntryLike {
+	type: string;
+	customType?: string;
+	data?: unknown;
+}
+
+/**
+ * The preferences file this session's runs use for a team: the session's own (a Gaffer App run whose options
+ * weren't saved, `gaffer.run.prefs_file`), else the team's saved file, else none.
+ */
+export function activePrefsFile(branch: readonly EntryLike[], data: string, teamIdHash: string): string | undefined {
+	const run = latestCustom<RunEntry>(branch, "gaffer.run");
+	if (run?.prefs_file && run.team_id_hash === teamIdHash && readPrefsFile(run.prefs_file)) return run.prefs_file;
+	const saved = prefsPath(data, teamIdHash);
+	return readPrefsFile(saved) ? saved : undefined;
+}
 import { hashTeamId } from "./snapshot.ts";
 import { SnapshotStore } from "./store.ts";
 
@@ -38,6 +55,10 @@ export function savePreferences(ctx: ExtensionContext, patch: PrefsPatch): { pre
 		if (unknown.length) throw new Error(`Unknown player id(s): ${unknown.join(", ")}. Use the ids from the snapshot.`);
 		return [...new Set(ids)].map((id) => ({ id, name: elements.get(id)! }));
 	};
-	const prefs = writePrefs(dataDir(), hash, { risk: patch.risk, save_chips: patch.save_chips, keep: players(patch.keep), avoid: players(patch.avoid), max_hits_per_gw: patch.max_hits_per_gw });
+	const resolved = { risk: patch.risk, save_chips: patch.save_chips, keep: players(patch.keep), avoid: players(patch.avoid), max_hits_per_gw: patch.max_hits_per_gw };
+	const prefs = writePrefs(dataDir(), hash, resolved);
+	// A session with its own preferences (an App run's options) keeps using its file: the change goes there too.
+	const active = activePrefsFile(branch, dataDir(), hash);
+	if (active && active !== prefsPath(dataDir(), hash)) return { prefs: writePrefsFile(active, resolved), path: active };
 	return { prefs, path: prefsPath(dataDir(), hash) };
 }

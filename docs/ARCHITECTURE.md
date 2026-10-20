@@ -146,6 +146,8 @@ ttyd -i <egress IP> -W -m 1 --check-origin … tmux -f /opt/gaffer/tmux.conf new
 
 From Phase 1.1 (M1.1-1) the same launcher also starts the Gaffer App's RPC processes (`gaffer-pi --mode rpc --session <path>`), and the image's `settings.json` and `keybindings.json` carry ADR 0012's and 0013's settings; `--check-origin` and `--no-mcp` are new. (As built in M1: `harness/entrypoint.sh` and `harness/gaffer-pi`. The cwd is `/work` because Pi resolves tool paths against the session cwd, see §1.4. The image also sets `PI_OFFLINE=1` and `PI_SKIP_VERSION_CHECK=1`, which stop Pi's startup network calls — model-catalogue refresh, version check, tool downloads — without affecting LLM calls.)
 
+*As built in M1.1-3:* `harness/gaffer-pi` takes no arguments (the terminal) or `--mode rpc [--session <path>]` (the App), and nothing else. For the terminal it replaces `--continue` with `--session <newest session no live process holds>` (`scripts/continue-session.ts`), so a restart never resumes a session the App has open. `GAFFER_PI_PRINT=1` prints Pi's arguments instead of running it: `gaffer-web` hands them to Pi's `RpcClient` (which spawns `node <cli> --mode rpc …`), and the container tests launch exactly that line.
+
 **SDK gotcha (S1):** a host that embeds Pi through the SDK must call `session.bindExtensions()`, or `session_start` never fires. This matters for the evaluation runner and the phase-3 bridge. The CLI and RPC modes do it themselves. The `--tools` allowlist is kept as a second line of defence.
 
 ---
@@ -435,6 +437,11 @@ The decisions are [ADR 0005](decisions/0005-web-tui.md) (Phase 1), [ADR 0013](de
 - **Frontend:** no build step; Preact and htm vendored as two ES modules; self-hosted fonts; model text rendered as text, never HTML.
 - **One store:** both UIs read and write `/sessions`. A session lock in `gaffer-core` lets one Pi process write a session at a time (the other UI shows it read-only), and in Phase 1.1 a run lock allows one run at a time because the local sandbox's `/work` is shared.
 
+*As built in M1.1-3 (Recommend only; the other actions and the follow-up box are M1.1-4):*
+- **Bridge** (`packages/gaffer-web/src/bridge.ts`, about 500 lines): the page calls `GET /api/home` (next GW, spend, the run lock's holder, the session list), `GET /api/team/:id` (FPL name check, squad, saved preferences, the latest derived FT), `POST /api/runs` (Start's fields, checked one by one, become `/run {json}`; it answers once the run has started, or with Pi's reason it didn't), `GET /api/sessions/:id` (the session file's entries without system prompts or validation requests, cut where the current run began), `GET /api/sessions/:id/events` (SSE) and `POST /api/sessions/:id/commands` (`stop`, `rename` and `ask`, the follow-up M1.1-4 will show). A Pi process is spawned only to write: for a new run, or a rename or follow-up on an existing session; reading a session needs none. Every request needs a loopback `Host` and, if it carries one (every POST must), the App's own `Origin`; `Sec-Fetch-Site: cross-site` is refused. Dialog requests (Gaffer issues none) are cancelled for the id asked. The page's CSP allows only its own scripts, styles and fonts.
+- **Events forwarded:** Pi's stream without system messages, `agent_end.messages`, `turn_end` payloads, tool-result message copies, argument deltas and validation replay requests; bash partials trimmed to a 4 KB tail. Each SSE frame carries the bridge's receive time (`at`) so the page can measure NFR-LAT-04.
+- **Locks** (`src/lock.ts`, `gaffer-core/locks.ts`): files created with `O_EXCL`, holding pid, host, the process's start time (from `/proc`, so a pid reused after a container restart isn't the owner) and a heartbeat rewritten every 5 s; stale after 30 s without one, or at once when the owner is gone; a stale lock is renamed aside and re-checked before it is taken over. The *session lock* (`<session file>.lock`) is taken on `session_start` and released on `session_shutdown` or switch; a process that can't take it is read-only: prompts, `/team` and `/run` are refused with a notice, cache warming is stopped, and the `gaffer-lock` status tells the bridge. It takes the lock back at the next prompt only if the file is unchanged since it opened it. The *run lock* (`<sessions root>/.gaffer-run.lock`) is checked before a prompt starts a run, taken at `agent_start` (a run that loses a race aborts before its first model call) and released at `agent_settled`; `SandboxSession.release()` (which clears `/work`) runs only while holding it. Headless callers may wait for it (`GAFFER_RUN_LOCK_WAIT_MS`; the eval runner waits up to 10 minutes). SDK hosts don't emit `session_shutdown` on `dispose()`, so their session locks go stale when the process exits.
+
 **Phase 3:** the bridge gains OIDC → tenant mapping, per-tenant paths and budgets, and sticky routing of each session's Pi process across harness tasks; the terminal stays operator-only.
 
 ---
@@ -446,7 +453,7 @@ The full decision is in [ADR 0006](decisions/0006-deployment.md).
 flowchart TB
   subgraph Local["Phase 1 — docker compose (single user)"]
     direction LR
-    g1[gaffer<br/>Pi + ttyd<br/>127.0.0.1:7681] -- sandbox_net internal --> s1[sandbox<br/>sandboxd]
+    g1[gaffer<br/>Pi + ttyd + gaffer-web<br/>127.0.0.1:7681, :7682] -- sandbox_net internal --> s1[sandbox<br/>sandboxd]
     g1 --- v1[(vol: sessions)]
     g1 --- v2[(vol: data)]
     s1 -. ro .- v2

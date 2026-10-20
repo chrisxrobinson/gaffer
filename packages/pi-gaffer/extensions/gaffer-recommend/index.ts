@@ -16,7 +16,7 @@ import { failureLines, type Paint, recommendationLines, type SubmitFailure, wrap
 import { sharedSandboxSession } from "../../src/sandbox.ts";
 import { Chip, type Recommendation, Risk, Submission } from "../../src/schema/recommendation.ts";
 import { fplState, latestCustom, type SnapshotEntry } from "../../src/session.ts";
-import { savePreferences } from "../../src/team-prefs.ts";
+import { activePrefsFile, savePreferences } from "../../src/team-prefs.ts";
 
 export type SubmitDetails = { recommendation: Recommendation } | SubmitFailure;
 
@@ -87,6 +87,7 @@ export default function gafferRecommend(pi: ExtensionAPI) {
 				const outcome = await runGate(params, snapshot, attempt, {
 					sandbox: sharedSandboxSession(),
 					dataDir: dataDir(),
+					prefsFile: snapshot ? activePrefsFile(ctx.sessionManager.getBranch(), dataDir(), snapshot.team_id_hash) : undefined,
 					model: ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : "unknown",
 					piVersion: VERSION,
 					now: () => fplNow(),

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t">
+  <title id="t">Gaffer</title>
+  <!-- The centre circle, open at the top right, is the G; the halfway line from the centre spot to the edge is its bar. -->
+  <style>
+    .ring { stroke: #0E1B2B; }
+    .line { stroke: #1E7B4F; }
+    .spot { fill: #1E7B4F; }
+    @media (prefers-color-scheme: dark) { .ring { stroke: #E6EDF3; } .line { stroke: #3DBE7E; } .spot { fill: #3DBE7E; } }
+  </style>
+  <path class="ring" d="M56 32 A24 24 0 1 1 45.77 12.34" fill="none" stroke-width="7"/>
+  <path class="line" d="M32 32 H59.5" fill="none" stroke-width="7"/>
+  <circle class="spot" cx="32" cy="32" r="6"/>
+</svg>

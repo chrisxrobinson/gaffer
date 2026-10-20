@@ -2,7 +2,8 @@
  * gaffer-core: turns the coding agent into an FPL agent (ARCHITECTURE §1).
  * Replaces the coding preamble while keeping skills, injects fpl_context and user_preferences
  * sections, restricts the active tools, blocks the user's `!` shell, and adds /team, /prefs,
- * /export-rec, /usage and /scorecard. The terminal's identity and command surface are in ui.ts (ADR 0013).
+ * /export-rec, /usage and /scorecard. The terminal's identity and command surface are in ui.ts (ADR 0013);
+ * the session and run locks in locks.ts, and the Gaffer App's /run in run.ts (ADR 0014).
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -14,17 +15,20 @@ import { fplContextSection, GAFFER_PREAMBLE, userPreferencesSection } from "../.
 import { DEFAULT_PREFS, describePrefs, parsePrefsArgs, readPrefs, writePrefs } from "../../src/prefs.ts";
 import type { Recommendation } from "../../src/schema/recommendation.ts";
 import { fplState, latestCustom, type TeamEntry } from "../../src/session.ts";
-import { savePreferences, sessionTeamHash } from "../../src/team-prefs.ts";
+import { activePrefsFile, savePreferences, sessionTeamHash } from "../../src/team-prefs.ts";
 import { hashTeamId } from "../../src/snapshot.ts";
 import { parseTeamArgs } from "../../src/team-args.ts";
 import { SnapshotStore } from "../../src/store.ts";
 import { usageLines, usageNow } from "../../src/usage.ts";
+import { gafferLocks } from "./locks.ts";
+import { registerRun, type SetTeam } from "./run.ts";
 import { gafferUi } from "./ui.ts";
 
 export const USER_SHELL_BLOCKED = "Shell commands are disabled in Gaffer: the harness holds credentials. Ask Gaffer instead; its code runs in the sandbox.";
 
 export default function gafferCore(pi: ExtensionAPI) {
 	gafferUi(pi);
+	const guard = gafferLocks(pi);
 
 	pi.on("session_start", async () => {
 		// Second line of defence after the CLI --tools allowlist (S1: SDK hosts must bindExtensions for this to run).
@@ -46,7 +50,7 @@ export default function gafferCore(pi: ExtensionAPI) {
 		o.sections = {
 			...o.sections,
 			fpl_context: fplContextSection(state, new SnapshotStore(dataDir()), fplNow()),
-			user_preferences: userPreferencesSection(dataDir(), teamHash),
+			user_preferences: userPreferencesSection(dataDir(), teamHash, teamHash ? activePrefsFile(ctx.sessionManager.getBranch(), dataDir(), teamHash) : undefined),
 		};
 	});
 
@@ -55,6 +59,24 @@ export default function gafferCore(pi: ExtensionAPI) {
 		ctx.ui.notify(USER_SHELL_BLOCKED, "warning");
 		return { result: { output: USER_SHELL_BLOCKED, exitCode: 1, cancelled: false, truncated: false } };
 	});
+
+	// /team's effect, shared with /run: check the team exists, then record it (each one replaces the previous:
+	// options not restated are cleared).
+	const setTeam: SetTeam = async (ctx, { teamId, ft, pending }) => {
+		const why = guard.refusal(ctx);
+		if (why) return { error: why };
+		let name: string | undefined;
+		let unreachable: string | undefined;
+		try {
+			const r = await new FplClient({ timeoutMs: 8000 }).get<{ name?: string }>(`entry/${teamId}/`, { fresh: true, signal: AbortSignal.timeout(9500) });
+			name = r.json.name;
+		} catch (e) {
+			if (e instanceof FplNotFoundError) return { error: `FPL team ${teamId} not found. Check the ID (the number in the URL of your Points page).` };
+			unreachable = (e as Error).message; // keep the ID; fpl_snapshot will report any problem
+		}
+		pi.appendEntry("gaffer.team", { team_id: teamId, team_name: name, ...(ft !== undefined && { ft }), ...(pending && { pending }) } satisfies TeamEntry);
+		return { name, unreachable };
+	};
 
 	pi.registerCommand("team", {
 		description: "Set your FPL team for this session: /team <id> [--ft N] [--pending \"OUT>IN, ...\"]",
@@ -65,25 +87,15 @@ export default function gafferCore(pi: ExtensionAPI) {
 				return;
 			}
 			const { teamId, ft, pending } = parsed;
-			let name: string | undefined;
-			let unreachable: string | undefined;
-			try {
-				const r = await new FplClient({ timeoutMs: 8000 }).get<{ name?: string }>(`entry/${teamId}/`, { fresh: true, signal: AbortSignal.timeout(9500) });
-				name = r.json.name;
-			} catch (e) {
-				if (e instanceof FplNotFoundError) {
-					ctx.ui.notify(`FPL team ${teamId} not found. Check the ID (the number in the URL of your Points page).`, "error");
-					return;
-				}
-				unreachable = (e as Error).message; // keep the ID; fpl_snapshot will report any problem
-			}
-			// Each /team replaces the previous one: options not restated are cleared.
-			pi.appendEntry("gaffer.team", { team_id: teamId, team_name: name, ...(ft !== undefined && { ft }), ...(pending && { pending }) } satisfies TeamEntry);
+			const set = await setTeam(ctx, parsed);
+			if ("error" in set) return ctx.ui.notify(set.error, "error");
 			const extra = [ft !== undefined ? `free transfers ${ft} (yours)` : "", pending ? `pending ${pending}` : ""].filter(Boolean).join("; ");
-			if (unreachable) ctx.ui.notify(`Team ID ${teamId} set${extra ? ` (${extra})` : ""}, but FPL could not be reached to confirm it (${unreachable}).`, "warning");
-			else ctx.ui.notify(`Team set: ${name ?? "?"} (ID ${teamId})${extra ? `; ${extra}` : ""}.`, "info");
+			if (set.unreachable) ctx.ui.notify(`Team ID ${teamId} set${extra ? ` (${extra})` : ""}, but FPL could not be reached to confirm it (${set.unreachable}).`, "warning");
+			else ctx.ui.notify(`Team set: ${set.name ?? "?"} (ID ${teamId})${extra ? `; ${extra}` : ""}.`, "info");
 		},
 	});
+
+	registerRun(pi, guard, setTeam);
 
 	pi.registerCommand("prefs", {
 		description: "Show or change your saved preferences: /prefs [risk=… save_chips=… keep=… avoid=… max_hits=…] | /prefs clear",

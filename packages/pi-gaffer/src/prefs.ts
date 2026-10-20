@@ -28,9 +28,23 @@ export function prefsPath(dataDir: string, teamIdHash: string): string {
 	return join(dataDir, "users", teamIdHash.replace(/^hmac-sha256:/, ""), "prefs.json");
 }
 
+/**
+ * Preferences for one session's runs, from the Gaffer App's options when they aren't saved as the team's
+ * (`/run`): the same format, beside the team's file. The golden path, the prompt and the gate read this file
+ * instead of the saved one for the rest of that session (team-prefs.ts `activePrefsFile`).
+ */
+export function runPrefsPath(dataDir: string, teamIdHash: string, sessionId: string): string {
+	if (!/^[0-9A-Za-z._-]{1,80}$/.test(sessionId)) throw new Error(`invalid session id for a preferences file: ${sessionId}`);
+	return join(dirname(prefsPath(dataDir, teamIdHash)), "runs", `${sessionId}.json`);
+}
+
 /** The saved preferences, or undefined when none are saved (or the file is unreadable). */
 export function readPrefs(dataDir: string, teamIdHash: string): StoredPrefs | undefined {
-	const file = prefsPath(dataDir, teamIdHash);
+	return readPrefsFile(prefsPath(dataDir, teamIdHash));
+}
+
+/** A preferences file (the team's, or a session's run file), or undefined when it is missing or unreadable. */
+export function readPrefsFile(file: string): StoredPrefs | undefined {
 	if (!existsSync(file)) return undefined;
 	try {
 		const raw = JSON.parse(readFileSync(file, "utf8")) as StoredPrefs;
@@ -43,7 +57,12 @@ export function readPrefs(dataDir: string, teamIdHash: string): StoredPrefs | un
 
 /** Merge `patch` into the saved preferences (each field given replaces the saved one) and write the file. */
 export function writePrefs(dataDir: string, teamIdHash: string, patch: Partial<Preferences>, now: Date = new Date()): StoredPrefs {
-	const current = readPrefs(dataDir, teamIdHash);
+	return writePrefsFile(prefsPath(dataDir, teamIdHash), patch, now);
+}
+
+/** Merge `patch` into a preferences file, as `writePrefs` does for the team's. */
+export function writePrefsFile(file: string, patch: Partial<Preferences>, now: Date = new Date()): StoredPrefs {
+	const current = readPrefsFile(file);
 	const { schema: _s, updated_at: _u, ...saved } = current ?? { schema: PREFS_SCHEMA, updated_at: "", ...DEFAULT_PREFS };
 	const defined = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
 	const next = { ...saved, ...defined } as Preferences;
@@ -52,7 +71,6 @@ export function writePrefs(dataDir: string, teamIdHash: string, patch: Partial<P
 		const e = [...check.Errors(next)][0];
 		throw new Error(`invalid preferences: ${e?.instancePath || "/"} ${e?.message ?? ""}`.trim());
 	}
-	const file = prefsPath(dataDir, teamIdHash);
 	mkdirSync(dirname(file), { recursive: true });
 	const stored: StoredPrefs = { schema: PREFS_SCHEMA, updated_at: now.toISOString(), ...next };
 	const tmp = `${file}.${process.pid}.tmp`;

@@ -123,7 +123,7 @@ export interface Notification {
 	type?: string;
 }
 
-export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxResponseStep[]; skillsDir?: string; promptsDir?: string; extra?: ExtensionFactory[]; cost?: { input: number; output: number }; bind?: boolean; tools?: string[]; ui?: Record<string, unknown> }) {
+export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxResponseStep[]; skillsDir?: string; promptsDir?: string; extra?: ExtensionFactory[]; cost?: { input: number; output: number }; bind?: boolean; tools?: string[]; ui?: Record<string, unknown>; sessionFile?: string }) {
 	const faux = fauxProvider({
 		provider: "faux",
 		models: [{ id: "faux-1", cost: { input: opts.cost?.input ?? 0, output: opts.cost?.output ?? 0, cacheRead: 0, cacheWrite: 0 } }],
@@ -153,7 +153,8 @@ export async function startGaffer(env: GafferTestEnv, opts: { responses: FauxRes
 		additionalPromptTemplatePaths: opts.promptsDir ? [opts.promptsDir] : [],
 	} as never);
 	await loader.reload();
-	const sessionManager = SessionManager.create(cwd, env.sessionsDir);
+	// A new session, or an existing file opened again (as a second Pi process would: the session lock's tests).
+	const sessionManager = opts.sessionFile ? SessionManager.open(opts.sessionFile, env.sessionsDir) : SessionManager.create(cwd, env.sessionsDir);
 	const { session } = await createAgentSession({ cwd, agentDir, model: faux.getModel() as never, resourceLoader: loader, sessionManager, settingsManager, tools: opts.tools ?? GAFFER_TOOLS });
 	const notifications: Notification[] = [];
 	// A plain object: Pi spreads the UI context ({...ui}), so a Proxy would lose its methods.

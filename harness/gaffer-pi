@@ -1,17 +1,40 @@
 #!/bin/sh
-# Pi as Gaffer (ARCHITECTURE §1.5). Runs inside tmux; --continue resumes the latest session after a restart.
+# Pi as Gaffer (ARCHITECTURE §1.5), one launch line for both UIs (ADR 0014):
+#   gaffer-pi                               the terminal, inside tmux: resumes the newest session nobody else holds
+#   gaffer-pi --mode rpc [--session PATH]   the Gaffer App's bridge: one Pi per open session, PATH resolved by it
+# GAFFER_PI_PRINT=1 prints Pi's arguments, one per line, instead of running it: gaffer-web hands them to Pi's
+# RpcClient (which adds --mode rpc itself), and the container tests launch exactly this line.
 set -eu
+MODE=tui
+SESSION=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --mode) [ "${2:-}" = rpc ] || { echo "gaffer-pi: only --mode rpc" >&2; exit 64; }; MODE=rpc; shift 2 ;;
+    --session) SESSION="${2:?gaffer-pi: --session needs a path}"; shift 2 ;;
+    *) echo "gaffer-pi: unknown argument $1" >&2; exit 64 ;;
+  esac
+done
+SESSIONS="${GAFFER_SESSIONS_DIR:-/sessions}"
 cd /work   # same path as the sandbox working dir; empty and read-only here
-# --tui-mode fullscreen: Pi keeps the transcript and scrolls it itself (wheel, PageUp/PageDown, Ctrl+Home/Ctrl+End).
-# In regular mode Pi relies on the terminal's scrollback, and tmux doesn't pass every line that scrolls
-# off to the browser: the top of a result taller than the window (a recommendation) could not be reached.
 # --no-mcp: no MCP server is ever spawned next to the key, whatever an mcp.json or a project says (ADR 0012).
-set -- --session-dir /sessions --no-context-files --no-mcp --continue --tui-mode fullscreen \
+set -- --session-dir "$SESSIONS" --no-context-files --no-mcp \
   --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences
+if [ "$MODE" = tui ]; then
+  # Pi's --continue, except into a session the Gaffer App has open: the newest one no live process holds
+  # (NFR-REL-03). None: Pi starts a new session.
+  SESSION="$(node /opt/pi-gaffer/scripts/continue-session.ts "$SESSIONS")"
+  # --tui-mode fullscreen: Pi keeps the transcript and scrolls it itself (wheel, PageUp/PageDown, Ctrl+Home/Ctrl+End).
+  # In regular mode Pi relies on the terminal's scrollback, and tmux doesn't pass every line that scrolls
+  # off to the browser: the top of a result taller than the window (a recommendation) could not be reached.
+  set -- "$@" --tui-mode fullscreen
+fi
+[ -n "$SESSION" ] && set -- "$@" --session "$SESSION"
 # Pi 1.x refuses --provider without --model.
 if [ -n "${GAFFER_MODEL:-}" ]; then
   [ -n "${GAFFER_PROVIDER:-}" ] && set -- "$@" --provider "$GAFFER_PROVIDER"
   set -- "$@" --model "$GAFFER_MODEL"
 fi
 [ -n "${GAFFER_THINKING:-}" ] && set -- "$@" --thinking "$GAFFER_THINKING"
+if [ -n "${GAFFER_PI_PRINT:-}" ]; then printf '%s\n' "$@"; exit 0; fi
+[ "$MODE" = rpc ] && set -- --mode rpc "$@"
 exec pi "$@"

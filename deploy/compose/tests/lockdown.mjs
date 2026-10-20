@@ -7,7 +7,7 @@
 // registered or offered (the model sees exactly Gaffer's seven tools), no MCP section reaches the system
 // prompt, and /mcp and /llama are absent from RPC get_commands. No key is used and nothing outside a
 // temporary directory is written.
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -48,11 +48,11 @@ export default function (pi) {
 }
 `);
 
-// gaffer-pi's launch line, with this run's session dir, the project trusted (--approve, the worst case), RPC
-// mode, and the faux model loaded with -e (an extension, like Gaffer's own).
-const launcher = readFileSync("/opt/gaffer/gaffer-pi", "utf8").replace(/\\\n\s*/g, " ");
-const line = /^set -- (.*)$/m.exec(launcher)[1].trim().split(/\s+/);
-const args = [...line.map((a) => (a === "/sessions" ? sessions : a)), "--approve", "--mode", "rpc", "--provider", "faux", "--model", "faux-1", "-e", faux];
+// gaffer-pi's launch line for the Gaffer App (`--mode rpc`, as gaffer-web runs it), printed by the launcher itself
+// with this run's session dir, then the project trusted (--approve, the worst case) and the faux model loaded
+// with -e (an extension, like Gaffer's own).
+const line = execFileSync("/opt/gaffer/gaffer-pi", ["--mode", "rpc"], { env: { ...process.env, GAFFER_PI_PRINT: "1", GAFFER_SESSIONS_DIR: sessions, GAFFER_MODEL: "", GAFFER_PROVIDER: "", GAFFER_THINKING: "" }, encoding: "utf8" }).trim().split("\n");
+const args = [...line, "--approve", "--mode", "rpc", "--provider", "faux", "--model", "faux-1", "-e", faux];
 console.log(`pi ${args.join(" ").replaceAll(root, "$TMP")}`);
 const pi = spawn("pi", args, {
 	cwd: work,
