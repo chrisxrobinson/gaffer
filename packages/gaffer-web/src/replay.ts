@@ -56,7 +56,13 @@ export function replaySource(file: string, speed = 1) {
 				return () => listeners.splice(listeners.indexOf(l as (e: unknown) => void), 1);
 			},
 			getState: async () => ({ sessionId: id, sessionFile: join(tmpdir(), `gaffer-replay-${id}.jsonl`) }) as never,
-			prompt: async () => {
+			prompt: async (text: string) => {
+				// A Preferences save starts no run: Gaffer only says so (run.ts).
+				if (text.includes('"action":"preferences"')) {
+					const clear = text.includes('"clear":true');
+					timers.push(setTimeout(() => emit({ type: "extension_ui_request", id: randomUUID(), method: "notify", notifyType: "info", message: `Preferences ${clear ? "cleared" : "saved"} for ${team?.name ?? "Replay XI"} (replay: nothing was written).` }), 50));
+					return "handled" as never;
+				}
 				for (const r of prompts++ ? followUp : events) timers.push(setTimeout(() => emit(r.rec), r.t / speed));
 				return "handled" as never;
 			},

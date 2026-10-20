@@ -173,6 +173,10 @@ export function Banner({ kind, text, children }) {
 
 export function RunView({ s, now, onStop, onRetry, canStop, elsewhere }) {
 	const visible = runItems(s).filter((x) => x.kind !== "step" || s.steps[x.id]);
+	// A text run's answer: what it said after its last step (What-if, Explain, Chip planner answer in text).
+	const text = s.brief && s.brief.action !== "recommend";
+	const lastStep = visible.findLastIndex((x) => x.kind === "step");
+	const answer = text ? visible.filter((x, i) => i > lastStep && x.kind === "say") : [];
 	// The step list as a live region: one line per step as it starts and ends, not the streaming text.
 	const log = visible.filter((x) => x.kind === "step" && !describeStep(s.steps[x.id]).minor && s.steps[x.id].status !== "pending").map((x) => stepWords(s.steps[x.id]));
 	const lastThink = [...visible].reverse().find((x) => x.kind === "think");
@@ -192,6 +196,7 @@ export function RunView({ s, now, onStop, onRetry, canStop, elsewhere }) {
 		${runBanners(s).map((b) => html`<${Banner} kind=${b.kind} text=${b.text}>${b.retry && onRetry ? html` <button type="button" class="btn small" onClick=${onRetry}>Try again</button>` : null}<//>`)}
 		${visible.map((x) => {
 			if (x.kind === "think") return html`<${Thinking} key=${x.key} item=${x} live=${s.running && !x.done && x === lastThink} />`;
+			if (x.kind === "say" && answer.includes(x)) return x === answer[0] ? html`<section class="answer final" key=${x.key} aria-label="Gaffer's answer"><span class="lbl">Gaffer's answer</span>${answer.map((a) => html`<${Said} key=${a.key} text=${a.text} />`)}</section>` : null;
 			if (x.kind === "say") return html`<${Said} key=${x.key} text=${x.text} />`;
 			if (x.kind === "user") return html`<p class="you" key=${x.key}><span class="lbl">You</span> ${x.text}</p>`;
 			if (x.kind === "note") return html`<p class="note" key=${x.key}>Budget soft cap: Gaffer asked the model to wrap up.</p>`;
@@ -199,7 +204,7 @@ export function RunView({ s, now, onStop, onRetry, canStop, elsewhere }) {
 			return html`<${Step} key=${x.id} step=${step} open=${step.status === "running" && !describeStep(step).minor} />`;
 		})}
 		${s.queue.length && !s.result ? html`<p class="muted">Queued: ${s.queue.join(" · ")}</p>` : null}
-		<ol class="sr" role="log" aria-label="Steps" aria-live="polite">${log.map((t, i) => html`<li key=${i}>${t}</li>`)}</ol>
+		<div class="sr" role="log" aria-label="Steps" aria-live="polite">${log.map((t, i) => html`<p key=${i}>${t}</p>`)}</div>
 		<div class="runbar"><span class="muted" role="status">${meta}</span>${s.running && canStop ? html`<button type="button" class="btn small" onClick=${onStop}>${s.run ? "Stop the answer" : "Stop run"} <span class="muted">(Esc)</span></button>` : null}</div>
 	</section>`;
 }

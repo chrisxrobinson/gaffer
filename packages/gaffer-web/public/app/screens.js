@@ -24,7 +24,7 @@ export function Scorecard({ card, teamName }) {
 				<p class="sc-vs">Gaffer against you <b class=${t.gaffer - t.actual >= 0 ? "gain" : "loss"}>${delta(t.gaffer - t.actual)}</b> · against holding <b class=${t.gaffer - t.b0 >= 0 ? "gain" : "loss"}>${delta(t.gaffer - t.b0)}</b> · against the best swap <b class=${t.gaffer - t.b1 >= 0 ? "gain" : "loss"}>${delta(t.gaffer - t.b1)}</b></p>
 			</div>
 			<div class="sc-bars" aria-hidden="true">${card.gws.map((g) => html`<div class="sc-gw"><b class="gwc">GW${g.gw}</b><div class="sc-group">${SERIES.map(([k, , c]) => html`<span class="sc-bar"><i class=${c} style=${`width:${(Math.max(0, g[k]) / max) * 100}%`}></i><span class="mono">${fig(g[k])}</span></span>`)}</div></div>`)}</div>
-			<div class="scroll-x"><table class="sc-table">
+			<div class="scroll-x" tabindex="0" role="region" aria-label="Points per GW table"><table class="sc-table">
 				<caption class="sr">Points per scored GW</caption>
 				<thead><tr><th scope="col">GW</th><th scope="col" class="n">Gaffer</th><th scope="col" class="n">You</th><th scope="col" class="n">B0</th><th scope="col" class="n">B1</th><th scope="col" class="n">Gaffer xP</th></tr></thead>
 				<tbody>${card.gws.map((g) => html`<tr data-gw=${g.gw}><th scope="row" class="gwc">${g.gw}</th><td class="n">${fig(g.gaffer)}</td><td class="n">${fig(g.actual)}</td><td class="n">${fig(g.b0)}</td><td class="n">${fig(g.b1)}</td><td class="n">${xp(g.expected)}</td></tr>`)}</tbody>

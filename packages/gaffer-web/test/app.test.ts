@@ -5,8 +5,11 @@
  * - the Markdown renderer: model text stays text, never HTML;
  * - the Scorecard against a fixture outcomes.jsonl (FR-EVL-04);
  * - the page-level states (empty, daily cap, a run in the other UI, deadline passed, reconnecting, open elsewhere),
- *   which M1.1-3 checked in the browser only.
+ *   which M1.1-3 checked in the browser only;
+ * - text contrast from the App's CSS, both themes (NFR-A11Y-01), and that the CSS is tokens.json's.
  */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { renderToString } from "preact-render-to-string";
 import { describe, expect, it } from "vitest";
 import { scorecard } from "../../pi-gaffer/src/outcomes.ts";
@@ -55,6 +58,7 @@ describe("FR-UI-08: What-if, Explain a pick and Chip planner answer in text", ()
 		expect(t).toContain(brief);
 		expect(page).toMatch(new RegExp(`<div class="say md"><p><strong>${opening.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</strong>`));
 		expect(page).toContain('<table class="md">');
+		expect(page).toMatch(/<section class="answer final" aria-label="Gaffer(&#39;|')s answer"><span class="lbl">Gaffer(&#39;|')s answer<\/span><div class="say md">/);
 		expect(t).toMatch(/Answered in \d+ s · \$0\.012/);
 		expect(t).toContain("Fetched your team and FPL data");
 		expect(t).toContain("Projected points and solved a 6-GW plan");
@@ -141,7 +145,7 @@ describe("the Markdown renderer: model text stays text", () => {
 	const md = (s: string) => renderToString(html`<div>${markdown(s)}</div>`);
 	it("paragraphs, bold, lists, tables and headings, as elements", () => {
 		const out = md("# Verdict\n\nKeep **Watkins**.\nIt holds.\n\n- one\n- two **bold**\n\n1. first\n2. second\n\n| a | b |\n|---|--:|\n| x | 1.5 |");
-		expect(out).toBe('<div><p class="md-h"><strong>Verdict</strong></p><p>Keep <strong>Watkins</strong>. It holds.</p><ul><li>one</li><li>two <strong>bold</strong></li></ul><ol><li>first</li><li>second</li></ol><div class="scroll-x"><table class="md"><thead><tr><th>a</th><th class="n">b</th></tr></thead><tbody><tr><td>x</td><td class="n">1.5</td></tr></tbody></table></div></div>');
+		expect(out).toBe('<div><p class="md-h"><strong>Verdict</strong></p><p>Keep <strong>Watkins</strong>. It holds.</p><ul><li>one</li><li>two <strong>bold</strong></li></ul><ol><li>first</li><li>second</li></ol><div class="scroll-x" tabindex="0" role="region" aria-label="Table"><table class="md"><thead><tr><th>a</th><th class="n">b</th></tr></thead><tbody><tr><td>x</td><td class="n">1.5</td></tr></tbody></table></div></div>');
 	});
 	it("markup and links in the text are shown as characters, never run or followed", () => {
 		const out = md('<img src=x onerror=alert(1)> **<script>alert(2)</script>** [a](javascript:alert(3)) ![i](http://evil.example/x.png)\n\n| <b>x</b> |\n|---|\n| <iframe src="http://evil.example"> |');
@@ -253,5 +257,37 @@ describe("docs/ui §6: the page-level states", () => {
 		const { page } = session("done");
 		expect(page).toMatch(/<a class="btn small" href="http:\/\/127\.0\.0\.1:7681\/" target="_blank" rel="noopener noreferrer">Open in terminal<\/a>/);
 		expect(text(page)).toContain("this session is under /resume there. The App itself has no terminal.");
+	});
+});
+
+describe("NFR-A11Y-01: text contrast ≥ 4.5:1 in light and dark, measured from the App's own CSS", () => {
+	const css = readFileSync(resolve(import.meta.dirname, "../public/app/style.css"), "utf8");
+	const tokens = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../docs/ui/brand/tokens.json"), "utf8"));
+	const vars = (block: string) => Object.fromEntries([...block.matchAll(/--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map((m) => [m[1], m[2].toUpperCase()]));
+	const theme = { light: vars(/:root \{([\s\S]*?)\}/.exec(css)![1]), dark: vars(/:root\[data-theme="dark"\] \{([\s\S]*?)\}/.exec(css)![1]) };
+	const lum = (hex: string) => {
+		const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+		return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+	};
+	const ratio = (a: string, b: string) => {
+		const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+		return (x + 0.05) / (y + 0.05);
+	};
+	// Every text colour on every ground it is drawn on (style.css): the grounds, the banners and tags, the buttons,
+	// the selected segment, the pitch's counters and figures. panel-2 is the ground only of a hovered rail row, the
+	// info banner and the vice's armband, which carry the inks; the greens are drawn on bg and panel.
+	const PAIRS: [string, string][] = [
+		...["ink", "ink-2", "ink-3", "think"].flatMap((t) => ["bg", "panel", "panel-2"].map((g) => [t, g] as [string, string])),
+		...["brand", "good", "warn", "bad"].flatMap((t) => ["bg", "panel"].map((g) => [t, g] as [string, string])),
+		["warn", "warn-bg"], ["bad", "bad-bg"], ["good", "good-bg"], ["ink", "warn-bg"], ["ink", "bad-bg"], ["ink-2", "warn-bg"],
+		["brand-ink", "brand"], ["accent-ink", "accent"], ["bg", "ink"], ["counter-ink", "counter"], ["#FFFFFF", "pitch-2"],
+	];
+	it.each(["light", "dark"] as const)("%s: every pair ≥ 4.5:1, and the colours are tokens.json's", (mode) => {
+		const t = theme[mode];
+		const low = PAIRS.map(([a, b]) => [a, b, ratio(a.startsWith("#") ? a : t[a], t[b])] as const).filter(([, , r]) => !(r >= 4.5));
+		expect(low.map(([a, b, r]) => `${a} on ${b}: ${r.toFixed(2)}`)).toEqual([]);
+		for (const [k, v] of Object.entries(tokens[mode] as Record<string, string>)) if (t[k]) expect(t[k], `${mode} ${k}`).toBe(v.toUpperCase());
+		// The dark theme is the same whether chosen or from the system.
+		if (mode === "dark") expect(vars(/@media \(prefers-color-scheme: dark\) \{ :root:not\(\[data-theme="light"\]\) \{([\s\S]*?)\} \}/.exec(css)![1])).toEqual(t);
 	});
 });

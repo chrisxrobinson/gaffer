@@ -44,7 +44,7 @@ export function markdown(text) {
 			while (i < lines.length && lines[i].includes("|") && lines[i].trim()) rows.push(cells(lines[i++]));
 			// A column of figures (a dash for none) is right-aligned, as the App's own tables are.
 			const right = head.map((_, c) => rows.some((r) => r[c] && /\d/.test(r[c])) && rows.every((r) => !r[c] || numeric(r[c])));
-			out.push(h("div", { class: "scroll-x", key: k++ }, h("table", { class: "md" },
+			out.push(h("div", { class: "scroll-x", tabindex: 0, role: "region", "aria-label": "Table", key: k++ }, h("table", { class: "md" },
 				h("thead", null, h("tr", null, head.map((c, j) => h("th", { key: j, class: right[j] ? "n" : undefined }, inline(c, `h${j}`))))),
 				h("tbody", null, rows.map((r, ri) => h("tr", { key: ri }, head.map((_, j) => h("td", { key: j, class: right[j] ? "n" : undefined }, inline(r[j] ?? "", `${ri}-${j}`)))))))));
 			continue;

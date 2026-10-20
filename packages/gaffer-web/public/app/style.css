@@ -208,7 +208,8 @@ details.step pre, .raw pre { margin: 0; white-space: pre-wrap; overflow-wrap: an
 table { border-collapse: collapse; width: 100%; }
 th { text-align: left; font: 600 11px/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); padding: 0 10px 8px 0; white-space: nowrap; }
 td { padding: 9px 10px 9px 0; border-top: 1px solid var(--line); vertical-align: top; }
-td.n, th.n { text-align: right; font-family: var(--f-data); white-space: nowrap; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+td.n { font-family: var(--f-data); }
 .mv { display: grid; grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr); gap: 6px; align-items: baseline; min-width: 260px; }
 .mv .out { color: var(--ink-2); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--bad) 70%, transparent); }
 .mv .in { font-weight: 600; }
@@ -291,7 +292,10 @@ table.md td { padding: 6px 14px 6px 0; }
 .answer { display: grid; gap: 8px; padding: 12px 14px; border-left: 3px solid var(--line-2); background: var(--panel); border-radius: 0 var(--radius) var(--radius) 0; }
 .answer .q { font-weight: 500; overflow-wrap: anywhere; }
 .answer .q .lbl { margin-right: 6px; }
-.answer .meta { font-size: 12px; }
+.answer .meta { font-size: 12.5px; }
+/* A text run's answer (what-if, explain, chips): the product of the run, set apart from the narration above it. */
+.answer.final { border-left-color: var(--brand); background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--brand); padding: 14px 16px; }
+.answer.final > .lbl { color: var(--ink-3); }
 .composer { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--panel); }
 .composer textarea { width: 100%; resize: vertical; border: 1px solid var(--line-2); background: var(--bg); border-radius: var(--radius); padding: 9px 11px; min-height: 64px; }
 .ask-row { justify-content: space-between; }

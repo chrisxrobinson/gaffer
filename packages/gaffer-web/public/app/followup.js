@@ -34,7 +34,7 @@ export function FollowUps({ s }) {
 		return html`<article class="answer" key=${a.key} data-ask=${i}>
 			<p class="q"><span class="lbl">You asked</span> ${s.items[from]?.text}</p>
 			${said.length ? said.map((x) => html`<${Said} key=${x.key} text=${x.text} />`) : html`<p class="muted">${working ? "Gaffer is answering…" : "No answer was written."}</p>`}
-			<p class="muted mono meta" role=${last ? "status" : undefined}>${working ? `Answering · ${usd(cost, 3)} so far` : `This answer cost ${usd(cost, 3)}`}</p>
+			<p class="muted meta" role=${last ? "status" : undefined}>${working ? `Answering · ${usd(cost, 3)} so far` : `This answer cost ${usd(cost, 3)}`}</p>
 		</article>`;
 	})}</section>`;
 }

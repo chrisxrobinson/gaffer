@@ -18,17 +18,19 @@ gaffer/
 │   │   ├── src/schema/            #   TypeBox schemas: recommendation/1 (with the submission and prefs), FPL response subsets
 │   │   ├── scripts/               #   export-schema.ts (→ schemas/recommendation-1.json), replay.ts (rec_id → rerun the gate, NFR-OBS-01), continue-session.ts (the terminal's lock-aware --continue)
 │   │   ├── skills/                #   SKILL.md directories (see list below)
-│   │   ├── prompts/               #   prompt templates: gw.md, whatif.md, explain.md; 1.1 adds chips.md (Chip planner)
+│   │   ├── prompts/               #   prompt templates: gw.md, whatif.md, explain.md and (M1.1-4) chips.md, the Chip planner
 │   │   ├── themes/                #   gaffer-dark.json (today's gaffer.json) and gaffer-light.json (1.1, ADR 0013)
 │   │   └── test/                  #   vitest: S1 checks as tests, tool unit tests with fauxProvider
-│   └── gaffer-web/                # Phase 1.1: the Gaffer App (ADR 0014; as built in M1.1-3)
+│   └── gaffer-web/                # Phase 1.1: the Gaffer App (ADR 0014; as built in M1.1-3 and M1.1-4)
 │       ├── server.ts              #   entry: --host/--port, or --replay <events.jsonl> (no Pi, no model)
 │       ├── src/                   #   bridge.ts: node: built-ins + Pi's RpcClient; one gaffer-pi --mode rpc per open session; command allowlist; SSE + POST; Origin/Host checks;
-│       │                          #   replay.ts: a recorded run served as a session
-│       ├── public/                #   no-build frontend: index.html (import map), app/ (main, start, run, result, reduce, format; style.css from docs/ui/brand),
+│       │                          #   replay.ts: a recorded run (and a follow-up after it) served as a session
+│       ├── public/                #   no-build frontend: index.html (import map), app/ (main, parts, start, run, result, followup, screens, md, reduce, format;
+│       │                          #   style.css from docs/ui/brand),
 │       │                          #   vendor/ (Preact 10.29.8 + hooks, htm 3.1.1, as published), fonts/ (Barlow Condensed, IBM Plex Sans and Mono, WOFF2)
-│       └── test/                  #   bridge.test.ts (allowlist fuzz NFR-SEC-05/07, SSE replay, latency), views.test.ts (renderer over every eval recommendation FR-UI-10,
-│                                  #   export FR-UI-11, run steps FR-UI-09), fixtures/ (a recorded faux run, the eval recommendations)
+│       └── test/                  #   bridge.test.ts (allowlist fuzz NFR-SEC-05/07 over every action's fields, SSE replay, latency, scorecard), views.test.ts (renderer
+│                                  #   over every eval recommendation FR-UI-10, export FR-UI-11, run steps FR-UI-09), states.test.ts, app.test.ts (text answers, follow-up,
+│                                  #   Markdown, Scorecard, page-level states, contrast), fixtures/ (a recorded faux run and its states, the eval recommendations, a scorecard)
 ├── python/
 │   └── gaffer_lib/                # Tested analytics library, installed read-only in the sandbox image
 │       ├── src/gaffer_lib/        #   rules, derive, strength, minutes, xp, plan, ownership, validate, backtest, cli
