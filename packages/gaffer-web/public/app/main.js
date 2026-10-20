@@ -235,7 +235,7 @@ function App() {
 	const empty = home && !home.sessions.length && !home.pending?.length;
 	const pick = () => setDrawer(false);
 	return html`<div class=${`app${drawer ? " drawer-open" : ""}`}>
-		<a class="skip" href="#main" onClick=${(e) => { e.preventDefault(); main.current?.querySelector("h1")?.focus(); }}>Skip to the main content</a>
+		${drawer ? null : html`<a class="skip" href="#main" onClick=${(e) => { e.preventDefault(); main.current?.querySelector("h1")?.focus(); }}>Skip to the main content</a>`}
 		<${Rail} home=${home} current=${r.view === "session" ? r.id : null} onRename=${rename} onPick=${pick} open=${drawer} themeSwitch=${html`<${ThemeSwitch} />`} />
 		${drawer ? html`<div class="scrim" aria-hidden="true" onClick=${() => setDrawer(false)}></div>` : null}
 		<main class="main" id="main" ref=${main}>

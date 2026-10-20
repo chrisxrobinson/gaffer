@@ -485,16 +485,7 @@
  },
  {
   "screen": "light-375-12-run-done",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -509,15 +500,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -574,16 +565,7 @@
  },
  {
   "screen": "light-375-13-result",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -598,15 +580,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -663,16 +645,7 @@
  },
  {
   "screen": "light-375-14-ask-box",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -687,15 +660,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -752,16 +725,7 @@
  },
  {
   "screen": "light-375-15-followup-answered",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -776,15 +740,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -841,16 +805,7 @@
  },
  {
   "screen": "light-375-16-result-full",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -865,15 +820,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -938,14 +893,6 @@
     "targets": [
      "html"
     ]
-   },
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
    }
   ],
   "contrastNeedsReview": [
@@ -962,15 +909,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -1183,16 +1130,7 @@
  },
  {
   "screen": "light-375-30-state-softcap",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -1207,15 +1145,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -1284,16 +1222,7 @@
  },
  {
   "screen": "light-375-30-state-stale",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -1308,15 +1237,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -1373,16 +1302,7 @@
  },
  {
   "screen": "light-375-30-state-oddsdown",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -1397,15 +1317,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -1502,16 +1422,7 @@
  },
  {
   "screen": "light-375-31-state-deadline-passed-result",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -1526,15 +1437,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2075,16 +1986,7 @@
  },
  {
   "screen": "dark-375-12-run-done",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2099,15 +2001,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2164,16 +2066,7 @@
  },
  {
   "screen": "dark-375-13-result",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2188,15 +2081,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2253,16 +2146,7 @@
  },
  {
   "screen": "dark-375-14-ask-box",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2277,15 +2161,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2342,16 +2226,7 @@
  },
  {
   "screen": "dark-375-15-followup-answered",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2366,15 +2241,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2431,16 +2306,7 @@
  },
  {
   "screen": "dark-375-16-result-full",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2455,15 +2321,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2528,14 +2394,6 @@
     "targets": [
      "html"
     ]
-   },
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
    }
   ],
   "contrastNeedsReview": [
@@ -2552,15 +2410,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2773,16 +2631,7 @@
  },
  {
   "screen": "dark-375-30-state-softcap",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2797,15 +2646,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2874,16 +2723,7 @@
  },
  {
   "screen": "dark-375-30-state-stale",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2898,15 +2738,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -2963,16 +2803,7 @@
  },
  {
   "screen": "dark-375-30-state-oddsdown",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -2987,15 +2818,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
@@ -3092,16 +2923,7 @@
  },
  {
   "screen": "dark-375-31-state-deadline-passed-result",
-  "violations": [
-   {
-    "id": "scrollable-region-focusable",
-    "impact": "serious",
-    "nodes": 1,
-    "targets": [
-     "section[aria-labelledby=\"tr-h\"] > .scroll-x"
-    ]
-   }
-  ],
+  "violations": [],
   "contrastNeedsReview": [
    {
     "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
@@ -3116,15 +2938,15 @@
     "why": "Element's background color could not be determined because it is overlapped by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(3)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(4)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {
-    "target": "section[aria-labelledby=\"tr-h\"] > .scroll-x > table > thead > tr > th:nth-child(5)",
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
     "why": "Element's background color could not be determined because it's partially obscured by another element"
    },
    {

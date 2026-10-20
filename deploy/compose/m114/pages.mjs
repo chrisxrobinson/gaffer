@@ -151,9 +151,11 @@ async function screen(name, { scrollTo, full = false } = {}) {
 
 // ---- The keyboard walk ---------------------------------------------------------------------------------------
 /** Tab from the top of the page `n` times: each stop, in DOM order or not, with its focus visible or not. */
-async function walk(name, n, scope = "document") {
-	await js("document.activeElement?.blur(); window.scrollTo(0, 0); true");
-	await js("(document.body.tabIndex = -1, document.body.focus(), document.body.removeAttribute('tabindex'), true)");
+async function walk(name, n, scope = "document", fromTop = true) {
+	if (fromTop) {
+		await js("document.activeElement?.blur(); window.scrollTo(0, 0); true");
+		await js("(document.body.tabIndex = -1, document.body.focus(), document.body.removeAttribute('tabindex'), true)");
+	}
 	const stops = [];
 	for (let i = 0; i < n; i++) {
 		await key("Tab");
@@ -320,10 +322,12 @@ try {
 				// The drawer by keyboard: open, Tab inside it, Esc back to its button.
 				const d = await replay("done", 40);
 				await go(`${d.url}/#/`);
-				await js(`document.querySelector("button.menu").focus(); true`);
-				await key("Enter");
-				await sleep(300);
-				keyboard.push(await walk("drawer-open", 14, 'document.getElementById("rail")'));
+				// Opened as a tap would (the App then moves focus into it); Tab from there must stay inside the drawer.
+				await click("button.menu");
+				await sleep(400);
+				const open = await js(`document.querySelector("main").inert && document.getElementById("rail").contains(document.activeElement)`);
+				const w = await walk("drawer-open", 14, 'document.getElementById("rail")', false);
+				keyboard.push({ ...w, drawerOpenAndFocused: open, stayedInDrawer: w.stops.every((x) => x.index >= 0) });
 				d.stop();
 			}
 		}
