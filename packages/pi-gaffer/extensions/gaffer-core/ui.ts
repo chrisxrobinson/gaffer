@@ -166,6 +166,7 @@ const DESCRIBE: Record<(typeof GAFFER_COMMANDS)[number], string> = {
 	gw: "/gw [notes]          the next GW's recommendation: transfers, captain, XI, chip, 4-GW plan",
 	whatif: "/whatif <idea>       test a transfer or chip against the best plan: /whatif Watkins>Isak",
 	explain: "/explain <player>    why a player is in, out or captain",
+	chips: "/chips [weeks]       when to play each chip you have left: /chips GW8-GW19",
 	team: '/team <id>           set your FPL team; add --ft N or --pending "OUT>IN" if FPL is behind',
 	prefs: "/prefs [...]         show or change saved preferences: risk, chips to save, keep, avoid, hits",
 	scorecard: "/scorecard           season to date: Gaffer's plans against your points and the baselines",

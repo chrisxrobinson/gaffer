@@ -158,7 +158,7 @@ describe("command allowlist (FR-UI-06)", () => {
 	});
 	const ask = (text: string, force = false) => provider.getSuggestions([text], 0, text.length, { signal: new AbortController().signal, force });
 
-	it("typing / lists exactly Gaffer's twelve commands", async () => {
+	it("typing / lists exactly Gaffer's thirteen commands", async () => {
 		const res = await ask("/");
 		expect(res?.items.map((i) => i.value).sort()).toEqual([...GAFFER_COMMANDS].sort());
 	});
