@@ -121,7 +121,7 @@ export function briefLine(b) {
 	].filter(Boolean).join(" · ");
 }
 
-export const runTitle = (s) => (s.brief ? `Recommend GW${s.brief.gw ?? s.result?.gw ?? "?"}` : s.result ? `GW${s.result.gw} recommendation` : s.name ?? "Session");
+export const runTitle = (s) => s.name ?? (s.brief ? `Recommend GW${s.brief.gw ?? s.result?.gw ?? "?"}` : s.result ? `GW${s.result.gw} recommendation` : s.snapshot?.gw?.next ? `GW${s.snapshot.gw.next} session` : "Session");
 
 /** Banners for the states docs/ui §6 lists that a Recommend run can reach. */
 export function runBanners(s) {
@@ -145,12 +145,14 @@ export function Banner({ kind, text, children }) {
 	return html`<div class=${`banner ${kind}`} role=${kind === "bad" ? "alert" : "status"}>${kind === "info" ? ICON.info : kind === "warn" ? ICON.warn : ICON.err}<p>${text}${children}</p></div>`;
 }
 
-export function RunView({ s, now, onStop, onRetry, canStop }) {
+export function RunView({ s, now, onStop, onRetry, canStop, elsewhere }) {
 	const visible = s.items.filter((x) => x.kind !== "step" || s.steps[x.id]);
 	const lastThink = [...visible].reverse().find((x) => x.kind === "think");
 	const elapsed = s.startedAt ? ((s.endedAt ?? now) - s.startedAt) / 1000 : null;
 	const cost = s.cost + (s.running ? s.liveCost : 0);
-	const meta = s.running
+	const meta = elsewhere
+		? `${elsewhere === "running" ? "Running in the browser terminal" : "Open in the browser terminal"} · ${usd(cost, 3)} so far`
+		: s.running
 		? `Running · ${elapsed !== null ? `${Math.round(elapsed)} s` : "…"} · ${usd(cost, 3)} so far`
 		: s.aborted
 			? `Stopped${elapsed !== null ? ` after ${Math.round(elapsed)} s` : ""} · ${usd(cost, 3)}${s.result ? "" : " · nothing was saved"}`

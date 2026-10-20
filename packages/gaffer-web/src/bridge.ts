@@ -355,12 +355,14 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 		gwCache = gwCache && Date.now() - gwCache.at < 5 * 60_000 ? gwCache : { at: Date.now(), value: fplBootstrap(new SnapshotStore(opts.dataDir), fpl, fplNow()).then(gwInfo).catch(() => null) };
 		const busy = lockHolder(runLockPath(opts.sessionsDir));
 		const listed = sessions();
+		// A session the other UI holds is running when that same process holds the run lock.
+		const otherRunning = (s: SessionSummary) => !!busy && !!s.lock && s.lock.pid === busy.pid && s.lock.ui === busy.ui;
 		return {
 			gw: await gwCache.value,
 			now: fplNow(),
 			spend: { today: Math.round(dayCost(opts.sessionsDir, new Date()) * 1e6) / 1e6, daily: cfg.daily, soft: cfg.soft, hard: cfg.hard },
 			busy: busy ? { ui: busy.ui } : null,
-			sessions: listed.map(({ file: _f, ...s }) => ({ ...s, live: live.get(s.id)?.running ? "running" : live.has(s.id) ? "open" : null })),
+			sessions: listed.map(({ file: _f, ...s }) => ({ ...s, live: live.get(s.id)?.running || otherRunning(s as SessionSummary) ? "running" : live.has(s.id) ? "open" : null })),
 			pending: pending(listed),
 		};
 	};
@@ -391,11 +393,12 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 		}
 		if (l) text = text.slice(0, l.historyBytes);
 		const owner = l ? undefined : lockHolder(sessionLockPath(s.file));
+		const runner = owner && lockHolder(runLockPath(opts.sessionsDir));
 		return {
 			id,
 			history: historyOf(text),
 			live: l ? { running: l.running, from: l.buffer[0]?.id ?? l.seq + 1, seq: l.seq } : null,
-			lock: owner ? { ui: owner.ui } : null,
+			lock: owner ? { ui: owner.ui, running: !!runner && runner.pid === owner.pid && runner.ui === owner.ui } : null,
 		};
 	};
 

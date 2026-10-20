@@ -220,7 +220,7 @@ function SessionView({ id, home, now, refreshHome, onState }) {
 	return html`
 		${conn === "reconnecting" ? html`<${Banner} kind="info" text="Reconnecting… The run continues on the server; the transcript fills in from where it left off." />` : null}
 		${view.lock?.ui === "terminal" ? html`<${Banner} kind="info" text="This session is also open in the browser terminal. Both show the same session; only one can send a prompt at a time, so it is read-only here." />` : null}
-		${s.items.length || s.brief ? html`<${RunView} s=${s} now=${now} canStop=${!!view.live} onStop=${stop} onRetry=${() => (location.hash = "#/")} />` : html`<p class="muted">Nothing has run in this session yet.</p>`}
+		${s.items.length || s.brief ? html`<${RunView} s=${s} now=${now} canStop=${!!view.live} onStop=${stop} onRetry=${() => (location.hash = "#/")} elsewhere=${view.lock?.ui === "terminal" ? (view.lock.running ? "running" : "open") : null} />` : html`<p class="muted">Nothing has run in this session yet.</p>`}
 		${s.result ? html`<${ResultView} rec=${s.result} teamName=${teamName} now=${now} />` : null}`;
 }
 

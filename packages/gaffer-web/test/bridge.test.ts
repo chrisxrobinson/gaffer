@@ -234,7 +234,7 @@ describe("NFR-REL-03 on the App's side", () => {
 			}));
 		try {
 			const view = await (await fetch(`${base}/api/sessions/${EXISTING}`)).json();
-			expect(view.lock).toEqual({ ui: "terminal" });
+			expect(view.lock).toEqual({ ui: "terminal", running: true }); // the same process holds the run lock: it is running there
 			const ask = await post(`/api/sessions/${EXISTING}/commands`, { requestId: rid(), type: "ask", text: "hello" });
 			expect(ask.status).toBe(409);
 			expect(((await ask.json()) as { error: string }).error).toMatch(/open in the browser terminal/);
