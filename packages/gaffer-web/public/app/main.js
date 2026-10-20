@@ -145,10 +145,18 @@ function SessionView({ id, home, now, refreshHome, onState }) {
 	const [view, setView] = useState({ state: "loading" });
 	const [conn, setConn] = useState("ok");
 	const es = useRef(null);
+	const retry = useRef(0);
 
 	const load = useCallback(async () => {
 		es.current?.close();
 		const r = await api.get(`/api/sessions/${id}`);
+		// The App's server is restarting (or the network is down): keep what is shown, say so, and try again.
+		if (r.status === 0) {
+			setConn("reconnecting");
+			retry.current = setTimeout(() => void load(), 2000);
+			return;
+		}
+		setConn("ok");
 		if (!r.ok) return setView({ state: "error", message: r.status === 404 ? "There is no such session." : r.body.error });
 		dispatch({ reset: historyEvents(r.body.history).reduce(reduce, initialState()) });
 		setView({ state: "ready", lock: r.body.lock, live: r.body.live });
@@ -182,7 +190,10 @@ function SessionView({ id, home, now, refreshHome, onState }) {
 	useEffect(() => {
 		void load();
 		void refreshHome(); // the rail shows this session (a run just started) at once
-		return () => es.current?.close();
+		return () => {
+			es.current?.close();
+			clearTimeout(retry.current);
+		};
 	}, [load]);
 	useEffect(() => onState(s), [s]);
 	// When the run settles the rail's dot, the spend and the session's title change.
@@ -203,7 +214,7 @@ function SessionView({ id, home, now, refreshHome, onState }) {
 		return () => removeEventListener("keydown", onKey);
 	}, [s.running, view.live, stop]);
 
-	if (view.state === "loading") return html`<p class="muted">Loading the session…</p>`;
+	if (view.state === "loading") return conn === "reconnecting" ? html`<${Banner} kind="info" text="Reconnecting… The App's server can't be reached yet; this page tries again every few seconds." />` : html`<p class="muted">Loading the session…</p>`;
 	if (view.state === "error") return html`<${Banner} kind="bad" text=${view.message} />`;
 	const teamName = s.team?.team_name ?? s.snapshot?.team_name;
 	return html`
