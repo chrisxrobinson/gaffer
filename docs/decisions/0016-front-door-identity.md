@@ -57,6 +57,7 @@
 ## Consequences
 - **The answer to "do I need a domain?" is no.**
 - **Sign-in is your tailnet login.** A stolen laptop or phone that's still logged in to the tailnet is the residual risk. Mitigate it with your identity provider's two-factor authentication and Tailscale's key expiry, and by removing a lost device in the admin console.
+- **The bind address changes.** Today ttyd and `gaffer-web` bind to the interface with the default route (`harness/egress-ip.mjs`). An internal-only harness has none, and the script exits 1 (checked 2026-10-23, S13's README). In the overlay they bind to the `front` interface, and never to `sandbox_net`.
 - **Code changes, all in M2-0:**
   - three settings in `gaffer-web` and its tests;
   - the `/admin` route;
