@@ -50,7 +50,37 @@ Branch `phase-2-plan`, cut from `phase-2-prompts` (`phase-1.1-close` and `phase-
 - [x] **FR-DAT-10 has never had a trigger or a stand-alone command.** `tools/gaffer-snapshot` is new work in M2-0.
 - [x] **ROADMAP's GW13 date was a day late** (FPL: 2026-12-01 18:30Z).
 
+## Re-planned on AWS (your instruction, 2026-10-23: "change it to use AWS - keep it professional")
+- [x] R17 AWS facts and prices (subagent; key behaviours checked against AWS docs it cited) → `docs/research/17-aws.md`. About $183 a month before VAT for the ARM64, NAT-free design.
+- [x] Research 13–16 kept as the evidence for the small-host alternative, each with a status line. S11–S13 still apply: the egress pattern, the harness-side identity, and the bind address.
+- [x] ADRs 0015–0020 rewritten for AWS (still Proposed; the small-host versions are in git history at `46393af`):
+  - 0015: Fargate ARM64, always-on harness and sandbox;
+  - 0016: ALB, Cognito Essentials and MFA, `gaffer-web` verifying `x-amzn-oidc-data` and fronting ttyd;
+  - 0017: no NAT, a Squid service, endpoints, DNS Firewall;
+  - 0018: EFS, AWS Backup with a copy in `eu-west-1`, and the migration;
+  - 0019: EventBridge Scheduler jobs;
+  - 0020: CDK and `cdk-nag`, ECR, deploy scripts, alarms and Budgets.
+- [x] ADRs 0004, 0005, 0006 and 0013 status lines, and the index, re-pointed.
+- [x] ROADMAP Phase 2 (AWS, M2-0 to M2-2, exits) and Phase 3. REQUIREMENTS:
+  - FR-ADM-02, NFR-SEC-04, NFR-PORT-02 and NFR-LAT-02 back to AWS wording;
+  - NFR-SEC-10, -11, NFR-REL-04 and NFR-LAT-05 restated;
+  - NFR-OBS-03 and NFR-MNT-06 added.
+- [x] ARCHITECTURE §6.4, §7, §8 and §9, and REPO_LAYOUT, now on AWS.
+- [x] The M2-0 to M2-2 briefs rewritten for AWS.
+
+## Discovered while re-planning on AWS
+- [x] **`x-amzn-oidc-identity` is unsigned**, and no AWS doc says the ALB strips a client's copy. ttyd's `-H` on it would be trusting a header anyone signed in could set. So `gaffer-web` verifies the signed `x-amzn-oidc-data` and fronts the terminal, and ttyd listens on loopback.
+- [x] **Security groups and NACLs can't filter traffic to the VPC's DNS server,** so a task with no egress rules can still leak data through DNS. Hence DNS Firewall, with `TRUST_REDIRECTION_DOMAIN` because FPL's CNAME chain runs through Fastly names that change.
+- [x] **A task with no role can't use EFS IAM authorisation.** The sandbox's read-only mount is allowed by the file system policy for one access point instead.
+- [x] **The always-on sandbox is the largest line ($66 a month).** Per-run `RunTask` would save most of it, at 30–60 s a recommendation. That's left for Phase 3.
+- [x] **You need a domain** for the ALB's certificate and Cognito's callback: `.com` is $16 a year in Route 53.
+
 ## Blocked on you (for the build, not this plan)
-- [ ] Review the six Proposed ADRs (0015–0020); accept them or change them.
-- [ ] Optional but useful before M2-0: a free Tailscale account, signed in on this Mac. Then M2-0 can check Serve's Host and Origin behaviour, two HTTPS ports, and WebSocket/SSE on a real tailnet before you buy a server.
-- [ ] For M2-1: the Hetzner account and server, the Cloud Firewall, the tailnet policy and the phone app, the Storage Box, healthchecks.io.
+- [ ] Review the six Proposed ADRs (0015–0020, the AWS versions); accept them or change them. The budget is about $183 a month before VAT.
+- [ ] For M2-1:
+  - an AWS account with IAM Identity Center and MFA (root MFA too);
+  - a domain registered in Route 53 (or one you move there);
+  - the two secrets put into Secrets Manager yourself;
+  - your Cognito user's first sign-in;
+  - the SNS email confirmation;
+  - your AWS Budgets figure.

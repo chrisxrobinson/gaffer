@@ -1,5 +1,7 @@
 # R16 — Operating Gaffer on one host: backups, scheduling, deploys, patching and alerts
 
+> **Status, 2026-10-23 (later the same day):** Phase 2 is on AWS, so backups, scheduling, deploys and alerts use AWS Backup, EventBridge Scheduler, ECR with CDK, and CloudWatch with SNS (ADRs 0018–0020, [research 17](17-aws.md)). This note stays as the evidence for the single-host alternatives.
+
 *Researched 2026-10-23 against vendor docs and pricing pages. healthchecks.io's free tier was re-checked by hand, and spike S14 tested restic locally.*
 
 ## TL;DR

@@ -1,6 +1,6 @@
 # ADR 0006 — Deployment topology: Compose, mapped 1:1 to ECS Fargate
 
-**Status:** Superseded in part · **Date:** 2026-09-27 · **Superseded in part 2026-10-23 by** [ADR 0015](0015-host.md) (Phase 2 runs on one Hetzner server, not AWS), [0016](0016-front-door-identity.md) (front door), [0017](0017-egress-allowlist.md) (egress) and [0020](0020-build-deploy-observe.md) (deploys). The Compose design stands; the AWS column below is kept as the reference mapping for a big-cloud move in Phase 3, and "Phase 2" in its scaling path now reads "Phase 3".
+**Status:** Accepted, refined · **Date:** 2026-09-27 · **Refined 2026-10-23 by** [ADR 0015](0015-host.md)–[0020](0020-build-deploy-observe.md) for Phase 2 on AWS: Fargate on ARM64; an always-on sandbox *service* (a warm pool of 1) instead of per-session `RunTask` (which moves to Phase 3); no NAT, with the egress allowlist as a Squid proxy service, VPC endpoints and DNS Firewall instead of Network Firewall; Cognito with MFA; AWS Backup for EFS; CDK.
 
 ## Context
 Three requirements drive this. It has to be cloud-agnostic and Docker-first. It has to follow the managed-agents separation of brain, hands and session. And it has to go from single user to multi-user without a rewrite ([research 06](../research/06-deployment.md)). The verified AWS facts that matter:

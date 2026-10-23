@@ -1,5 +1,7 @@
 # R15 — An egress allowlist for the harness
 
+> **Status, 2026-10-23 (later the same day):** still current. On AWS the same pattern holds: the harness has no route out except a Squid proxy service, enforced by subnets and security groups instead of Docker networks (ADR 0017, [research 17](17-aws.md)).
+
 *Researched 2026-10-23 against Node's docs and source, Docker's and Squid's docs. Spikes S11 and S13 tested it locally.*
 
 ## TL;DR

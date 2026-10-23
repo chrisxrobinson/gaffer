@@ -1,5 +1,7 @@
 # R14 — The front door: reaching Gaffer from a laptop and a phone, and only by its owner
 
+> **Status, 2026-10-23 (later the same day):** Phase 2 is on AWS, so the front door is the ALB with Cognito (ADR 0016, [research 17](17-aws.md)). This note stays as the evidence for the alternatives (Tailscale, Cloudflare Access, oauth2-proxy). Its harness-side findings (S12: ttyd `-H` checks only presence; `TTYD_USER`; `gaffer-web`'s loopback-only Host check) still apply.
+
 *Researched 2026-10-23 against vendor docs. Tailscale's identity-header behaviour was re-checked by hand. Spikes S12 and S13 tested the harness side locally.*
 
 ## TL;DR

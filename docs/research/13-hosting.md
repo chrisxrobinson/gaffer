@@ -1,5 +1,7 @@
 # R13 — Where Gaffer runs in Phase 2: a small host
 
+> **Status, 2026-10-23 (later the same day):** you chose AWS for Phase 2 ("keep it professional"). This note is kept as the evidence for the small-host alternative that ADR 0015 considered and didn't choose; the AWS facts and prices are in [research 17](17-aws.md).
+
 *Researched 2026-10-23 against live vendor pages; prices exclude VAT. Key claims re-checked by hand: Hetzner's availability and price table, Cloudflare's disk model.*
 
 ## TL;DR

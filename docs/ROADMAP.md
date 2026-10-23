@@ -1,6 +1,6 @@
 # Gaffer — Roadmap
 
-**Date:** 2026-09-27, updated 2026-10-18 (Phase 1.1 added; Phases 2 and 3 revised) 2026-10-23 (Phase 1.1 deployed) and 2026-10-23 again (Phase 2 re-planned on a small host; AWS moved to Phase 3). Each phase lists its scope and **exit criteria**. Exit criteria refer to [REQUIREMENTS](REQUIREMENTS.md) IDs and must all pass before the next phase starts. Timing follows the FPL calendar, checked live on 2026-10-17: GW8's deadline is 2026-10-23 17:30Z, GW9's 2026-10-31 11:00Z, GW10's 2026-11-06 18:30Z, then an international break to GW11 (2026-11-21 11:00Z), GW12 2026-11-27, GW13 2026-12-01 18:30Z (FPL's live value, checked 2026-10-23; earlier drafts said 12-02); first-half chips expire at the GW19 deadline (2027-01-01 18:30Z); blanks and doubles historically fall in GW29–37.
+**Date:** 2026-09-27, updated 2026-10-18 (Phase 1.1 added; Phases 2 and 3 revised) 2026-10-23 (Phase 1.1 deployed; Phase 2 planned on AWS). Each phase lists its scope and **exit criteria**. Exit criteria refer to [REQUIREMENTS](REQUIREMENTS.md) IDs and must all pass before the next phase starts. Timing follows the FPL calendar, checked live on 2026-10-17: GW8's deadline is 2026-10-23 17:30Z, GW9's 2026-10-31 11:00Z, GW10's 2026-11-06 18:30Z, then an international break to GW11 (2026-11-21 11:00Z), GW12 2026-11-27, GW13 2026-12-01 18:30Z (FPL's live value, checked 2026-10-23; earlier drafts said 12-02); first-half chips expire at the GW19 deadline (2027-01-01 18:30Z); blanks and doubles historically fall in GW29–37.
 
 ## Phase 0 — Research & architecture ✅ (this run)
 - **Scope:** research notes 01–06, spike S1, ADRs 0001–0008, ARCHITECTURE, REQUIREMENTS, ROADMAP, REPO_LAYOUT.
@@ -131,35 +131,88 @@ The break is the longest gap between deadlines this autumn, so the largest chang
 - The Phase 1 exit (three consecutive live GWs scored) is met, whichever finishes first.
   - **Status 2026-10-23: not met.** GW7 is scored, GW8 is waiting for FPL's check and GW9 needs a recommendation (see Phase 1 above).
 
-## Phase 2 — Hosted single user (one small host, behind sign-in)
-**Re-planned 2026-10-23** ([ADR 0015](decisions/0015-host.md)–[0020](decisions/0020-build-deploy-observe.md), research [13](research/13-hosting.md)–[16](research/16-operations.md), spikes S11–S14). AWS was dropped for cost (about $140 a month before an egress firewall) and moved to Phase 3 as a documented mapping. Gaffer runs the **same Compose file** on one Hetzner Cloud server (CAX21 if Hetzner can supply it, CPX22 otherwise; €14–23 a month with offsite backups), reached only through **Tailscale Serve** (no domain, nothing open to the internet), with the harness's egress allowlisted and its identity checked again inside the harness. Prices and stock are in research 13: on 2026-10-23 every Cost-Optimized (CX/CAX) plan showed "not available".
+## Phase 2 — Cloud deployment on AWS (single user)
+**Planned 2026-10-23** ([ADR 0015](decisions/0015-host.md)–[0020](decisions/0020-build-deploy-observe.md), research [17](research/17-aws.md) and [13](research/13-hosting.md)–[16](research/16-operations.md), spikes S11–S14). A small single host was planned first and set aside for AWS ("keep it professional"); research 13–16 keep it as the alternatives considered.
 
-The rules for every Phase 1.1 milestone carry over (ADR 0009 windows, security only stays the same or gets stronger, the regression set), plus: nothing reachable from the internet except through the front door; SSH on the tailnet only; the harness's egress allowlisted; backups encrypted before they leave the host. Accounts, payments and the server's order are yours.
+**The shape** (in `eu-west-2`, London, as code in AWS CDK):
+- an ALB with Cognito sign-in (MFA) in front of both UIs on your own domain;
+- an always-on harness and an always-on sandbox on Fargate ARM64, the harness checking your identity again from the ALB's signed token;
+- EFS for `/sessions` and `/data`, backed up by AWS Backup with a copy in `eu-west-1`;
+- no NAT: the harness reaches only Anthropic, FPL and football-data through a Squid proxy service, with VPC endpoints for AWS and a DNS Firewall allow list;
+- EventBridge Scheduler jobs for scoring, the pre-deadline snapshot and the admin report;
+- CloudWatch alarms and an AWS Budgets alert by email.
 
-### M2-0 — The production setup, built and tested locally (any time; no live impact)
-- **Scope:** the `door` service and the identity checks in `gaffer-web` (`GAFFER_PUBLIC_ORIGIN`, `GAFFER_ALLOWED_LOGIN`, `/admin`) and `gaffer-pi` (`TTYD_USER`) (ADR 0016); the `egress` service, internal-only networks and Node ≥ 24.22 (ADR 0017); `tools/gaffer-snapshot`, the job scripts and systemd units (ADR 0019); the restic backup and restore scripts (ADR 0018); `deploy/server/setup.sh`, `deploy.sh`, `rollback.sh` and `verify-prod.sh` (ADR 0020); all proven on a separate local Compose project.
-- **Exit:** NFR-SEC-10, NFR-SEC-11, FR-ADM-02, NFR-REL-04 (local restore), FR-DAT-10's trigger and FR-EVL-03's job (on a scratch data directory), NFR-SEC-01/02/07/08 unchanged; the regression set (`verify.sh`, faux eval 31/31 with points equal to G0, latency no worse than the Phase 1.1 close). If you have created the free tailnet by then: Serve's Host/Origin behaviour, two HTTPS ports, and a whole run's WebSocket and SSE checked through it.
+The monthly cost is in ADR 0015.
 
-### M2-1 — The host and the cutover (cutover inside a window: after the GW10 deadline, 2026-11-06 18:30Z, through the international break, never after 2026-11-19 11:00Z)
-- **Scope:** you order the server and create the tailnet, Storage Box and healthchecks.io accounts; the server is set up and hardened; the stack is deployed with a throwaway salt and gated; then the live data moves from the Mac with its salt unchanged and checked (ADR 0018), and the host becomes the live Gaffer; the Mac's stack is kept, stopped, as the rollback.
-- **Exit:** NFR-SEC-04 (Phase 2 criterion), NFR-SEC-10 with real sign-ins from your laptop and phone, NFR-SEC-11 and NFR-PRIV-02 on the host, NFR-LAT-05, NFR-REL-04 (a real offsite backup and a restore on the host), the data move's checks, one real Recommend and follow-up through the hosted App, and the regression set on the host.
+The rules for every Phase 1.1 milestone carry over (ADR 0009 windows, security only stays the same or gets stronger, the regression set), plus:
+- nothing reaches the harness except through the ALB's authentication;
+- no shell path (ECS Exec off);
+- the harness's egress is allowlisted;
+- no long-lived AWS keys;
+- every change to the infrastructure is a reviewed `cdk diff`.
 
-### M2-2 — Operating it, and the Phase 2 exit (after at least four GWs live on the host)
-- **Scope:** the record of every GW since the cutover (recommendations, automatic scoring, cost and latency, restarts); recovery drills (restore into a fresh project, rollback, patch and reboot) inside windows; the real monthly cost against ADR 0015's; ADR 0006's AWS mapping brought up to date (NFR-PORT-02); ADR 0011's T3 measured.
-- **Exit:** NFR-PORT-02, NFR-REL-04 (drill), FR-EVL-03 met by the scheduler for every GW since the cutover, and the Phase 2 exit below.
+Accounts, payments, the domain and every login are yours.
+
+### M2-0 — Infrastructure as code and the code changes, built and tested without AWS (any time; no live impact)
+- **Scope:**
+  - **`deploy/aws/` (CDK, TypeScript):** the three stacks of ADR 0020, with `cdk-nag` and assertion tests.
+  - **`gaffer-web`:** the ALB-identity mode (`x-amzn-oidc-data` verification, the allowed user, `GAFFER_PUBLIC_ORIGIN`, `/admin`).
+  - **The harness:** `gaffer-pi`'s `TTYD_USER` check, and an explicit bind address.
+  - **Egress:** the Squid image and config, with the allowlist drift test.
+  - **Node:** ≥ 24.22.
+  - **The jobs:** `tools/gaffer-snapshot` and the `jobs.jsonl` line.
+  - **Scripts:** build-push, deploy, rollback, the restore drill, migration and `verify-aws.sh`.
+
+  The containers are proven locally on a separate Compose project, with Compose overlays that mirror the AWS networks (S11, S13).
+- **Exit:**
+  - NFR-SEC-10 and NFR-SEC-11 (local);
+  - NFR-MNT-06: `cdk synth` with `cdk-nag` clean, and the assertion tests in CI with no credentials;
+  - FR-DAT-10's trigger and FR-EVL-03's job (on a scratch data directory);
+  - NFR-SEC-01/02/07/08 unchanged;
+  - the regression set (`verify.sh`, faux eval 31/31 with points equal to G0, latency no worse than the Phase 1.1 close).
+
+### M2-1 — The AWS deploy and the cutover (cutover inside a window: after the GW10 deadline, 2026-11-06 18:30Z, through the international break, never after 2026-11-19 11:00Z)
+- **Scope:**
+  1. You set up the account (IAM Identity Center with MFA), register the domain, put the two secrets in Secrets Manager and set the budget.
+  2. `cdk deploy` of the network and data stacks, then the service stack with a throwaway salt, and the gate on AWS.
+  3. The real sign-in from your laptop and phone.
+  4. The live data moves from the Mac with its salt unchanged, checked by manifest and totals (ADR 0018), and AWS becomes the live Gaffer.
+  5. The Mac's stack is kept, stopped, as the rollback.
+- **Exit:**
+  - NFR-SEC-04 (Phase 2 criterion), and NFR-SEC-10 with real sign-ins;
+  - NFR-SEC-11 and NFR-PRIV-02 on AWS (Flow Logs and Squid's log);
+  - NFR-LAT-02 and NFR-LAT-05;
+  - NFR-REL-04 (a real backup, a restore drill, the cross-region copy);
+  - NFR-OBS-03 (a forced job failure alerts);
+  - the data move's checks;
+  - one real Recommend and follow-up through the hosted App;
+  - the regression set on AWS.
+
+### M2-2 — Operating it, and the Phase 2 exit (after at least four GWs live on AWS)
+- **Scope:**
+  - the record of every GW since the cutover: recommendations, automatic scoring, cost and latency, restarts;
+  - recovery drills inside windows: a restore to a new file system, a rollback, and a forced task replacement;
+  - the real monthly bill against ADR 0015's estimate, with the AWS Budgets history;
+  - ADR 0011's T3 measured.
+- **Exit:** NFR-REL-04 (drill), FR-EVL-03 met by the scheduler for every GW since the cutover, and the Phase 2 exit below.
 
 ### Phase 2 exit
 - All milestone exits above.
-- At least four consecutive live GWs recommended from the host and **scored automatically** (FR-EVL-03 by ADR 0019's timer), with cost per recommendation within NFR-COST-01.
-- Hosting cost within ADR 0015's estimate plus 20%.
-- A restore from the offsite backup into a fresh stack, with sessions and ledgers identical.
-- Both UIs reachable only through the tailnet with your identity; nothing on the host open to the internet.
-- ADR 0011's T3 measured: the share of runs interrupted by restarts.
+- NFR-LAT-02, measured.
+- FR-ADM-02: `/admin` behind the same sign-in.
+- NFR-SEC-04: OIDC (Cognito) required in front of both UIs.
+- NFR-PORT-02: the same images and Dockerfiles as local Compose.
+- A restore test: sessions and ledgers recovered from AWS Backup into a fresh file system, identical by manifest.
+- A month (at least four consecutive GWs) of recommendations from AWS, scored automatically, with cost per recommendation within NFR-COST-01 and the bill within ADR 0015's estimate plus 20%.
+- Both UIs reachable only through Cognito sign-in.
+- ADR 0011's Durable triggers reviewed (T3: the share of runs interrupted by restarts).
 - The Phase 1 exit closed, if the ledger shows it (it should, once the scheduler scores GW8 onwards).
 
-## Phase 3 — Multi-user (and, if needed, a big cloud)
+Moved to Phase 3: a sandbox per session (`SandboxProvider=ecs` with a warm pool), which retires the run lock; CI-built images; the Hetzner/Caddy generic-host documentation.
+
+## Phase 3 — Multi-user
 - **Scope** (the seams from ARCHITECTURE §8):
-  - **moved here from Phase 2 (2026-10-23):** the AWS deployment of ADR 0006 and research 06 — ECS Fargate (harness service, a sandbox task per session with no egress and no IAM role, warm pool), an ALB with OIDC (Cognito) and an idle timeout of 3600 s in front of both UIs, EFS with S3 copies, Secrets Manager, `gaffer-eval` as a scheduled task, the `SandboxProvider=ecs` implementation (which retires Phase 1.1's run lock), FR-ADM-02 behind the ALB, NFR-LAT-02's Fargate cold start; images built in CI and pulled by digest from a registry (ADR 0020 option 2). Only if multi-user or scale needs it: the single host may be enough
+  - **moved here from Phase 2 (2026-10-23):** a sandbox per session from a warm pool (`SandboxProvider=ecs`), which retires Phase 1.1's run lock; images built in CI and deployed through GitHub OIDC; the generic-host (Hetzner + Caddy/Tailscale) documentation from research 13–16
   - **changed by Phase 1.1:** the `gaffer-web` bridge and the Gaffer App already exist (single-user, ADR 0014). Phase 3 adds OIDC → tenant mapping, per-tenant session and data paths, and sticky routing of each session's Pi process across N harness tasks; the browser terminal stays operator-only, and other users get the App
   - per-tenant paths
   - per-user sandboxes from a pool (or E2B/AgentCore if cold starts demand it)
@@ -184,7 +237,6 @@ The rules for every Phase 1.1 milestone carry over (ADR 0009 windows, security o
 | GW19 chip-expiry conflict (API vs PL article) | Re-verify on the FPL site | Early December 2026 |
 | FT derivation wrong for edge cases | Reference accounts re-checked | After each WC/FH use in a reference account |
 | Terms of use (PL / football-data) | Legal review | Before phase 3 |
-| Hetzner can't supply the planned server (every CX/CAX plan "not available" on 2026-10-23) | ADR 0015's order of preference (CAX21, then CPX22, then CAX11); images built on the host for its arch | At order time (M2-1) |
-| One host is a single point of failure | Encrypted offsite backups and a drilled restore onto any Docker host, the Mac included (ADR 0018) | Nightly; drilled in M2-0, M2-1, M2-2 |
-| The front door depends on Tailscale's coordination service | Losing it loses remote access only; the stack and the scheduler keep running; a console login on the server is the way in | If Tailscale's terms or free plan change |
+| AWS cost creeps (endpoints, IPv4, logs) | AWS Budgets alert by email at your monthly figure; ADR 0015's itemised estimate checked against the bill in M2-2 | Monthly |
+| A single harness task: a deploy or a task failure is a short outage | Deploys only in ADR 0009 windows; ECS replaces a failed task; alarm on 0 running tasks | Every deploy |
 | The egress allowlist drifts from the hosts Gaffer calls | A test compares them (ADR 0017); a missing host fails loudly, never leaks | Every change to a data source or provider |

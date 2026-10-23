@@ -1,75 +1,68 @@
-# ADR 0016 — Front door and identity: Tailscale Serve on the host, identity checked again in the harness
+# ADR 0016 — Front door and identity: an ALB with Cognito, the identity verified again in the harness
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Supersedes in part:** [ADR 0005](0005-web-tui.md) and [ADR 0006](0006-deployment.md) (the Phase 2 ALB, OIDC and `-H X-Amzn-Oidc-Identity` lines) · **Evidence:** [research 14](../research/14-front-door-identity.md), spikes [S12](../../spikes/s12-identity-header/README.md) and [S13](../../spikes/s13-internal-publish/README.md) · **Requirements:** NFR-SEC-04, NFR-SEC-10, FR-ADM-02, NFR-A11Y-01 (phone)
+**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Refines:** [ADR 0005](0005-web-tui.md)'s cloud line (ALB OIDC, `-H X-Amzn-Oidc-Identity`, idle timeout 3600 s) · **Evidence:** [research 17](../research/17-aws.md), [research 14](../research/14-front-door-identity.md) (alternatives), [spike S12](../../spikes/s12-identity-header/README.md) · **Requirements:** NFR-SEC-04, NFR-SEC-10, FR-ADM-02, NFR-A11Y-01 (phone)
 
 ## Context
-- **What you need:** to reach both UIs from your laptop and your phone, with only you getting in. You don't own a domain and left the sign-in method to this plan.
-- **What the harness enforces today:** both ports are published on `127.0.0.1` only (NFR-SEC-04). `gaffer-web` refuses any non-loopback Host and any Origin other than `http://<host>` (`bridge.ts`). ttyd checks Origin against Host and allows one client.
-- **What S12 found about the harness behind a door:**
-  - ttyd's `-H` checks only that the header is present, not its value.
-  - The value reaches ttyd's command as `TTYD_USER`.
-  - `gaffer-web` returns 421 to a real hostname.
-- **What S13 found:** a container on internal networks only can't publish a port. That matters because the egress allowlist (ADR 0017) keeps the harness internal-only.
+- **What you need:** both UIs on the internet over HTTPS, from your laptop and your phone, with only you getting in. ADR 0005 already planned an ALB with OIDC for the cloud.
+- **What the harness enforces today:** both ports are bound to loopback only. `gaffer-web` refuses any non-loopback Host (421) and any Origin other than `http://<host>`. ttyd checks Origin against Host and allows one client.
+- **What S12 found:**
+  - ttyd's `-H` checks only that the header is present (any value passes).
+  - ttyd hands the value to its command as `TTYD_USER`.
+- **You don't own a domain.** An ALB needs one for an ACM certificate and for Cognito's callback.
 
 ## Options considered
-1. **Tailscale, `tailscale serve` on the host.** **Chosen.**
-   - HTTPS on `<machine>.<tailnet>.ts.net`, with no domain.
-   - Nothing open to the internet.
-   - Free for personal use.
-   - The phone gets the Tailscale app.
-   - Sign-in through the tailnet's identity provider.
-   - Serve adds `Tailscale-User-Login` and strips client copies.
-2. **Tailscale as a sidecar container.** Rejected:
-   - Serve proxying to a Docker service name isn't documented.
-   - It needs its own state volume.
-   - Sharing its network namespace would give the harness Tailscale's egress.
-3. **Cloudflare Tunnel with Access.** Rejected:
-   - It needs a domain on Cloudflare.
-   - A JWT has to be verified against rotating keys.
-   - Quick tunnels can't carry the App's SSE.
-4. **Caddy with oauth2-proxy and Google.** Rejected:
-   - It's public on 80/443.
-   - It needs a DNS name, and free wildcard-DNS names hit Let's Encrypt's shared rate limits.
-   - It's two more services, plus an OAuth client.
-5. **WireGuard alone.** Rejected: no identity reaches the app, and keys are managed by hand per device.
+1. **An ALB with `authenticate-cognito`,** a Cognito user pool with one user and MFA required, and self-registration off. **Chosen.**
+   - It's AWS-native, with no third-party identity provider.
+   - The ALB authenticates before any request reaches a target.
+   - It signs the user's claims into `x-amzn-oidc-data`, which the harness verifies.
+2. **An ALB with `authenticate-oidc` to Google.** Rejected for now. It needs a Google Cloud project and OAuth client, and the Cognito user pool can federate Google later without changing the ALB.
+3. **CloudFront in front of the ALB.** Rejected. It adds a layer and a second certificate for one user; WAF can go on the ALB directly if ever needed.
+4. **No auth at the edge, auth in the app only.** Rejected. The app would carry a whole login flow, and every request would reach the harness unauthenticated.
 
 ## Decision
-- **The front door is Tailscale Serve, running as `tailscaled` on the host:**
-  - `https://<machine>.<tailnet>.ts.net/` (port 443) proxies to `http://127.0.0.1:7682`, the App;
-  - `https://<machine>.<tailnet>.ts.net:8443/` proxies to `http://127.0.0.1:7681`, the terminal.
-
-  Using two ports rather than a path avoids rewriting paths under ttyd. **Funnel stays off.**
-- **The tailnet:**
-  - You sign in with your chosen identity provider (Google, Apple, GitHub, Microsoft or a passkey).
-  - The server joins tagged `tag:gaffer`. Your laptop and phone join as **your own untagged devices**: identity headers aren't set for traffic from tagged devices.
-  - The tailnet policy lets only your user reach `tag:gaffer` on 443 and 8443, and on 22 for SSH.
-- **Ports stay where they are:** the Compose file keeps publishing `127.0.0.1:7681` and `127.0.0.1:7682`, which is Tailscale's advice for header-authenticated backends. Because the harness is internal-only (ADR 0017), the binding moves to a small **`door` container** (Caddy, pinned by digest). `door` is on an ordinary network and on the harness's internal `front` network, publishes the two loopback ports, and passes Host, Origin and the identity header through unchanged. Nothing else is on `front`.
-- **The harness checks identity itself** when `GAFFER_ALLOWED_LOGIN` is set (on the server; unset on the Mac, where loopback is the boundary):
+- **A domain, which you register:**
+  - The domain is registered in Route 53 (a `.com` or `.co.uk`; prices in research 17), with its hosted zone.
+  - It has two names: `gaffer.<domain>` (the App) and `terminal.<domain>` (the terminal). Separate hostnames avoid path rewriting under ttyd.
+  - One ACM certificate covers both, validated through DNS.
+- **The ALB** is internet-facing, in two public subnets:
+  - HTTPS only (TLS policy `ELBSecurityPolicy-TLS13-1-2-2021-06` or newer); HTTP on 80 just redirects.
+  - Idle timeout 3600 s, for ttyd's WebSocket and the App's SSE.
+  - **The default action is a fixed 404.** Two host-header rules, `gaffer.<domain>` and `terminal.<domain>`, each run `authenticate-cognito`, then forward to **one target group, `gaffer-web` on 7682**. ttyd isn't a target at all (see below).
+  - `deletion_protection` is on; access logs go to S3.
+- **Cognito:**
+  - one user pool on the **Essentials** plan (free for up to 10,000 MAU; it adds passkeys and managed login), self-registration off, **MFA required** (TOTP or passkey), and a strong password policy;
+  - one app client for the ALB (authorization-code grant, `openid email`);
+  - managed login on a Cognito domain;
+  - the ALB's `SessionTimeout` set to 12 hours (the default is 7 days);
+  - one user, you. You set your own password and MFA at first sign-in.
+- **The harness verifies the identity itself** when `GAFFER_AUTH=alb` is set (unset on the Mac, where loopback is the boundary).
   - **`gaffer-web`:**
-    - accepts Host and Origin for loopback and for `GAFFER_PUBLIC_ORIGIN` (for example `https://gaffer.tail1234.ts.net`);
-    - requires `Tailscale-User-Login` (the name is configurable, `GAFFER_IDENTITY_HEADER`) to equal `GAFFER_ALLOWED_LOGIN` on every route, the event stream included, and answers 401 otherwise;
-    - trusts the header only from `door`'s address on `front`;
-    - logs at start-up which mode it is in.
-  - **ttyd** runs with `-H Tailscale-User-Login`, and **`gaffer-pi`** refuses to start Pi unless `TTYD_USER` equals `GAFFER_ALLOWED_LOGIN`. A refused terminal shows one line and no Pi.
-  - **The admin report (FR-ADM-02)** is served by `gaffer-web` at `/admin`, read-only, behind the same check. It reads `admin.html` from `/data/admin`.
-- **SSH to the host** listens only on the Tailscale interface (or through Tailscale SSH). Hetzner's Cloud Firewall allows nothing inbound.
+    - verifies `x-amzn-oidc-data` on every request, the event stream included: ES256, the key fetched by `kid` from the region's ALB public-key endpoint and cached, `signer` equal to the ALB's ARN, `exp` in the future;
+    - requires the token's `sub` (or `email`) to equal `GAFFER_ALLOWED_SUB` (or `GAFFER_ALLOWED_EMAIL`), and answers 401 otherwise;
+    - accepts Host and Origin for `GAFFER_PUBLIC_ORIGIN` (`https://gaffer.<domain>`) as well as loopback;
+    - serves `/admin` (FR-ADM-02) behind the same check.
+  - **The terminal goes through the same verification.** `x-amzn-oidc-identity` is an *unsigned* header, and no AWS doc says the ALB strips a client's copy (research 17). So ttyd isn't exposed and never trusts it:
+    - ttyd binds to `127.0.0.1:7681` inside the task.
+    - `gaffer-web` serves `terminal.<domain>`: it verifies `x-amzn-oidc-data` exactly as for the App, then proxies the page and its WebSocket to ttyd on loopback (Node's own `http` upgrade handling, no new dependency).
+    - `gaffer-web` sets `X-Gaffer-User` to the verified `sub`, after deleting any copy the client sent.
+    - ttyd runs with `-H X-Gaffer-User`, and **`gaffer-pi`** refuses to start Pi unless `TTYD_USER` equals the allowed `sub`.
+    - Locally (no `GAFFER_AUTH`), ttyd keeps today's binding and port.
+  - **Only the ALB can reach the harness:** its security group allows inbound 7682 only from the ALB's security group. `gaffer-web` binds to the task's private address, and ttyd to loopback.
+- **`GAFFER_PUBLIC_ORIGIN`, the allowed identity and the ALB's ARN** are CDK outputs passed to the task as environment, not secrets.
 
 ## Consequences
-- **The answer to "do I need a domain?" is no.**
-- **Sign-in is your tailnet login.** A stolen laptop or phone that's still logged in to the tailnet is the residual risk. Mitigate it with your identity provider's two-factor authentication and Tailscale's key expiry, and by removing a lost device in the admin console.
-- **The bind address changes.** Today ttyd and `gaffer-web` bind to the interface with the default route (`harness/egress-ip.mjs`). An internal-only harness has none, and the script exits 1 (checked 2026-10-23, S13's README). In the overlay they bind to the `front` interface, and never to `sandbox_net`.
+- **You need to buy a domain** (about $15 a year for a `.com` in Route 53; research 17). This is the one thing the small-host plan avoided.
+- **Sign-in is Cognito with MFA,** a stronger second factor than relying on a device staying logged in. The ALB's session cookie lasts 12 hours. An open terminal WebSocket can outlive it (the ALB checks only at the handshake); its next reconnect signs in again.
 - **Code changes, all in M2-0:**
-  - three settings in `gaffer-web` and its tests;
-  - the `/admin` route;
-  - a check of `TTYD_USER` in `gaffer-pi`;
-  - the `door` service;
-  - new tests: no header, a wrong header, and a forged header from outside `front` are each refused on every route and on the terminal's WebSocket.
-- **First checks on a real tailnet**, in M2-0 if you create a free tailnet early, otherwise M2-1 step 1:
-  - Does Serve pass the browser's Host and Origin through unchanged? ttyd's `--check-origin` and `gaffer-web` depend on it.
-  - Can 443 and 8443 be served together?
-  - Do WebSocket and SSE run for a whole recommendation without dropping?
-
-  If Serve rewrites Host, `door` restores the public Host from configuration before it forwards.
+  - the JWT verification and settings in `gaffer-web`, with tests using a locally generated ES256 key and a fake `signer`;
+  - `/admin`;
+  - the `TTYD_USER` check in `gaffer-pi`;
+  - a bind address that isn't the default-route interface's when an explicit one is given;
+  - the terminal proxy (the page and WebSocket upgrade to `127.0.0.1:7681`);
+  - the identity tests: no header, a bad signature, a wrong `signer`, an expired token, the wrong user, a forged `x-amzn-oidc-identity` or `X-Gaffer-User`, and the allowed user. Each is checked on every route and on the terminal's WebSocket.
+- **First checks on AWS (M2-1):**
+  - what the ALB does with client-sent `x-amzn-oidc-*` headers (research 17 found no doc). The design doesn't depend on it;
+  - the terminal's WebSocket stays up through the ALB for a whole recommendation;
+  - `--check-origin` sees the public Host (the ALB preserves Host).
 - **ttyd's one-client limit stays.** The terminal page's reconnect message should say "open in another tab" (BUILD.md, Phase 1.1 close, Proposed).
-- **The phone:** the App's phone layout (NFR-A11Y-01) is now reachable on a real phone for the first time.
-- **New requirement NFR-SEC-10**, and NFR-SEC-04 and FR-ADM-02 are reworded (REQUIREMENTS).
+- **The phone:** the App's phone layout (NFR-A11Y-01) is reachable on a real phone for the first time, through the browser, with no app to install.

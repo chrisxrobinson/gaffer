@@ -1,6 +1,6 @@
 # ADR 0004 — Session and recommendation storage: Pi's JSONL session files are the system of record
 
-**Status:** Accepted, amended · **Date:** 2026-09-27 · **Amended 2026-10-23 by** [ADR 0018](0018-data-secrets-backups.md): in Phase 2 the volumes live on the host's disk with encrypted restic backups offsite; the EFS/S3 lines below move to Phase 3 (big cloud).
+**Status:** Accepted, amended · **Date:** 2026-09-27 · **Amended 2026-10-23 by** [ADR 0018](0018-data-secrets-backups.md): Phase 2 uses EFS as below, backed up by AWS Backup (daily, with a monthly copy to `eu-west-1`) in place of "nightly S3 copies".
 
 ## Context
 Gaffer needs four things stored:

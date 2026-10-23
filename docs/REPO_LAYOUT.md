@@ -40,12 +40,10 @@ gaffer/
 │                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013; M1.1-1); models.json only for models the catalogue lacks (none today)
 ├── deploy/
 │   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs, commands.mjs and app.mjs, the NFR-SEC-08, FR-UI-06 and App gates), m1xx/ (each milestone's separate evidence stack)
-│   │                              #   2 (M2-0, ADRs 0016–0019): docker-compose.host.yml (door, egress, internal-only harness, runsc), door/ (Caddyfile),
-│   │                              #   egress/ (squid.conf, the host allowlist), jobs/ (score.sh, snapshot.sh, backup.sh, heartbeat.sh), systemd/ (their
-│   │                              #   timer units), backup/ (restic backup and restore scripts), tests/verify-prod.sh (identity + egress checks)
-│   ├── server/                    #   2 (ADR 0020): setup.sh (one-time host setup: Docker, gVisor, Tailscale + Serve, SSH on the tailnet, unattended-upgrades),
-│   │                              #   deploy.sh and rollback.sh (from the Mac over the tailnet, ADR 0009 tags and windows)
-│   └── aws/                       #   Phase 3 only, if ever: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager (ADR 0006's mapping)
+│   │                              #   2 (M2-0): docker-compose.aws-parity.yml (internal-only harness + the egress proxy, mirroring the AWS subnets; S11, S13)
+│   └── aws/                       #   2 (ADRs 0015–0020): a pnpm workspace package with the CDK app (bin/, lib/: GafferNetwork, GafferData,
+│                                  #   GafferService stacks), test/ (assertions + cdk-nag), egress/ (Squid Dockerfile and squid.conf, the allowlist),
+│                                  #   scripts/ (build-push, deploy, rollback, restore-drill, migrate, verify-aws.sh), deploys.log
 ├── evals/                         # A workspace package: `pnpm eval` (runner/cli.ts)
 │   ├── cases/                     #   30 fixed team×GW cases (*.json); data/: id-free fixtures of Gaffer's own 2026/27 snapshots
 │   ├── build/                     #   extract_live.py (snapshots → cases/data), build_cases.py (cases → gitignored var/evals)
@@ -54,7 +52,7 @@ gaffer/
 ├── tools/                         # Operator scripts, plain node, also in the harness image (/opt/tools)
 │   ├── gaffer-admin/              #   scans /sessions + /data → admin.html
 │   ├── gaffer-eval/               #   post-data_checked live tracker → /data/ledger/outcomes.jsonl
-│   └── gaffer-snapshot/           #   2 (ADR 0019): one shared pre-deadline snapshot with ep_next, inside T−6h..T−1h, once per GW (FR-DAT-10)
+│   └── gaffer-snapshot/           #   2 (ADR 0019): one shared pre-deadline snapshot with ep_next, inside T−6h..T−1h, once per GW (FR-DAT-10); run by EventBridge Scheduler
 ├── .github/workflows/ci.yml       # CI: vitest (with the S1 checks), the Python suites, the stack and `pnpm eval --model faux`
 ├── renovate.json                  # Pi upgrades as one gated pull request (NFR-MNT-02)
 ├── schemas/                       # Exported JSON Schemas (recommendation-1.json) for consumers
@@ -77,7 +75,7 @@ gaffer/
 | `python/` | `gaffer_lib`: the deterministic FPL rules, projections, optimiser wrapper, validator and backtester |
 | `sandbox/` | The no-network Python execution environment and its `sandboxd` exec service |
 | `harness/` | The Pi + Gaffer + ttyd + `gaffer-web` container image (the "brain") |
-| `deploy/` | Compose for local and the Phase 2 host (overlays), server setup and deploy scripts; AWS IaC only if Phase 3 needs it |
+| `deploy/` | Compose for local (and an AWS-parity overlay), and the AWS CDK app with its deploy scripts |
 | `evals/` | LLM-in-the-loop evaluation cases, runner and results |
 | `tools/` | Operator scripts: admin report, live outcome tracker, pre-deadline snapshot |
 | `schemas/` | Published JSON Schemas for machine-readable output |

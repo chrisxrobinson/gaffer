@@ -1,43 +1,62 @@
-# ADR 0018 — Data, secrets and backups on the host; moving the live data off the Mac
+# ADR 0018 — Data, secrets and backups on AWS; moving the live data off the Mac
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Amends:** [ADR 0004](0004-session-storage.md) (its EFS/S3 lines move to Phase 3) · **Evidence:** [research 16](../research/16-operations.md), [spike S14](../../spikes/s14-restic-backup/README.md) · **Requirements:** NFR-REL-04, NFR-PRIV-01, FR-INP-03, FR-EVL-03
+**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Confirms:** [ADR 0004](0004-session-storage.md)'s cloud line (EFS for `/sessions` and `/data`), with AWS Backup in place of "nightly S3 copies" · **Evidence:** [research 17](../research/17-aws.md), [spike S14](../../spikes/s14-restic-backup/README.md) (byte-for-byte restore checks) · **Requirements:** NFR-REL-04, NFR-PRIV-01, FR-INP-03, FR-EVL-03
 
 ## Context
-- **What's live:** Gaffer's data is on two Docker volumes on the Mac. `sessions` holds the Pi JSONL files. `data` holds snapshots, the ledger, `outcomes.jsonl`, users' preferences, exports and the admin report.
-- **The two secrets:** the provider key and `GAFFER_ID_SALT`. Team IDs are HMAC-hashed with the salt at rest (NFR-PRIV-01), so **the salt must move unchanged**. A new salt would orphan every ledger row and preference file from its team.
-- **What ADR 0004 assumed:** EFS with nightly S3 copies, on AWS.
-- **What S14 showed:** restic backs up these volumes and secrets, restores them byte-identical, refuses a wrong password, and leaves no plaintext in the repository.
+- **What's live:** Gaffer's data is on two Docker volumes on the Mac. `sessions` holds Pi's JSONL files. `data` holds snapshots, the ledger, `outcomes.jsonl`, preferences, exports and the admin report.
+- **The secrets:** the provider key and `GAFFER_ID_SALT`. Team IDs are HMAC-hashed with the salt at rest (NFR-PRIV-01), so **the salt must move unchanged**. A new salt would orphan every ledger row and preference file from its team.
+- **Locks on EFS:** Pi writes JSONL by appending, and Gaffer's locks are `O_EXCL` files (ADR 0014), which NFSv4 (EFS) supports.
 
 ## Options considered
-1. **restic to a Hetzner Storage Box (BX11) over SFTP.** **Chosen.** €3.20 a month, encrypted before it leaves the host, one provider.
-2. **restic to Cloudflare R2.** Kept as the alternative. It's free at this size and puts the backups with another provider, which is a one-line repository change if you want the backups off Hetzner.
-3. **Hetzner's server Backups.** Rejected as the backup. They're whole-machine images, at the same provider, can't be restored on the Mac, and their encryption isn't stated.
-4. **Copying the volumes with `rsync` to the Mac.** Rejected. It isn't encrypted at rest, and the Mac would have to be on.
+1. **EFS (Standard, multi-AZ),** encrypted with KMS, with access points per role, and AWS Backup daily plus a copy in another region. **Chosen.** It's a managed filesystem Pi uses unchanged, backups are point-in-time and managed, and at under 1 GB it costs cents.
+2. **EFS One Zone.** Rejected. It saves cents and loses the data if that AZ is lost.
+3. **The Pi session store in S3 or DynamoDB.** Rejected. It would replace Pi's file-based `SessionManager`, which is against the Pi-package thesis and buys nothing at this scale.
+4. **restic to S3, as on the small host.** Rejected. AWS Backup does the same with managed retention and restore, and needs no password kept outside the account.
 
 ## Decision
-- **On the host:**
-  - The two volumes live on the server's disk, as Docker named volumes.
-  - The secrets are files in `deploy/compose/secrets/` (mode 0600, owned by root, the directory 0700), mounted as Compose secrets. That's the existing `init-secrets.sh` layout, with stricter modes on Linux.
-  - The restic password and the Storage Box SSH key sit in `/root/gaffer-backup/` (0600).
-- **Backups:**
-  - **Nightly at 03:30 UTC**, a host timer (ADR 0019) runs `restic/restic:0.19.1` (pinned by digest) over both volumes (read-only) and both secrets, to `sftp:<box>:/gaffer`.
-  - Then `forget --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune`.
-  - **Weekly**, `restic check`.
-  - Each run pings healthchecks.io (ADR 0020).
-- **Restore:** `deploy/compose/backup/restore.sh <snapshot> <project>` restores into a named Compose project's volumes and secrets. It then compares the restored files with the snapshot (restic's own `restore --verify`) and prints `gaffer admin`'s totals.
-- **The restore drill is S14's comparison:** a sha256 over every file, the same on both sides. It runs once in M2-0 (local), once in M2-1 (on the host, after the first real backup) and once in M2-2 (a fresh project).
-- **The password is kept in two places:** on the host, and in your password manager. A backup you can't decrypt is not a backup.
-- **The cutover (M2-1)** moves the live data with this same path:
-  1. Take a restic backup on the Mac (staging the files in a volume, as S14 had to on Docker Desktop).
-  2. Stop the Mac's `gaffer` container.
-  3. Take a final incremental backup.
-  4. Restore on the host with the Mac's salt.
-  5. Check before starting anything: file counts and sha256s match; `gaffer admin`'s totals match; the ledger and `outcomes.jsonl` match byte for byte; and the salt file's sha256 matches.
+- **EFS:**
+  - one encrypted file system (`gaffer`), with mount targets in both private subnets;
+  - automatic backups through AWS Backup;
+  - `PreventDelete`-style protection through a CDK removal policy of `RETAIN`;
+  - **three access points:**
+
+    | Access point | Path | Owner | Mode | Mounted by |
+    |---|---|---|---|---|
+    | `sessions` | `/sessions` | uid/gid 10002 | read-write | harness and job tasks |
+    | `data` | `/data` | uid/gid 10002 | read-write | harness and job tasks |
+    | `data-ro` | `/data` | uid/gid 10001 | read-only | sandbox |
+
+  - **Authorisation on mounts:**
+    - The harness and job task roles may mount `sessions` and `data` read-write, with IAM authorisation and TLS required.
+    - The sandbox has no task role, and EFS IAM authorisation uses the task role (research 17), so its mount can't be authorised by IAM. Instead, the file system policy allows `elasticfilesystem:ClientMount` only (never `ClientWrite`) through the `data-ro` access point, and only from the VPC.
+    - The task definition also mounts it read-only, and the access point's POSIX user (10001) owns nothing.
+- **Secrets Manager:**
+  - two secrets, `gaffer/anthropic-api-key` and `gaffer/id-salt`;
+  - injected into the harness and job containers only, through `secrets` on the task definition;
+  - readable by the task *execution* role only.
+- **AWS Backup:**
+  - a vault, `gaffer`, encrypted with KMS;
+  - a plan with daily backups at 03:30 UTC kept 35 days, and monthly backups kept 12 months;
+  - a monthly copy to the same vault name in `eu-west-1`, kept 12 months;
+  - a vault access policy that denies deleting recovery points, except to an admin role;
+  - backup job failures alarm to your email (ADR 0020).
+- **The secrets aren't in the EFS backups.** Secrets Manager is their system of record. Your copy of the salt, taken at the cutover, goes into your password manager.
+- **The restore drill:** a script restores the latest recovery point to a new EFS file system, mounts it in a one-off task beside the live one, and compares a sha256 manifest over every file (S14's comparison) and `gaffer admin`'s totals. It runs once in M2-1 and again in M2-2.
+- **The cutover (M2-1)** moves the live data:
+  1. On the Mac, stop `gaffer`, then tar both volumes (staged through a volume, as S14 needed on Docker Desktop) with a sha256 manifest.
+  2. Upload the archive to a temporary migration bucket: private, SSE-KMS, with a 7-day lifecycle expiry, and readable only by a one-off migration task's role.
+  3. The migration task (the AWS CLI image) untars into the EFS access points and checks the manifest.
+  4. **You put the salt into Secrets Manager yourself** from the Mac's secret file (`aws secretsmanager put-secret-value … file://…`), along with the provider key. Neither ever passes through the agent.
+  5. Before the service starts, check:
+     - the manifest matches;
+     - `gaffer admin`'s totals match the Mac's;
+     - the ledger and `outcomes.jsonl` match byte for byte;
+     - the salt's sha256 matches the Mac's file.
 
   The Mac's volumes, images and secrets stay, stopped, as the rollback.
 
 ## Consequences
-- **New requirement NFR-REL-04:** encrypted offsite backups with a tested restore.
-- **Losing the server loses at most a day of data.** You'd lose any sessions written since 03:30 UTC, never the ledger's history.
-- **The salt and provider key are in the backup,** inside restic's encryption. Whoever holds the restic password holds them, so the password is treated as a secret of the same rank.
-- **M2-0 adds the backup and restore scripts and their tests,** and a Mac-side backup script that stages files in a volume first.
+- **New requirement NFR-REL-04:** managed backups with a tested restore, including a copy outside the region.
+- **The worst case loses about a day of data:** at most the sessions written since the last daily backup, never the ledger's history. AWS Backup supports point-in-time restore per recovery point, not continuously.
+- **Losing the salt** (deleting the secret) would orphan the ledger's team hashes. The secret has a 30-day recovery window, and you keep the copy in your password manager.
+- **M2-0 adds** the CDK constructs, the restore-drill and migration scripts, and their tests (CDK assertions; the manifest comparison against a local volume).

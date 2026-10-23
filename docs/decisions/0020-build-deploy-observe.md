@@ -1,55 +1,84 @@
-# ADR 0020 — Build, deploy, patch and observe: built on the host, rolled back by tag, watched by a dead-man's switch
+# ADR 0020 — Infrastructure, build, deploy and observe: AWS CDK in TypeScript, ARM images in ECR, alarms to email
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Extends:** [ADR 0009](0009-pi-version-policy.md) (rollback tags and deploy windows) · **Evidence:** [research 16](../research/16-operations.md), [research 13](../research/13-hosting.md) · **Requirements:** NFR-MNT-01, NFR-MNT-04, NFR-REL-04, NFR-LAT-05
+**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Extends:** [ADR 0009](0009-pi-version-policy.md) (rollback and deploy windows) · **Evidence:** [research 17](../research/17-aws.md) · **Requirements:** NFR-MNT-01, NFR-MNT-04, NFR-MNT-06, NFR-OBS-03, NFR-LAT-02, NFR-LAT-05
 
 ## Context
-- **How it's done today:** one machine builds the images (`docker compose up -d --build`), and ADR 0009 keeps the previous images tagged for rollback.
-- **What changes with the host:**
-  - The images may need a different architecture: CAX is arm64, CPX is amd64, and stock decides which (ADR 0015).
-  - Deploys happen remotely.
-  - The host OS needs patching.
-  - You need to hear when the host is down or a job failed, without running a monitoring service.
-- **What's already pinned:** the Dockerfiles pin their base images by digest (multi-arch indexes), and Pi's tree is pinned by lockfile (NFR-MNT-01).
+- **What's pinned today:** the Dockerfiles pin base images by digest (multi-arch indexes), Pi's tree is pinned by lockfile (NFR-MNT-01), and the Mac builds arm64 images natively.
+- **What Phase 2 on AWS needs:**
+  - infrastructure that can be reviewed, tested and recreated;
+  - images in a registry;
+  - deploys and rollbacks that keep ADR 0009's discipline;
+  - a single-writer harness (ADR 0014's session lock, ttyd's tmux), so two harness tasks must never run at once;
+  - alerts for failures, without running a monitoring stack.
+- **What isn't set up:** the repository has CI (`.github/workflows/ci.yml`), but it isn't pushed or enabled yet (NFR-MNT-02, blocked on you since M5).
 
 ## Options considered
-1. **Build on the host** from a `git archive` of the tagged commit, sent over the tailnet. **Chosen.** It's the host's own architecture, with no registry and no credential on the host.
-2. **CI builds multi-arch images and pushes them to a private GHCR package; the host pulls by digest.** Rejected for one host. It needs a pull token on the host, and an amd64 or arm64 build in Actions per release. Kept as the Phase 3 path.
-3. **`docker save | ssh host docker load` from the Mac.** Rejected. Images of 1–2 GB over a home uplink, and amd64 images built under emulation on the Mac.
-4. **Monitoring with a Prometheus or Grafana stack, or an uptime service polling a public URL.** Rejected. It's more services than Gaffer, and there's no public URL to poll.
+1. **AWS CDK v2 in TypeScript,** with `cdk-nag`'s AwsSolutions checks and `aws-cdk-lib/assertions` tests. **Chosen.**
+   - It's the same language and toolchain as the repo (pnpm, vitest).
+   - `cdk synth` and the tests run without AWS credentials, so M2-0 can build and test it all locally.
+   - CloudFormation handles state, drift detection and rollback, with no Terraform state bucket to run.
+2. **Terraform.** Rejected. It's equally professional, but it brings a second language, a state backend and locking to run for one stack. CDK's output is plain CloudFormation, so there's no lock-in.
+3. **Console or CLI by hand.** Rejected: not reviewable, not repeatable.
 
 ## Decision
-- **Server setup** (`deploy/server/setup.sh`, run once by hand over SSH, idempotent):
-  - a non-root admin user;
-  - Docker Engine from Docker's apt repository;
-  - gVisor `runsc` registered with Docker;
-  - Tailscale, and `tailscale serve` for both UIs (ADR 0016);
-  - SSH on the tailnet only;
-  - unattended-upgrades for security updates, with `Automatic-Reboot "true"` at 04:00 UTC;
-  - the systemd units (ADR 0019);
-  - a check that nothing listens on a public address.
+- **The infrastructure as code** lives in `deploy/aws/`, a pnpm workspace package. It has three stacks, all in `eu-west-2`:
 
-  Hetzner's Cloud Firewall (no inbound rules) is set in the console. That's yours.
-- **Deploy** (`deploy/server/deploy.sh <git ref>`, from the Mac over the tailnet, inside an ADR 0009 window):
-  1. `git archive <ref>` is copied to `/srv/gaffer/releases/<ref>`.
-  2. Tag the running images `:pre-<ref>`.
-  3. `docker compose build`.
-  4. `up -d`.
-  5. Wait for both UIs to answer 200 through `door`.
-  6. `verify-prod.sh` (`verify.sh` plus the identity and egress checks).
-  7. Record the ref, the image IDs and the time in `/srv/gaffer/deploys.log`.
+  | Stack | What it holds | Protection |
+  |---|---|---|
+  | `GafferNetwork` | VPC, subnets, endpoints, DNS Firewall | |
+  | `GafferData` | EFS, Secrets Manager, the Backup vault and plan, ECR repositories | termination protection; `RETAIN` removal policies |
+  | `GafferService` | the ECS cluster, task definitions, services, ALB, Cognito, schedules, alarms | |
 
-  **Rollback** (`deploy/server/rollback.sh`): retag `:pre-<ref>` as `:local`, and `up -d` with that release's Compose files. Both scripts refuse to run within 24 hours before a deadline unless `--force` is given, reading the deadline from FPL's `events`.
+  - The versions on 2026-10-23 were `aws-cdk-lib` 2.274.0, the CLI 2.1146.1 and `cdk-nag` 3.0.2 (research 17), pinned exactly as Pi is.
+  - `cdk-nag` AwsSolutions runs in `cdk synth`. Every acknowledged finding (v3's `Validations.of().acknowledge()`) carries its reason in the code.
+  - `aws-cdk-lib/assertions` tests check the security properties: no NAT; the sandbox has no task role and no egress; ECS Exec off; harness `desiredCount` 1 with `maximumPercent` 100 and `minimumHealthyPercent` 0; ALB rules only after `authenticate-cognito`; EFS encrypted; secrets only on the harness and job containers.
+- **Images:**
+  - built on the Mac for `linux/arm64` (Graviton Fargate, the Mac's own architecture, so no emulation) by `deploy/aws/scripts/build-push.sh <git ref>`;
+  - pushed to private ECR repositories (`gaffer-harness`, `gaffer-sandbox`, `gaffer-egress`) with **immutable tags** (the git commit), scan on push, and a lifecycle that keeps the last 10;
+  - task definitions reference images **by digest**;
+  - CI-built images (GitHub Actions with OIDC to an AWS role, no stored keys) are a later step, once NFR-MNT-02's pipeline is enabled.
+- **Deploys** (`deploy/aws/scripts/deploy.sh <git ref>`), from the Mac with your AWS IAM Identity Center (SSO) session, inside an ADR 0009 window:
+  1. `build-push.sh`.
+  2. `cdk diff`, shown to you.
+  3. `cdk deploy GafferService` with the new digests.
+  4. ECS replaces the single harness task (stop, then start, because of the 0/100 settings), with the **deployment circuit breaker and rollback on**.
+  5. Wait until both hostnames answer through the ALB.
+  6. Run `verify-aws.sh`.
+  7. Record the ref, digests and time in `deploys.log` (in the repo's `deploy/aws/`, committed with the BUILD.md section).
+
+  **Rollback** (`rollback.sh <git ref>`) is a `cdk deploy` with an earlier ref's digests. ADR 0009's "previous image kept" holds because ECR keeps them. Both scripts refuse to run within 24 hours before a deadline unless given `--force`, reading the deadline from FPL's `events`.
+- **Access to the account:**
+  - You sign in with IAM Identity Center (SSO) on the Mac, with an admin permission set and MFA.
+  - The agent uses the CLI session you start, and never creates or handles access keys.
+  - No IAM users, no long-lived keys.
+  - The root account has MFA and isn't used.
+- **No shell path:** ECS Exec stays off on every service. A CDK assertion checks it, and nothing grants `ecs:ExecuteCommand`.
+- **Observe:**
+  - CloudWatch Logs for every container (30-day retention).
+  - **CloudWatch alarms to one SNS topic with your email:**
+    - the harness, sandbox or proxy service at 0 running tasks for 5 minutes;
+    - ALB 5xx above 5 in 5 minutes;
+    - the ALB target unhealthy;
+    - a scheduled job failed, or no success in 26 hours (ADR 0019);
+    - an AWS Backup job failed;
+    - **an AWS Budgets alert at your monthly budget** (set in M2-1).
+  - VPC Flow Logs (rejected traffic) on the private subnets, 14 days.
 - **Patching:**
-  - The OS patches itself (security updates, the 04:00 UTC reboot).
-  - Docker Engine and gVisor are upgraded by hand inside a window, then `verify-prod.sh` runs.
-  - Pi and image changes follow ADR 0009 as before.
-- **Alerts:**
-  - healthchecks.io (free; your account), with one check per job (ADR 0019) and a 5-minute heartbeat from a host timer. The heartbeat also curls both UIs through `door` with the allowed identity, so a stack that's down shows up as well as a host that's down.
-  - Alerts go to your email, and optionally to an ntfy topic on your phone.
-- **Latency on the host** (NFR-LAT-05): `verify-prod.sh` records the sandbox's first-command latency after `up -d`, and the golden path's time, in `deploys.log`.
+  - Fargate patches the host.
+  - Base images move by digest through the usual Pi or dependency upgrade path (ADR 0009, Renovate when enabled).
+  - ECR scanning findings at high or critical alarm by email.
+- **Latency on AWS:**
+  - NFR-LAT-02 (re-instated): a harness and sandbox task's start time after a deploy, launch to running.
+  - NFR-LAT-05: the sandbox's first command, and the golden path's time on Graviton.
+
+  `verify-aws.sh` records both in `deploys.log`.
 
 ## Consequences
-- **The host needs outbound access while building** (Docker Hub, npm, PyPI, GitHub for the solver pin), as the Mac does. The harness's egress allowlist doesn't apply to the host.
-- **There's no registry,** so a second host would build its own images. Fine for Phase 2; Phase 3 revisits it (option 2).
-- **The only standing third-party service is healthchecks.io.** It sees ping times and exit codes, never content.
-- **`deploys.log` and the job lines** give M2-2 its record of restarts and failures (ADR 0011's T3).
+- **New requirement NFR-MNT-06:** the infrastructure is code, it passes `cdk-nag` and its assertion tests in CI without credentials, and a deploy is a reviewed `cdk diff`.
+- **Deploys cause a brief outage** (about a minute while the single harness task is replaced). It's accepted, and it's why deploys stay in ADR 0009's windows.
+- **`deploys.log` and the alarms' history** give M2-2 its record of restarts (ADR 0011's T3).
+- **What you do:**
+  - create the AWS account (or use an existing one), with IAM Identity Center and MFA;
+  - run `aws sso login` when the agent asks;
+  - approve each `cdk diff`;
+  - set the budget figure.
