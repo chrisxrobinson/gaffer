@@ -1,0 +1,46 @@
+Unable to find image 'alpine:3.24' locally
+3.24: Pulling from library/alpine
+d3531b7a4f21: Pulling fs layer
+d3531b7a4f21: Download complete
+Digest: sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+Status: Downloaded newer image for alpine:3.24
+created restic repository aeb4254e73 at /repo
+
+Please note that knowledge of your password is required to access
+the repository. Losing your password means that your data is
+irrecoverably lost.
+no parent snapshot found, will read all files
+
+Files:        2264 new,     0 changed,     0 unmodified
+Dirs:          850 new,     0 changed,     0 unmodified
+Added to the repository: 55.657 MiB (5.529 MiB stored)
+
+processed 2264 files, 207.166 MiB in 0:00
+snapshot 30789079 saved
+ID        Time                 Host    Tags    Size
+----------------------------------------------------------
+30789079  2026-10-23 19:08:35  gaffer          207.166 MiB
+----------------------------------------------------------
+Timestamps shown in UTC
+1 snapshots
+restoring snapshot 30789079 of [/src] at 2026-10-23 19:08:35.33544188 +0000 UTC by root@gaffer to /dst
+Summary: Restored 3111 / 3110 files/dirs (207.166 MiB / 207.166 MiB) in 0:00
+--- compare (sha256 of every file, sorted)
+sessions: 0206dabdf986f6fac2b3d3d91ff229920ae19101da05c7a0081bff0e5a923f4c  - vs 0206dabdf986f6fac2b3d3d91ff229920ae19101da05c7a0081bff0e5a923f4c  -
+data:     4b9b40a6e28465f65ac39ec0350358bb2780c67c3b802676ce987864b67a71a8  - vs 4b9b40a6e28465f65ac39ec0350358bb2780c67c3b802676ce987864b67a71a8  -
+secrets:  730d48991002cf47a4afc7de28cedaa98811da06da99de52833d4d9b1c6f40ac  - vs 730d48991002cf47a4afc7de28cedaa98811da06da99de52833d4d9b1c6f40ac  -
+files:    136 sessions files
+--- wrong password
+Fatal: wrong password or no key found
+--- what the storage holds (no names or contents)
+config
+data
+index
+keys
+locks
+snapshots
+2
+0
+6.6M	/repo
+files containing "sessions": 0
+files containing "gaffer.recommendation": 0

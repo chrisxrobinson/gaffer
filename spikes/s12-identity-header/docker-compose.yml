@@ -1,0 +1,25 @@
+# S12 spike: identity from a front door, checked by ttyd (-H) and by gaffer-web as it is today.
+name: s12-identity
+services:
+  door:
+    image: caddy:2.10-alpine
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro"]
+    ports: ["127.0.0.1:17699:8080"]
+    networks: [front]
+  harness:
+    image: gaffer-harness:local
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        mkdir -p /tmp/s /tmp/d
+        node /opt/packages/gaffer-web/server.ts --host 0.0.0.0 --port 7682 --sessions /tmp/s --data /tmp/d &
+        exec ttyd --port 7681 --writable --check-origin -H Tailscale-User-Login sh -c 'echo "user=$$TTYD_USER"; sleep 30'
+    networks: [front]
+  outsider:
+    # Something else on another network: it must not reach the harness at all.
+    image: gaffer-harness:local
+    entrypoint: ["sleep", "infinity"]
+    networks: [other]
+networks:
+  front: {}
+  other: {}

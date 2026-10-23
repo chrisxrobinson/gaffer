@@ -1,0 +1,19 @@
+# S11 spike: the harness image on an internal-only network; squid on both, allowlisting by hostname.
+name: s11-egress
+services:
+  proxy:
+    image: ubuntu/squid:6.6-24.04_edge
+    volumes: ["./squid.conf:/etc/squid/squid.conf:ro"]
+    networks: [inside, outside]
+  client:
+    image: gaffer-harness:local
+    entrypoint: ["sleep", "infinity"]
+    environment:
+      NODE_USE_ENV_PROXY: "1"
+      HTTPS_PROXY: http://proxy:3128
+      HTTP_PROXY: http://proxy:3128
+      NO_PROXY: localhost,127.0.0.1,sandbox
+    networks: [inside]
+networks:
+  inside: { internal: true }
+  outside: {}

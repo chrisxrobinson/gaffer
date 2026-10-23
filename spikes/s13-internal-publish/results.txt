@@ -1,0 +1,4 @@
+Docker Engine 27.3.1
+internal only, published 127.0.0.1:17698 -> no answer (exit 7)
+
+internal + front, published 127.0.0.1:17697 -> s13 ok via front network

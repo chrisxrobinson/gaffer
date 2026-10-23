@@ -1,0 +1,14 @@
+== through the front door (header set by the door)
+App page /           : 200
+App page, loopback Host: 200
+App page, tailnet Host : {"error":"wrong host"} 421
+terminal /terminal/  : 200
+== straight to the harness, no door (from the door's network, as a forger would need to be)
+ttyd without header  :   HTTP/1.1 407 Proxy Auth Required
+ttyd with header     :   HTTP/1.1 200 OK
+gaffer-web no header :   HTTP/1.1 421 Misdirected Request
+== from another network
+outsider -> harness  : failed, ENOTFOUND
+== client-sent header is replaced by the door
+through the door: user=owner@example.com
+through the door, client also sends a forged header: user=owner@example.com

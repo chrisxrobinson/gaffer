@@ -1,0 +1,14 @@
+# S12: a stand-in front door. It sets the identity header the way Tailscale Serve or an auth proxy would,
+# replacing anything the client sent, and is the only route to ttyd and gaffer-web.
+:8080 {
+	handle_path /terminal* {
+		reverse_proxy harness:7681 {
+			header_up Tailscale-User-Login "owner@example.com"
+		}
+	}
+	handle {
+		reverse_proxy harness:7682 {
+			header_up Tailscale-User-Login "owner@example.com"
+		}
+	}
+}

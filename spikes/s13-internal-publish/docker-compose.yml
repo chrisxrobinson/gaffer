@@ -1,0 +1,17 @@
+# S13: can a container whose only network is internal still have a port published on the host's 127.0.0.1?
+name: s13-publish
+services:
+  web:
+    image: caddy:2.10-alpine
+    command: ["caddy", "respond", "--listen", ":8080", "s13 ok"]
+    ports: ["127.0.0.1:17698:8080"]
+    networks: [inside]
+  web2:
+    # The same with a second, ordinary network that has no route to the internet beyond Docker's default.
+    image: caddy:2.10-alpine
+    command: ["caddy", "respond", "--listen", ":8080", "s13 ok via front network"]
+    ports: ["127.0.0.1:17697:8080"]
+    networks: [inside, front]
+networks:
+  inside: { internal: true }
+  front: {}

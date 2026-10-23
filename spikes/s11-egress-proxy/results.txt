@@ -1,0 +1,21 @@
+allowed: FPL bootstrap: HTTP 200 (97 ms)
+allowed: Anthropic (no key: 401 expected): HTTP 401 (207 ms)
+allowed: football-data (apex, as odds.ts): HTTP 200 (168 ms)
+refused: example.com: failed, 0 (9 ms)
+refused: an IP literal (FPL's Fastly): failed, 0 (4 ms)
+refused: www.football-data.co.uk (not in the code): failed, 0 (3 ms)
+refused: plain http: failed, 0 (2 ms)
+refused: allowed name on port 8443: failed, 0 (2 ms)
+--- direct, without the proxy env:
+example.com: failed, EAI_AGAIN
+raw TCP to 140.248.134.133:443: failed, ENETUNREACH
+--- squid access log:
+TCP_DENIED/403 CONNECT example.com:443
+TCP_DENIED/403 CONNECT 140.248.134.133:443
+TCP_DENIED/403 CONNECT www.football-data.co.uk:443
+TCP_DENIED/403 CONNECT example.com:80
+TCP_DENIED/403 CONNECT fantasy.premierleague.com:8443
+TCP_TUNNEL/200 CONNECT api.anthropic.com:443
+TCP_TUNNEL/200 CONNECT football-data.co.uk:443
+TCP_TUNNEL/200 CONNECT fantasy.premierleague.com:443
+TCP_TUNNEL/200 CONNECT fantasy.premierleague.com:443
