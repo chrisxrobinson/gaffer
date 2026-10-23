@@ -1,6 +1,6 @@
 # ADR 0017 — Egress allowlist: no route out for the harness except a Squid proxy service
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Implements:** [ADR 0013](0013-gaffer-terminal.md)'s "the harness egress allowlist becomes required" · **Evidence:** [research 15](../research/15-egress-allowlist.md), [research 17](../research/17-aws.md), [spike S11](../../spikes/s11-egress-proxy/README.md) · **Requirements:** NFR-SEC-11, NFR-PRIV-02, NFR-SEC-09
+**Status:** Accepted (2026-10-23, with the ~$183/month budget) · **Date:** 2026-10-23 · **Implements:** [ADR 0013](0013-gaffer-terminal.md)'s "the harness egress allowlist becomes required" · **Evidence:** [research 15](../research/15-egress-allowlist.md), [research 17](../research/17-aws.md), [spike S11](../../spikes/s11-egress-proxy/README.md) · **Requirements:** NFR-SEC-11, NFR-PRIV-02, NFR-SEC-09
 
 ## Context
 - **Why it's required:** ADR 0013 made a harness egress allowlist required for Phase 2, as the one hard guarantee against future Pi features that reach out. The harness needs three hosts:

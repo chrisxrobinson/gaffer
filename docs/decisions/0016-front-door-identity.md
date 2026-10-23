@@ -1,6 +1,6 @@
 # ADR 0016 — Front door and identity: an ALB with Cognito, the identity verified again in the harness
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Refines:** [ADR 0005](0005-web-tui.md)'s cloud line (ALB OIDC, `-H X-Amzn-Oidc-Identity`, idle timeout 3600 s) · **Evidence:** [research 17](../research/17-aws.md), [research 14](../research/14-front-door-identity.md) (alternatives), [spike S12](../../spikes/s12-identity-header/README.md) · **Requirements:** NFR-SEC-04, NFR-SEC-10, FR-ADM-02, NFR-A11Y-01 (phone)
+**Status:** Accepted (2026-10-23, with the ~$183/month budget) · **Date:** 2026-10-23 · **Refines:** [ADR 0005](0005-web-tui.md)'s cloud line (ALB OIDC, `-H X-Amzn-Oidc-Identity`, idle timeout 3600 s) · **Evidence:** [research 17](../research/17-aws.md), [research 14](../research/14-front-door-identity.md) (alternatives), [spike S12](../../spikes/s12-identity-header/README.md) · **Requirements:** NFR-SEC-04, NFR-SEC-10, FR-ADM-02, NFR-A11Y-01 (phone)
 
 ## Context
 - **What you need:** both UIs on the internet over HTTPS, from your laptop and your phone, with only you getting in. ADR 0005 already planned an ALB with OIDC for the cloud.

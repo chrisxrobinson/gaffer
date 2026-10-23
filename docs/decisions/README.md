@@ -16,12 +16,12 @@
 | [0012](0012-builtins-locked-off.md) | Codemode, MCP, tool search and llama.cpp: off, locked by flag and setting | Accepted |
 | [0013](0013-gaffer-terminal.md) | Gaffer Terminal: Gaffer's identity and command surface on the Pi TUI | Accepted (egress line implemented by 0017) |
 | [0014](0014-gaffer-app.md) | Gaffer App: a local web app over `pi --mode rpc`, sharing one session store with the terminal | Accepted |
-| [0015](0015-host.md) | Phase 2 compute and cost: Fargate ARM64 in eu-west-2, an always-on harness and sandbox | Proposed |
-| [0016](0016-front-door-identity.md) | Front door and identity: an ALB with Cognito, the identity verified again in the harness | Proposed |
-| [0017](0017-egress-allowlist.md) | Egress allowlist: no route out for the harness except a Squid proxy service | Proposed |
-| [0018](0018-data-secrets-backups.md) | Data, secrets and backups on AWS; moving the live data off the Mac | Proposed |
-| [0019](0019-scheduler.md) | Scheduler: EventBridge Scheduler runs one-off Fargate tasks from the harness image | Proposed |
-| [0020](0020-build-deploy-observe.md) | Infrastructure, build, deploy and observe: AWS CDK in TypeScript, ARM images in ECR, alarms to email | Proposed |
+| [0015](0015-host.md) | Phase 2 compute and cost: Fargate ARM64 in eu-west-2, an always-on harness and sandbox | Accepted |
+| [0016](0016-front-door-identity.md) | Front door and identity: an ALB with Cognito, the identity verified again in the harness | Accepted |
+| [0017](0017-egress-allowlist.md) | Egress allowlist: no route out for the harness except a Squid proxy service | Accepted |
+| [0018](0018-data-secrets-backups.md) | Data, secrets and backups on AWS; moving the live data off the Mac | Accepted |
+| [0019](0019-scheduler.md) | Scheduler: EventBridge Scheduler runs one-off Fargate tasks from the harness image | Accepted |
+| [0020](0020-build-deploy-observe.md) | Infrastructure, build, deploy and observe: AWS CDK in TypeScript, ARM images in ECR, alarms to email | Accepted |
 
 Format: context, options considered, decision, consequences. Evidence links point to `docs/research/` and `spikes/`.
 

@@ -1,6 +1,6 @@
 # ADR 0019 — Scheduler: EventBridge Scheduler runs one-off Fargate tasks from the harness image
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Settles:** the open M3 and M5 question of what runs `gaffer-eval` and FR-DAT-10's pre-deadline snapshot · **Evidence:** [research 17](../research/17-aws.md), [research 16](../research/16-operations.md) (the single-host alternatives) · **Requirements:** FR-EVL-03, FR-DAT-10, NFR-OBS-03
+**Status:** Accepted (2026-10-23, with the ~$183/month budget) · **Date:** 2026-10-23 · **Settles:** the open M3 and M5 question of what runs `gaffer-eval` and FR-DAT-10's pre-deadline snapshot · **Evidence:** [research 17](../research/17-aws.md), [research 16](../research/16-operations.md) (the single-host alternatives) · **Requirements:** FR-EVL-03, FR-DAT-10, NFR-OBS-03
 
 ## Context
 - **Nothing scheduled exists yet:** since M3 and M5, nothing has run `gaffer-eval` after a GW is data-checked (GW7 was scored by hand on 2026-10-23), and nothing takes a pre-deadline snapshot in a week when Gaffer isn't opened (FR-DAT-10).

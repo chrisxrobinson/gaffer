@@ -1,6 +1,6 @@
 # ADR 0020 — Infrastructure, build, deploy and observe: AWS CDK in TypeScript, ARM images in ECR, alarms to email
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Extends:** [ADR 0009](0009-pi-version-policy.md) (rollback and deploy windows) · **Evidence:** [research 17](../research/17-aws.md) · **Requirements:** NFR-MNT-01, NFR-MNT-04, NFR-MNT-06, NFR-OBS-03, NFR-LAT-02, NFR-LAT-05
+**Status:** Accepted (2026-10-23, with the ~$183/month budget) · **Date:** 2026-10-23 · **Extends:** [ADR 0009](0009-pi-version-policy.md) (rollback and deploy windows) · **Evidence:** [research 17](../research/17-aws.md) · **Requirements:** NFR-MNT-01, NFR-MNT-04, NFR-MNT-06, NFR-OBS-03, NFR-LAT-02, NFR-LAT-05
 
 ## Context
 - **What's pinned today:** the Dockerfiles pin base images by digest (multi-arch indexes), Pi's tree is pinned by lockfile (NFR-MNT-01), and the Mac builds arm64 images natively.

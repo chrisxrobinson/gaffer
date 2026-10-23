@@ -19,7 +19,7 @@ Branch `phase-2-plan`, cut from `phase-2-prompts` (`phase-1.1-close` and `phase-
 - [x] S14 restic: byte-identical restore, wrong password refused, no plaintext.
 - [ ] gVisor on ARM64: **not spiked**. Docker Desktop's VM can't take `runsc` without changing the Mac's Docker setup. Desk-checked (gVisor's docs: x86_64 and ARM64) and checked on the server in M2-1 step 1.
 
-## Decisions (ADRs, status Proposed)
+## Decisions (the small-host ADRs, superseded by the AWS versions below)
 - [x] D1 host → ADR 0015: Hetzner, the same Compose file, CAX21, then CPX22, then CAX11, by stock.
 - [x] D2 front door → ADR 0016: Tailscale Serve on the host, `door`, identity re-checked in `gaffer-web` and `gaffer-pi`. No domain.
 - [x] D3 egress → ADR 0017: internal-only harness and a Squid allowlist; Node ≥ 24.22.
@@ -53,7 +53,7 @@ Branch `phase-2-plan`, cut from `phase-2-prompts` (`phase-1.1-close` and `phase-
 ## Re-planned on AWS (your instruction, 2026-10-23: "change it to use AWS - keep it professional")
 - [x] R17 AWS facts and prices (subagent; key behaviours checked against AWS docs it cited) → `docs/research/17-aws.md`. About $183 a month before VAT for the ARM64, NAT-free design.
 - [x] Research 13–16 kept as the evidence for the small-host alternative, each with a status line. S11–S13 still apply: the egress pattern, the harness-side identity, and the bind address.
-- [x] ADRs 0015–0020 rewritten for AWS (still Proposed; the small-host versions are in git history at `46393af`):
+- [x] ADRs 0015–0020 rewritten for AWS (**Accepted 2026-10-23**, with the ~$183/month budget; the small-host versions are in git history at `46393af`):
   - 0015: Fargate ARM64, always-on harness and sandbox;
   - 0016: ALB, Cognito Essentials and MFA, `gaffer-web` verifying `x-amzn-oidc-data` and fronting ttyd;
   - 0017: no NAT, a Squid service, endpoints, DNS Firewall;
@@ -76,7 +76,7 @@ Branch `phase-2-plan`, cut from `phase-2-prompts` (`phase-1.1-close` and `phase-
 - [x] **You need a domain** for the ALB's certificate and Cognito's callback: `.com` is $16 a year in Route 53.
 
 ## Blocked on you (for the build, not this plan)
-- [ ] Review the six Proposed ADRs (0015–0020, the AWS versions); accept them or change them. The budget is about $183 a month before VAT.
+- [x] ADRs 0015–0020 (AWS) and the ~$183/month budget: accepted by you on 2026-10-23.
 - [ ] For M2-1:
   - an AWS account with IAM Identity Center and MFA (root MFA too);
   - a domain registered in Route 53 (or one you move there);

@@ -1,6 +1,6 @@
 # ADR 0018 — Data, secrets and backups on AWS; moving the live data off the Mac
 
-**Status:** Proposed (Phase 2 plan, for your review) · **Date:** 2026-10-23 · **Confirms:** [ADR 0004](0004-session-storage.md)'s cloud line (EFS for `/sessions` and `/data`), with AWS Backup in place of "nightly S3 copies" · **Evidence:** [research 17](../research/17-aws.md), [spike S14](../../spikes/s14-restic-backup/README.md) (byte-for-byte restore checks) · **Requirements:** NFR-REL-04, NFR-PRIV-01, FR-INP-03, FR-EVL-03
+**Status:** Accepted (2026-10-23, with the ~$183/month budget) · **Date:** 2026-10-23 · **Confirms:** [ADR 0004](0004-session-storage.md)'s cloud line (EFS for `/sessions` and `/data`), with AWS Backup in place of "nightly S3 copies" · **Evidence:** [research 17](../research/17-aws.md), [spike S14](../../spikes/s14-restic-backup/README.md) (byte-for-byte restore checks) · **Requirements:** NFR-REL-04, NFR-PRIV-01, FR-INP-03, FR-EVL-03
 
 ## Context
 - **What's live:** Gaffer's data is on two Docker volumes on the Mac. `sessions` holds Pi's JSONL files. `data` holds snapshots, the ledger, `outcomes.jsonl`, preferences, exports and the admin report.
