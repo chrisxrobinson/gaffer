@@ -1,15 +1,13 @@
 # Project Gaffer — Build Brief: Phase 2, Milestone M2-2 (operating it, and the Phase 2 exit)
 
-> Drafted before the Phase 2 plan. **Where this brief and the Phase 2 ADRs (0015 onwards) or ROADMAP's Phase 2 exit disagree, they win.** The planning run edits this brief to match them.
-
 ## Where we are
 
-Gaffer is a Fantasy Premier League agent built as a Pi package on `@earendil-works/pi-coding-agent` 1.3.0. Since M2-1 it has run on the host chosen in ADR 0015:
-- behind the front door and sign-in from ADR 0016;
-- with the egress allowlist from ADR 0017;
-- with encrypted offsite backups (ADR 0018);
-- with the scheduler for `gaffer-eval` and the pre-deadline snapshot (ADR 0019);
-- with the deploy and rollback scripts from ADR 0020.
+Gaffer is a Fantasy Premier League agent built as a Pi package on `@earendil-works/pi-coding-agent` 1.3.0. Since M2-1 it has run on one Hetzner server (ADR 0015):
+- reached only through Tailscale Serve, with my identity checked again in `gaffer-web` and `gaffer-pi` (ADR 0016);
+- with the harness's egress limited to Anthropic, FPL and football-data by the `egress` proxy (ADR 0017);
+- with nightly restic backups to a Storage Box (ADR 0018);
+- with systemd timers for `gaffer-eval`, `gaffer-snapshot`, the backup and a heartbeat, each pinging healthchecks.io (ADR 0019);
+- with `deploy.sh` and `rollback.sh`, which log to `deploys.log` (ADR 0020).
 
 My Mac's old stack is stopped and kept as a rollback. BUILD.md's M2-0 and M2-1 sections have the evidence.
 
@@ -29,7 +27,7 @@ This milestone's BUILD.md section takes the same form as the others.
 
 Work on a new branch, `build-m2-2`, cut from `main`. Commit at sensible points. Don't push, open a PR or merge; I'll review the branch.
 
-1. **Read the record.** From the host's session store, ledger, scheduler log, backup log and the admin report, over every GW since the cutover:
+1. **Read the record.** From the host's session store, the ledger, `outcomes.jsonl`, `/data/admin/jobs.jsonl`, `deploys.log`, the systemd journal, healthchecks.io's history (which I'll export for you) and the admin report, over every GW since the cutover:
    - which GWs had a recommendation before the deadline;
    - which were scored, and when (automatically, by the scheduler, or by hand);
    - the cost per recommendation against NFR-COST-01;
@@ -37,13 +35,13 @@ Work on a new branch, `build-m2-2`, cut from `main`. Commit at sensible points. 
    - errors;
    - every restart of either container, and the runs it interrupted. The interrupted share is ADR 0011's trigger T3: if it's 5% or more, say so plainly.
 2. **Recovery drills,** each scripted where possible and recorded:
-   - **Restore from offsite:** the latest real backup restores into a fresh project. There, `gaffer admin`'s totals, the ledger and `outcomes.jsonl` match the live host's at the backup's time, and a restored session opens in both UIs. If a fresh server is needed for this, it's my call (it costs money); otherwise use a scratch project on the host or this Mac.
+   - **Restore from offsite:** the latest real backup restores into a fresh project (`deploy/compose/backup/restore.sh`). There, `gaffer admin`'s totals, the ledger and `outcomes.jsonl` match the live host's at the backup's time, and a restored session opens in both UIs. If a fresh server is needed for this, it's my call (it costs money); otherwise use a scratch project on the host or this Mac.
    - **Rollback:** the rollback script takes the host to the previous image and back, with sessions kept, inside an ADR 0009 window.
    - **Patch and reboot:** a host OS update and reboot, inside a window. Gaffer comes back on its own, the terminal resumes the newest session, and the scheduler and backup timers are still armed.
    - **Egress and identity, re-run on the host:** the M2-0 checks, unchanged, plus a tcpdump during one scripted App run.
 3. **Costs:** the real monthly cost (host, storage, backups, bandwidth, and the domain and sign-in if any), from what you can read and what I give you. Compare it with ADR 0015's estimate, and give the model spend over the same period from Pi's own figures.
-4. **The big-cloud mapping (NFR-PORT-02, or the ID ADR 0015 gave it).** Bring ADR 0006's AWS mapping, and research 06, up to date with what Phase 2 actually runs: each service, volume, secret, scheduled job, the front door and the egress allowlist, and where each one goes on AWS (and, briefly, on one other big cloud). This is a document, not a deploy.
-5. **The Phase 1 exit, if it's still open.** Check `outcomes.jsonl` for three consecutive live GWs scored. If they're there, close Phase 1 in ROADMAP and README; if not, write down exactly which GWs are missing and why.
+4. **The big-cloud mapping (NFR-PORT-02).** Bring ADR 0006's AWS mapping, and ARCHITECTURE §8's AWS column, up to date with what Phase 2 actually runs: `door`, `egress`, the harness, the sandbox, each volume and secret, each timer, Tailscale Serve and the identity check, and where each one goes on AWS (and, briefly, on one other big cloud). This is a document, not a deploy.
+5. **The Phase 1 exit, if it's still open.** Check `outcomes.jsonl` for three consecutive live GWs scored (GW7 is scored; GW8 onwards should have been scored by the timer). If they're there, close Phase 1 in ROADMAP and README; if not, write down exactly which GWs are missing and why.
 6. **Docs:**
    - BUILD.md's M2-2 section in the usual form, including the record above, each drill with its evidence, Blocked on you, Discovered and Proposed;
    - ROADMAP's Phase 2 exit updated item by item;
