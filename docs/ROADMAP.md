@@ -1,6 +1,6 @@
 # Gaffer — Roadmap
 
-**Date:** 2026-09-27, updated 2026-10-18 (Phase 1.1 added; Phases 2 and 3 revised). Each phase lists its scope and **exit criteria**. Exit criteria refer to [REQUIREMENTS](REQUIREMENTS.md) IDs and must all pass before the next phase starts. Timing follows the FPL calendar, checked live on 2026-10-17: GW8's deadline is 2026-10-23 17:30Z, GW9's 2026-10-31 11:00Z, GW10's 2026-11-06 18:30Z, then an international break to GW11 (2026-11-21 11:00Z), GW12 2026-11-27, GW13 2026-12-02; first-half chips expire at the GW19 deadline (2027-01-01 18:30Z); blanks and doubles historically fall in GW29–37.
+**Date:** 2026-09-27, updated 2026-10-18 (Phase 1.1 added; Phases 2 and 3 revised) and 2026-10-23 (Phase 1.1 deployed). Each phase lists its scope and **exit criteria**. Exit criteria refer to [REQUIREMENTS](REQUIREMENTS.md) IDs and must all pass before the next phase starts. Timing follows the FPL calendar, checked live on 2026-10-17: GW8's deadline is 2026-10-23 17:30Z, GW9's 2026-10-31 11:00Z, GW10's 2026-11-06 18:30Z, then an international break to GW11 (2026-11-21 11:00Z), GW12 2026-11-27, GW13 2026-12-02; first-half chips expire at the GW19 deadline (2027-01-01 18:30Z); blanks and doubles historically fall in GW29–37.
 
 ## Phase 0 — Research & architecture ✅ (this run)
 - **Scope:** research notes 01–06, spike S1, ADRs 0001–0008, ARCHITECTURE, REQUIREMENTS, ROADMAP, REPO_LAYOUT.
@@ -65,11 +65,14 @@ Runs on one machine with `docker compose up`, then `http://127.0.0.1:7681`. It h
 
 **Status on 2026-10-17:** M1–M5 are built and merged. The Phase 1 exit is **not yet met**: the ledger holds five real GW7 recommendations and no scored outcome. GW7 is scored once FPL checks it (about 2026-10-21); recommendations are still needed for GW8 and GW9, so the earliest close is GW9's data check, about 2026-11-04. Phase 1.1 runs alongside and must not interrupt it.
 
+**Status on 2026-10-23:** the Phase 1 exit is still **not met**. **GW7 is scored**: `gaffer-eval` wrote its five real recommendations to `outcomes.jsonl`. **GW8** has one real recommendation, made before the deadline, and is scored once FPL checks GW8 (about 2026-10-28). **GW9** still needs a recommendation before 2026-10-31 11:00Z. The earliest close is GW9's data check, about 2026-11-04, if `gaffer-eval` is run after each check ([BUILD.md](../BUILD.md#phase-1-exit-three-consecutive-live-gws-scored)).
+
 ## Phase 1.1 — Pi 1.x and Gaffer's own UIs (single user, local)
 A short phase between the local MVP and the cloud. It brings Gaffer onto Pi 1.3.0 with every new built-in locked off, makes the browser terminal Gaffer's own, and adds the Gaffer App, a structured web app over the same agent and session store. Design: [ADRs 0009–0014](decisions/README.md), [docs/ui](ui/README.md), [MIGRATION-PI-1X](MIGRATION-PI-1X.md), research 07–12.
 
 **Rules for every milestone** (ADR 0009):
 - Each milestone leaves a working Gaffer and lands in the 48 hours after a GW deadline, never in the 48 hours before one. The previous harness image stays tagged for rollback until the next milestone lands.
+  - **Waived on 2026-10-23, for one deploy:** M1.1-1 to M1.1-4 went live together at 15:40Z, 1 h 49 min before the GW8 deadline, with the M1.1-0 images tagged `:pre-phase-1.1` for rollback ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
 - Security can only stay the same or get stronger: no user shell; the sandbox has no network and no secrets; the LLM key stays in the harness; team IDs are hashed at rest; every new built-in is off unless an ADR turns it on.
 - Each milestone's exit includes the regression set: `pnpm test` (with the S1 checks), the sandboxd and `gaffer_lib` suites, `verify.sh`, `pnpm eval --model faux` (30/30 valid, points equal to G0).
 
@@ -83,6 +86,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
 - **Exit:** NFR-COST-04, NFR-COST-05; three real-model cases including one follow-up (the follow-up's cache-read share ≥ 80%); the regression set.
 
 ### M1.1-1 — Pi 1.3.0, locked down (deploy 2026-10-23 17:30Z – 10-25 17:30Z, between the GW8 and GW9 deadlines)
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
 - **Scope:**
   - MIGRATION-PI-1X steps 1–5: versions, `test/recommend.test.ts`, the harness image's Pi install from a committed lockfile (`npm ci`), drop the `models.json` override for Sonnet 5.5, docs and keys (`Ctrl+Home`/`Ctrl+End`)
   - ADR 0012's lock in the same change: `--no-mcp` on every CLI launch, `-builtin:` entries for MCP, codemode, tool search and llama.cpp in `settings.json`, the `--tools` allowlist kept
@@ -92,6 +96,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
 - **Exit:** NFR-MNT-01 (whole Pi tree pinned), NFR-MNT-04, NFR-MNT-05, NFR-SEC-08; the regression set on 1.3.0; ≥ 5 real-model Sonnet 5.5 cases including a follow-up, with cost per recommendation within NFR-COST-01 and no rise against M1.1-0; a TUI check in the browser (reasoning shown, recommendation at 100 columns, FR-OUT-02).
 
 ### M1.1-2 — Gaffer Terminal (deploy after the GW9 deadline, 2026-10-31 11:00Z – 11-02, before GW10)
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
 - **Scope** (ADR 0013, docs/ui §3):
   - header with the mark and ASCII wordmark; two-line footer (status strip with live countdown; spend and model); title
   - `gaffer-dark` and `gaffer-light` themes and the matching ttyd palette
@@ -101,6 +106,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
 
 ### M1.1-3 — Gaffer App: recommend (international break, 2026-11-07 – 11-19; GW11 deadline 2026-11-21)
 The break is the longest gap between deadlines this autumn, so the largest change lands here.
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
 - **Scope** (ADR 0014, docs/ui §4–8):
   - `gaffer-web` in the harness container: RPC process per open session, the command allowlist, SSE with replay, the Origin check, `--replay` dev mode
   - in Gaffer's package: the session lock and the run lock; `/run {json}` and `gaffer.run`; the plan-step tag; golden-path progress lines
@@ -109,14 +115,19 @@ The break is the longest gap between deadlines this autumn, so the largest chang
 - **Exit:** FR-UI-08 (*Recommend*), FR-UI-09, FR-UI-10, FR-UI-11, FR-UI-12; NFR-SEC-05, NFR-SEC-07, NFR-REL-03, NFR-LAT-04; NFR-PRIV-02 re-run with the App open (no third-party request).
 
 ### M1.1-4 — Gaffer App: complete (by the GW13 deadline, 2026-12-02)
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
 - **Scope:** the *What-if*, *Explain a pick*, *Chip planner* (with a new template), *Scorecard* and *Preferences* actions; the follow-up box; every state in docs/ui §6; rename; the phone layout; accessibility.
 - **Exit:** FR-UI-08 (all actions), FR-UI-13, NFR-A11Y-01, NFR-COST-04 measured through the App.
 
 ### Phase 1.1 exit
 - All milestone exits above.
+  - **Status 2026-10-23: met on the live stack.** The regression set passed after the deploy (`verify.sh` run 2 exit 0; faux eval 31/31, points equal to G0, p50 52.9 s, p95 59.6 s), and so did NFR-PRIV-02 with the App open. The two real-model runs M1.1-4 left (the *Chip planner* in the App, `/chips` in the terminal) are done. Six requirement and ADR wording decisions are still open with you (NFR-LAT-04, FR-UI-10, FR-UI-08, FR-UI-13, ADR 0014 item 4, NFR-MNT-04), as is NFR-COST-03's Console check.
 - Live use was never interrupted: a working Gaffer was available before every deadline from GW8 to GW13, and every milestone landed in its window.
+  - **Status 2026-10-23:** GW8 was covered. M1.1-0 ran until 15:40Z, Phase 1.1 from then on, and your GW8 recommendation was made at 15:44Z. GW9 to GW13 are still ahead. The window part is **not met, by your decision**: the windows were waived and the four milestones landed together, before a deadline.
 - The *Chip planner* is available before the GW16 deadline (2026-12-19), so first-half chips can be planned before they expire at GW19.
+  - **Status 2026-10-23: met.** It has been live since 2026-10-23, in the App and as `/chips`, and was run with the real model in both.
 - The Phase 1 exit (three consecutive live GWs scored) is met, whichever finishes first.
+  - **Status 2026-10-23: not met.** GW7 is scored, GW8 is waiting for FPL's check and GW9 needs a recommendation (see Phase 1 above).
 
 ## Phase 2 — Cloud deployment (single user, AWS; also documented for a generic host)
 - **Scope:**
