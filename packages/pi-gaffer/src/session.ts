@@ -46,23 +46,53 @@ export interface SnapshotEntry {
 	endpoints: unknown[];
 }
 
+type ChipName = "wildcard" | "freehit" | "bboost" | "3xc";
+/** A player as `/run` resolved it from FPL's bootstrap: the page sends only the id. */
+export interface RunPlayer {
+	id: number;
+	name: string;
+	team?: string;
+}
+
+export interface RecommendOptions {
+	risk: "safe" | "balanced" | "aggressive";
+	max_hits_per_gw: number | null;
+	save_chips: ChipName[];
+	keep: RunPlayer[];
+	ft?: number;
+	pending?: string;
+	/** Saved as the team's preferences; otherwise they apply to this session only (`prefs_file`). */
+	save: boolean;
+}
+export type WhatIfOptions = { kind: "transfer"; out: RunPlayer; in: RunPlayer; gw: number } | { kind: "chip"; chip: ChipName; gw: number } | { kind: "keep"; player: RunPlayer };
+export interface ExplainOptions {
+	player: RunPlayer;
+	against: "recommendation" | "squad";
+	/** Where the player stands in the team's latest recommendation, when explained against it. */
+	rec?: { rec_id: string; gw: number; role: string } | null;
+}
+export interface ChipsOptions {
+	from_gw: number;
+	to_gw: number;
+}
+export interface PreferencesOptions {
+	risk: "safe" | "balanced" | "aggressive";
+	max_hits_per_gw: number | null;
+	save_chips: ChipName[];
+	keep: RunPlayer[];
+	clear: boolean;
+}
+
 /** `gaffer.run`: a structured start from the Gaffer App (`/run {json}`, ADR 0014): what the run is for, as data. */
 export interface RunEntry {
-	action: "recommend";
+	action: "recommend" | "whatif" | "explain" | "chips" | "preferences";
+	/** The session's title in both UIs' lists until it is renamed: "Recommend GW8", "What-if: keep Watkins". */
+	title?: string;
 	team_id: number;
 	team_id_hash: string;
 	/** The next GW when the run was asked for, from FPL; null if FPL couldn't be reached. */
 	gw: number | null;
-	options: {
-		risk: "safe" | "balanced" | "aggressive";
-		max_hits_per_gw: number | null;
-		save_chips: ("wildcard" | "freehit" | "bboost" | "3xc")[];
-		keep: { id: number; name: string }[];
-		ft?: number;
-		pending?: string;
-		/** Saved as the team's preferences; otherwise they apply to this session only (`prefs_file`). */
-		save: boolean;
-	};
+	options: RecommendOptions | WhatIfOptions | ExplainOptions | ChipsOptions | PreferencesOptions;
 	/** The session's own preferences file when the options weren't saved (prefs.ts `runPrefsPath`). */
 	prefs_file: string | null;
 	source: "app";

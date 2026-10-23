@@ -1,0 +1,3004 @@
+[
+ {
+  "screen": "light-1280-01-start-empty",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-04-start-recommend",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-05-start-whatif-transfer",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-06-start-whatif-chip",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-07-start-explain",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-08-start-chips",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-09-state-daily-cap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-10-state-run-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-11-state-deadline-passed-start",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-12-run-done",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-13-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-14-ask-box",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-15-followup-answered",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-16-result-full",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-18-state-open-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-19-run-streaming",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-20-state-reconnecting",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-21-answer-whatif",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-21-answer-explain",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-21-answer-chips",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-21-answer-whatif-running",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-21-answer-whatif-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-22-scorecard",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-23-preferences",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-24-preferences-saved",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-25-preferences-clear-confirm",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-running",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-thinking",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": ".cursor",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-softcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-stale",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-oddsdown",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-novalid",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-30-state-stopped",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-1280-31-state-deadline-passed-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": ".summary",
+    "why": "Element's background color could not be determined because it partially overlaps other elements"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "light-375-01-start-empty",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-02-drawer-open",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-03-drawer-closed",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-04-start-recommend",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-05-start-whatif-transfer",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-06-start-whatif-chip",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-07-start-explain",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-08-start-chips",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-09-state-daily-cap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-10-state-run-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-11-state-deadline-passed-start",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-12-run-done",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-13-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-14-ask-box",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-15-followup-answered",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-16-result-full",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-17-rename",
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "nodes": 1,
+    "targets": [
+     "html"
+    ]
+   }
+  ],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-18-state-open-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-19-run-streaming",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-20-state-reconnecting",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-21-answer-whatif",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-21-answer-explain",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-21-answer-chips",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "tr:nth-child(2) > td:nth-child(1)",
+    "why": "Element's background color could not be determined because it partially overlaps other elements"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-21-answer-whatif-running",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-21-answer-whatif-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-22-scorecard",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "small",
+    "why": "Element's background color could not be determined because it partially overlaps other elements"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-23-preferences",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-24-preferences-saved",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-25-preferences-clear-confirm",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-running",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-thinking",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": ".what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".cursor",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-softcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-stale",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-oddsdown",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-novalid",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"err\"]:nth-child(11) > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"err\"]:nth-child(12) > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"err\"]:nth-child(13) > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-30-state-stopped",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".muted[role=\"status\"]",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "light-375-31-state-deadline-passed-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-1280-01-start-empty",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-04-start-recommend",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-05-start-whatif-transfer",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-06-start-whatif-chip",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-07-start-explain",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-08-start-chips",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-09-state-daily-cap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-10-state-run-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-11-state-deadline-passed-start",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-12-run-done",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-13-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-14-ask-box",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-15-followup-answered",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-16-result-full",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-18-state-open-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-19-run-streaming",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-20-state-reconnecting",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-21-answer-whatif",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-21-answer-explain",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-21-answer-chips",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-21-answer-whatif-running",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-21-answer-whatif-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-22-scorecard",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-23-preferences",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-24-preferences-saved",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-25-preferences-clear-confirm",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-running",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-thinking",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": ".cursor",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-softcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-stale",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-oddsdown",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-novalid",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-30-state-stopped",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-1280-31-state-deadline-passed-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": ".summary",
+    "why": "Element's background color could not be determined because it partially overlaps other elements"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 1280
+ },
+ {
+  "screen": "dark-375-01-start-empty",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-02-drawer-open",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-03-drawer-closed",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-04-start-recommend",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-05-start-whatif-transfer",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-06-start-whatif-chip",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-07-start-explain",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-08-start-chips",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-09-state-daily-cap",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-10-state-run-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-11-state-deadline-passed-start",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-12-run-done",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-13-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-14-ask-box",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-15-followup-answered",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-16-result-full",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-17-rename",
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "nodes": 1,
+    "targets": [
+     "html"
+    ]
+   }
+  ],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-18-state-open-in-terminal",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-19-run-streaming",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-20-state-reconnecting",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-21-answer-whatif",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-21-answer-explain",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-21-answer-chips",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "tr:nth-child(2) > td:nth-child(1)",
+    "why": "Element's background color could not be determined because it partially overlaps other elements"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-21-answer-whatif-running",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-21-answer-whatif-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-22-scorecard",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "small",
+    "why": "Element's background color could not be determined because it partially overlaps other elements"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-23-preferences",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-24-preferences-saved",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-25-preferences-clear-confirm",
+  "violations": [],
+  "contrastNeedsReview": [],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-running",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-thinking",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": ".what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".cursor",
+    "why": "Element content contains only non-text characters"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-softcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-hardcap",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-stale",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-oddsdown",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"82>572\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"387>533\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"114>173\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"368>427\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-novalid",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"err\"]:nth-child(11) > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"err\"]:nth-child(12) > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"err\"]:nth-child(13) > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-30-state-stopped",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".muted[role=\"status\"]",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ },
+ {
+  "screen": "dark-375-31-state-deadline-passed-result",
+  "violations": [],
+  "contrastNeedsReview": [
+   {
+    "target": "details[data-tool=\"fpl_snapshot\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "details[data-status=\"err\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": ".step[data-tool=\"submit_recommendation\"][data-status=\"ok\"] > summary > .what",
+    "why": "Element's background color could not be determined because it is overlapped by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(3)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "div[aria-label=\"Transfers table\"] > table > thead > tr > th:nth-child(5)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"19>182\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"309>99\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"351>447\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > td:nth-child(1) > .mv > .arr[aria-hidden=\"true\"]",
+    "why": "Element content contains only non-text characters"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > .gain.n",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   },
+   {
+    "target": "tr[data-transfer=\"129>252\"] > .n:nth-child(4)",
+    "why": "Element's background color could not be determined because it's partially obscured by another element"
+   }
+  ],
+  "scrollsSideways": false,
+  "width": 375
+ }
+]

@@ -25,7 +25,7 @@ describe("skills", () => {
 		expect(pi.skills).toEqual(["./skills"]);
 		expect(pi.prompts).toEqual(["./prompts/*.md"]);
 		expect(readdirSync(SKILLS).sort()).toEqual(NAMES);
-		expect(readdirSync(PROMPTS).sort()).toEqual(["explain.md", "gw.md", "whatif.md"]);
+		expect(readdirSync(PROMPTS).sort()).toEqual(["chips.md", "explain.md", "gw.md", "whatif.md"]);
 	});
 
 	it("each has frontmatter with its own name and a description that says when to use it", () => {

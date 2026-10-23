@@ -1,0 +1,72 @@
+{
+  "schema": "gaffer.evalsummary/1",
+  "run_id": "20261020T180723-faux",
+  "model": "faux",
+  "started_at": "2026-10-20T18:07:23.064Z",
+  "finished_at": "2026-10-20T18:32:16.438Z",
+  "cases": 31,
+  "validator_pass": {
+    "passed": 31,
+    "of": 31,
+    "rate": 1,
+    "within_two_retries": 31
+  },
+  "points_vs_g0": {
+    "cases": 29,
+    "recommended": 1819,
+    "g0": 1819,
+    "diff": 0,
+    "better": 0,
+    "same": 29,
+    "worse": 0,
+    "unscorable": [
+      "l7-a",
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "preferences": {
+    "cases": 2,
+    "passed": 2
+  },
+  "injection": {
+    "cases": 2,
+    "passed": 2
+  },
+  "expectations": {
+    "cases": 1,
+    "passed": 1
+  },
+  "follow_ups": {
+    "cases": 1,
+    "passed": 1,
+    "cache_read_share": [
+      {
+        "case": "l6-a-follow-up",
+        "share": 0.7647261453668619,
+        "cost": 0,
+        "cost_ratio": null
+      }
+    ]
+  },
+  "cost": {
+    "total": 0,
+    "median_per_recommendation": 0,
+    "max": 0
+  },
+  "latency_ms": {
+    "p50": 53097,
+    "p95": 59568,
+    "max": 59653,
+    "n": 31
+  },
+  "wildcard_or_free_hit_not_evaluated": {
+    "cases": 3,
+    "of": 31,
+    "ids": [
+      "h2425-gw10-5ft",
+      "h2425-gw24-dgw",
+      "l7-f-5ft-all-chips"
+    ]
+  },
+  "errors": []
+}

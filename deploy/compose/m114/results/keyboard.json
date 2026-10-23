@@ -1,0 +1,2287 @@
+[
+ {
+  "walk": "light-1280-start-chips",
+  "stops": [
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 4,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 5,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 6,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 7,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 8,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "FPL team ID",
+    "index": 9,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Recommend this GWTransfers, captain, line-up, chip and a 4-G",
+    "index": 10,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "What-ifTest a transfer or a chip against the best plan",
+    "index": 11,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain a pickWhy a player is in, out or captain",
+    "index": 12,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Chip plannerWhen to play each chip before they expire",
+    "index": 13,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "ScorecardSeason so far: Gaffer vs you vs baselines",
+    "index": 14,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "PreferencesRisk, chips to save, players to keep",
+    "index": 15,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "GW8–GW13",
+    "index": 16,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "To GW19",
+    "index": 17,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Plan my chips",
+    "index": 18,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 4,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 5,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 6,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 7,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 8,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "FPL team ID",
+    "index": 9,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Recommend this GWTransfers, captain, line-up, chip and a 4-G",
+    "index": 10,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "What-ifTest a transfer or a chip against the best plan",
+    "index": 11,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain a pickWhy a player is in, out or captain",
+    "index": 12,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Chip plannerWhen to play each chip before they expire",
+    "index": 13,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "ScorecardSeason so far: Gaffer vs you vs baselines",
+    "index": 14,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "PreferencesRisk, chips to save, players to keep",
+    "index": 15,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "GW8–GW13",
+    "index": 16,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "To GW19",
+    "index": 17,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Plan my chips",
+    "index": 18,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 4,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 5,
+    "of": 19,
+    "visible": true
+   }
+  ],
+  "inOrder": true,
+  "allVisible": true,
+  "reached": 19,
+  "focusable": 19,
+  "missed": []
+ },
+ {
+  "walk": "light-1280-result",
+  "stops": [
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Saka as captain rather than Mbeumo?",
+    "index": 25,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Tzolakis rather than keeping Kelleher?",
+    "index": 26,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain the bench order.",
+    "index": 27,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Saka as captain rather than Mbeumo?",
+    "index": 25,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Tzolakis rather than keeping Kelleher?",
+    "index": 26,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain the bench order.",
+    "index": 27,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Saka as captain rather than Mbeumo?",
+    "index": 25,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Tzolakis rather than keeping Kelleher?",
+    "index": 26,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain the bench order.",
+    "index": 27,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   }
+  ],
+  "inOrder": true,
+  "allVisible": true,
+  "reached": 28,
+  "focusable": 28,
+  "missed": []
+ },
+ {
+  "walk": "light-375-drawer-open",
+  "stops": [
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 1,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 2,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 3,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 4,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 5,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 6,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 7,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 0,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 1,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 2,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 3,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 4,
+    "of": 8,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 5,
+    "of": 8,
+    "visible": true
+   }
+  ],
+  "inOrder": true,
+  "allVisible": true,
+  "reached": 8,
+  "focusable": 8,
+  "missed": [],
+  "drawerOpenAndFocused": true,
+  "stayedInDrawer": true
+ },
+ {
+  "walk": "dark-1280-start-chips",
+  "stops": [
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 4,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 5,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 6,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 7,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 8,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "FPL team ID",
+    "index": 9,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Recommend this GWTransfers, captain, line-up, chip and a 4-G",
+    "index": 10,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "What-ifTest a transfer or a chip against the best plan",
+    "index": 11,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain a pickWhy a player is in, out or captain",
+    "index": 12,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Chip plannerWhen to play each chip before they expire",
+    "index": 13,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "ScorecardSeason so far: Gaffer vs you vs baselines",
+    "index": 14,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "PreferencesRisk, chips to save, players to keep",
+    "index": 15,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "GW8–GW13",
+    "index": 16,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "To GW19",
+    "index": 17,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Plan my chips",
+    "index": 18,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 4,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 5,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 6,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 7,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 8,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "FPL team ID",
+    "index": 9,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Recommend this GWTransfers, captain, line-up, chip and a 4-G",
+    "index": 10,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "What-ifTest a transfer or a chip against the best plan",
+    "index": 11,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain a pickWhy a player is in, out or captain",
+    "index": 12,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Chip plannerWhen to play each chip before they expire",
+    "index": 13,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "ScorecardSeason so far: Gaffer vs you vs baselines",
+    "index": 14,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "PreferencesRisk, chips to save, players to keep",
+    "index": 15,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "GW8–GW13",
+    "index": 16,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "To GW19",
+    "index": 17,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Plan my chips",
+    "index": 18,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 4,
+    "of": 19,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 5,
+    "of": 19,
+    "visible": true
+   }
+  ],
+  "inOrder": true,
+  "allVisible": true,
+  "reached": 19,
+  "focusable": 19,
+  "missed": []
+ },
+ {
+  "walk": "dark-1280-result",
+  "stops": [
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Saka as captain rather than Mbeumo?",
+    "index": 25,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Tzolakis rather than keeping Kelleher?",
+    "index": 26,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain the bench order.",
+    "index": 27,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Saka as captain rather than Mbeumo?",
+    "index": 25,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Tzolakis rather than keeping Kelleher?",
+    "index": 26,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain the bench order.",
+    "index": 27,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Saka as captain rather than Mbeumo?",
+    "index": 25,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Why Tzolakis rather than keeping Kelleher?",
+    "index": 26,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Explain the bench order.",
+    "index": 27,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Skip to the main content",
+    "index": 0,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Gaffer: new session",
+    "index": 1,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New session",
+    "index": 2,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "input",
+    "label": "Search sessions",
+    "index": 3,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "New sessionjust now",
+    "index": 4,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Scorecard",
+    "index": 5,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Preferences",
+    "index": 6,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "System",
+    "index": 7,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Light",
+    "index": 8,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Dark",
+    "index": 9,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Rename \"Recommend GW8\"",
+    "index": 10,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingA recommendation: snapshot with odds first.",
+    "index": 11,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneFetched your team and FPL data · fresh · 15 players · ba",
+    "index": 12,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingThe snapshot is fresh. Next the golden path, exactly",
+    "index": 13,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneProjected points and solved a 6-GW plan · 1 plan · solve",
+    "index": 14,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingPlan 1 it is. Submitting.",
+    "index": 15,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "failedSubmitted the recommendation · rejected: CAPTAIN_IS_VI",
+    "index": 16,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "ThinkingRejected: the vice can't be the captain. Fixing that",
+    "index": 17,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "summary",
+    "label": "doneSubmitted the recommendation · valid on attempt 2 · ever",
+    "index": 18,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "Transfers table",
+    "index": 19,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "div",
+    "label": "4-GW plan table",
+    "index": 20,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export JSON",
+    "index": 21,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "button",
+    "label": "Export CSV",
+    "index": 22,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "a",
+    "label": "Open in terminal",
+    "index": 23,
+    "of": 28,
+    "visible": true
+   },
+   {
+    "tag": "textarea",
+    "label": "Ask about this plan",
+    "index": 24,
+    "of": 28,
+    "visible": true
+   }
+  ],
+  "inOrder": true,
+  "allVisible": true,
+  "reached": 28,
+  "focusable": 28,
+  "missed": []
+ }
+]

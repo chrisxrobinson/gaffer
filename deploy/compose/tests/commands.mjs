@@ -12,7 +12,7 @@ import { chmodSync, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, s
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const GAFFER = ["gw", "whatif", "explain", "team", "prefs", "scorecard", "usage", "export-rec", "new", "resume", "copy", "help"];
+const GAFFER = ["gw", "whatif", "explain", "chips", "team", "prefs", "scorecard", "usage", "export-rec", "new", "resume", "copy", "help"];
 // Pi 1.3.0's 24 built-ins minus the four Gaffer keeps, the three it runs but doesn't list, and its built-in extensions'.
 const REFUSED = ["settings", "model", "tree", "thinking", "scoped-models", "export", "import", "share", "bug", "name", "session", "changelog", "hotkeys", "fork", "clone", "trust", "login", "logout", "compact", "reload", "quit", "debug", "arminsayshi", "dementedelves", "mcp", "llama"];
 // What a built-in leaves on screen when it runs (spike S5's baseline captures).
@@ -149,7 +149,7 @@ try {
 	keys("Escape");
 	keys("Enter");
 	s = await until((x) => x.includes("GAFFER · help"), 4000);
-	check(s.includes("GAFFER · help") && s.includes("/export-rec"), "/help is Gaffer's");
+	check(s.includes("GAFFER · help") && s.includes("/export-rec") && s.includes("/chips [weeks]"), "/help is Gaffer's, with /chips");
 
 	// /new keeps the branding; /resume opens the earlier session, and Ctrl+D (delete) and Ctrl+R (rename) do nothing.
 	const files = () => readdirSync(sessions, { recursive: true }).filter((f) => String(f).endsWith(".jsonl")).length;

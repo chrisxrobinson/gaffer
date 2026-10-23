@@ -35,7 +35,7 @@ describe("docs/ui §6: the states a Recommend run reaches", () => {
 
 	it("streaming thinking: muted text growing with a cursor", () => {
 		const { page } = view("thinking");
-		expect(page).toMatch(/<div class="think" aria-live="polite"><span class="lbl">Thinking<\/span>[^<]+<span class="cursor"/);
+		expect(page).toMatch(/<div class="think"><span class="lbl">Thinking<\/span>[^<]+<span class="cursor"/);
 	});
 
 	it("done: every step finished and the recommendation drawn", () => {

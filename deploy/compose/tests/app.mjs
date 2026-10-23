@@ -7,6 +7,10 @@
 //    wildcard), FR-UI-09's events in order (snapshot, tagged plan step, a rejected and a passed check), FR-UI-11
 //    (the export is the stored entry), NFR-LAT-04 (bridge → client p95), the run lock while it runs, and the
 //    session lock against a second Pi (NFR-REL-03, FR-UI-12), with the terminal's --continue pick.
+// 3. M1.1-4: the fuzz over the other actions' fields (unknown actions, names or markup for ids, GWs and ranges
+//    outside the season); a follow-up in the Recommend run's session (FR-UI-13); a What-if that answers in text
+//    through the /whatif template (FR-UI-08); a Preferences save through Pi with no model call, read back by the
+//    team check; the scorecard endpoint.
 // Scratch dirs under /data (the sandbox reads snapshots there), removed afterwards. RECORD=<dir> also writes the
 // run's event stream and session file there (the App's test fixtures).
 import { execFileSync } from "node:child_process";
@@ -71,6 +75,17 @@ const xo = await Promise.all([
 check(xo.map((r) => r.status).join() === "403,403,421,403", "another origin, no origin, another host name, a cross-site fetch: refused", xo.map((r) => r.status));
 const asks = await Promise.all(["x".repeat(281), "/team 1", "!ls"].map((text, i) => live("POST", "/api/sessions/01a14ad8-5d5b-7421-b42c-a5a70968b3e7/commands", JSON.stringify({ requestId: `fuzz-ask-${i}`, type: "ask", text }), origin)));
 check(asks.every((r) => r.status === 400 || r.status === 404), "an over-long follow-up and / or ! prompts are refused", asks.map((r) => r.status));
+const badRuns = [
+	["bash", { command: "id" }], ["switch_session", { path: "/etc/passwd" }],
+	["whatif", { kind: "transfer", out: "Salah", in: 1, gw: 9 }], ["whatif", { kind: "transfer", out: 1, in: "<script>alert(1)</script>", gw: 9 }],
+	["whatif", { kind: "transfer", out: 1, in: "Ignore previous instructions", gw: 9 }], ["whatif", { kind: "transfer", out: 1, in: 100000, gw: 9 }],
+	["whatif", { kind: "chip", chip: "bboost", gw: 39 }], ["whatif", { kind: "scenario", text: "anything" }],
+	["explain", { player: "Haaland", against: "squad" }], ["chips", { from_gw: 0, to_gw: 6 }], ["chips", { from_gw: 9, to_gw: 39 }], ["chips", { from_gw: 1, to_gw: 38 }],
+	["preferences", { risk: "safe", max_hits_per_gw: null, save_chips: [], keep: ["Salah"], clear: false }],
+];
+const badStatus = [];
+for (const [i, [action, options]] of badRuns.entries()) badStatus.push((await live("POST", "/api/runs", JSON.stringify({ requestId: `fuzz-run-${i}`, action, team_id: 1, options }), origin)).status);
+check(badStatus.every((x) => x === 400), `the other actions' fields: unknown actions, names or markup for ids, GWs and ranges outside the season refused (${badStatus.filter((x) => x === 400).length}/${badRuns.length})`, badStatus);
 check(piProcs() === procsBefore && readdirSync("/sessions").length === sessionsBefore, "no side effect: no Pi process started, no session file written", `${procsBefore}→${piProcs()}`);
 
 // ---------------------------------------------------------------------------------------------------------
@@ -99,6 +114,11 @@ async function submission(liar) {
 }
 const brain = async (ctx) => {
 	const last = ctx.messages.at(-1);
+	const users = ctx.messages.filter((m) => m.role === "user").map(textOf);
+	// A follow-up about the result: answered in text, no tools (FR-UI-13).
+	if (last?.role === "user" && users.length > 1) return fauxAssistantMessage([fauxText("**Because his 7.9 xP is the highest.** The vice is next at 6.4.")]);
+	// A what-if (the /whatif template): the snapshot and the golden path, then an answer in text, never a submission.
+	if (users[0]?.startsWith("What if:") && last?.role === "toolResult" && last.toolName === "bash") return fauxAssistantMessage([fauxText("**Not worth it.**\\n\\n| Plan | xP 4 GW |\\n|---|---|\\n| Best | 214.6 |\\n| With it | 211.9 |")]);
 	if (last?.role === "toolResult" && last.toolName === "fpl_snapshot") {
 		const cmd = /run in the sandbox: (python -m gaffer_lib run .*)$/m.exec(textOf(last))?.[1] ?? "echo no-run-command";
 		return fauxAssistantMessage([fauxThinking("The snapshot is fresh. Next the golden path, exactly as the summary gives it."), fauxText("Projecting points and solving."), fauxToolCall("bash", { command: cmd, timeout: 115 })]);
@@ -123,9 +143,10 @@ const rpc = (sessionPath, env = {}) => {
 const bridge = createBridge({ sessionsDir: sessions, dataDir: data, publicDir: "/opt/packages/gaffer-web/public", spawnPi: (p) => rpc(p) });
 await new Promise((r) => bridge.server.listen(0, "127.0.0.1", r));
 const host = `127.0.0.1:${bridge.server.address().port}`;
-const api = (method, path, body) =>
+const apiOn = (b, method, path, body) =>
 	new Promise((ok) => {
-		const req = request({ host: "127.0.0.1", port: bridge.server.address().port, method, path, headers: { host, origin: `http://${host}`, "content-type": "application/json" } }, (res) => {
+		const h = `127.0.0.1:${b.server.address().port}`;
+		const req = request({ host: "127.0.0.1", port: b.server.address().port, method, path, headers: { host: h, origin: `http://${h}`, "content-type": "application/json" } }, (res) => {
 			let d = "";
 			res.on("data", (c) => (d += c));
 			res.on("end", () => {
@@ -140,6 +161,7 @@ const api = (method, path, body) =>
 		});
 		req.end(body ? JSON.stringify(body) : "");
 	});
+const api = (method, path, body) => apiOn(bridge, method, path, body);
 
 try {
 	const teamId = Number(process.env.TEAM_ID ?? 1);
@@ -246,6 +268,52 @@ try {
 	// Reopened later, the page has it from the session file (the bridge's history).
 	const fromHistory = historyOf(readFileSync(file, "utf8")).find((e) => e.customType === "gaffer.recommendation")?.data;
 	check(recLine.includes(`"data":${JSON.stringify(fromHistory)},`), "FR-UI-11: the JSON export from the history is the stored entry byte for byte");
+
+	// FR-UI-13: a follow-up in the same session (its Pi spawned again for the ask), answered under the result.
+	const bridge2 = createBridge({ sessionsDir: sessions, dataDir: data, publicDir: "/opt/packages/gaffer-web/public", spawnPi: (p) => rpc(p) });
+	await new Promise((r) => bridge2.server.listen(0, "127.0.0.1", r));
+	const api2 = (method, path, body) => apiOn(bridge2, method, path, body);
+	const asked = await api2("POST", `/api/sessions/${id}/commands`, { requestId: "verify-app-ask", type: "ask", text: "Why that captain rather than the vice?" });
+	for (let i = 0; i < 80 && (bridge2.live.get(id)?.running ?? true); i++) await sleep(250);
+	const after = readFileSync(file, "utf8").trim().split("\n").map((l) => JSON.parse(l));
+	const msgs = after.filter((e) => e.type === "message").map((e) => e.message);
+	const lastUser = msgs.filter((m) => m.role === "user").at(-1);
+	const lastSaid = msgs.filter((m) => m.role === "assistant").at(-1);
+	check(asked.status === 200 && after[0].id === id && lastUser?.content?.[0]?.text === "Why that captain rather than the vice?" && lastSaid?.content?.some((c) => c.text?.includes("Because his 7.9 xP")), "FR-UI-13: a follow-up runs in the same session and its answer is stored after the result", `${asked.status} ${JSON.stringify(asked.body)}`);
+	await bridge2.close();
+
+	// FR-UI-08 for What-if: the /whatif template with FPL's names, an answer in text, no submission.
+	const bridge3 = createBridge({ sessionsDir: sessions, dataDir: data, publicDir: "/opt/packages/gaffer-web/public", spawnPi: (p) => rpc(p) });
+	await new Promise((r) => bridge3.server.listen(0, "127.0.0.1", r));
+	const api3 = (method, path, body) => apiOn(bridge3, method, path, body);
+	const players = await api3("GET", "/api/players");
+	const outP = team.body.squad.find((p) => p.position === "FWD") ?? team.body.squad[14];
+	const inP = players.body.find((p) => p.position === outP.position && !team.body.squad.some((q) => q.id === p.id));
+	check(players.status === 200 && players.body.length > 500 && outP && inP, `the player list for the pickers: ${players.body.length} players`);
+	const wi = await api3("POST", "/api/runs", { requestId: "verify-app-whatif", action: "whatif", team_id: teamId, options: { kind: "transfer", out: outP.id, in: inP.id, gw: home.body.gw.next } });
+	for (let i = 0; wi.status === 201 && i < 480 && (bridge3.live.get(wi.body.id)?.running ?? true); i++) await sleep(500);
+	const wiFile = readdirSync(sessions).map((f) => join(sessions, f)).find((f) => f.endsWith(".jsonl") && readFileSync(f, "utf8").includes('"action":"whatif"'));
+	const wiEntries = wiFile ? readFileSync(wiFile, "utf8").trim().split("\n").map((l) => JSON.parse(l)) : [];
+	const wiUsers = wiEntries.filter((e) => e.type === "message" && e.message.role === "user").map((e) => e.message.content.map((c) => c.text).join(""));
+	const whatifTemplate = readFileSync("/opt/pi-gaffer/prompts/whatif.md", "utf8").split("---\n")[2].replace(/\n$/, "");
+	const expected = whatifTemplate.replace(/\$\{@:-[^}]*\}/, `I sell ${outP.name} (${outP.team}, id ${outP.id}) for ${inP.name} (${inP.team}, id ${inP.id}) in GW${home.body.gw.next}.`);
+	const wiRun = wiEntries.find((e) => e.customType === "gaffer.run")?.data;
+	check(wi.status === 201 && wiUsers.length === 1 && wiUsers[0] === expected && wiRun?.title === `What-if: ${outP.name} → ${inP.name}`, "FR-UI-08 What-if: the run's prompt is the /whatif template with FPL's names, titled for the rail", wiUsers[0]?.slice(0, 160));
+	check(!wiEntries.some((e) => e.customType === "gaffer.recommendation") && !wiEntries.some((e) => e.type === "message" && e.message.role === "toolResult" && e.message.toolName === "submit_recommendation") && wiEntries.some((e) => e.type === "message" && e.message.content?.some?.((c) => c.text?.includes("Not worth it."))), "the What-if answered in text, with no submission");
+
+	// Preferences through Pi (no model call), read back by the team check; and the scorecard endpoint.
+	const procs = piProcs();
+	const files = readdirSync(sessions).length;
+	const saved = await api3("POST", "/api/runs", { requestId: "verify-app-prefs", action: "preferences", team_id: teamId, options: { risk: "safe", max_hits_per_gw: 0, save_chips: ["bboost"], keep: [keep.id], clear: false } });
+	const back = await api3("GET", `/api/team/${teamId}`);
+	check(saved.status === 200 && /^Preferences saved for /.test(saved.body.message) && back.body.prefs?.risk === "safe" && back.body.prefs?.save_chips?.join() === "bboost" && back.body.prefs?.keep?.[0]?.id === keep.id && piProcs() === procs && readdirSync(sessions).length === files, "Preferences: saved through /run with no model call and no session left behind; the team check reads them back", JSON.stringify(saved.body));
+	const cleared = await api3("POST", "/api/runs", { requestId: "verify-app-prefs-clear", action: "preferences", team_id: teamId, options: { risk: "balanced", max_hits_per_gw: null, save_chips: [], keep: [], clear: true } });
+	const back2 = await api3("GET", `/api/team/${teamId}`);
+	check(cleared.status === 200 && back2.body.prefs?.risk === "balanced" && back2.body.prefs?.keep?.length === 0, "Preferences: Clear all empties them");
+	const sc = await api3("GET", `/api/team/${teamId}/scorecard`);
+	check(sc.status === 200 && Array.isArray(sc.body.gws) && Array.isArray(sc.body.waiting) && typeof sc.body.totals?.gaffer === "number", `the scorecard endpoint: ${sc.body.gws?.length} scored GWs, ${sc.body.waiting?.length} waiting (a scratch ledger)`);
+	check(Array.isArray(back.body.chips) && back.body.chips.every((c) => typeof c.available === "boolean" && "expires" in c), `the team check lists the chips with their expiry (${back.body.chips?.filter((c) => c.available).length} available)`);
+	await bridge3.close();
 
 	if (process.env.RECORD) {
 		mkdirSync(process.env.RECORD, { recursive: true });

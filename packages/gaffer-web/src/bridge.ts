@@ -11,7 +11,8 @@
  * - Server-sent events with sequence ids; the current run's events are kept per session, so a reconnect replays
  *   from Last-Event-ID and then follows live (FR-UI-03). Commands are POSTs with request ids, answered once.
  * - Every request must come from the App's own origin on a loopback host name (DNS rebinding, cross-site).
- * - Read-only calls into Gaffer's src/ for the session list, the next GW, the team check, preferences and spend.
+ * - Read-only calls into Gaffer's src/ for the session list, the next GW, the team check (its squad, chips and
+ *   preferences), FPL's player list, spend and the scorecard. Saving preferences goes through Pi (`/run`).
  */
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -19,12 +20,15 @@ import { readFileSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
 import { RpcClient } from "@earendil-works/pi-coding-agent";
-import { checkTeam, fplBootstrap, gwInfo, listSessions, type SessionSummary, teamSquad } from "../../pi-gaffer/src/app-data.ts";
+import { allPlayers, checkTeam, fplBootstrap, gwInfo, listSessions, type SessionSummary, teamChips, teamSquad, waitingGws } from "../../pi-gaffer/src/app-data.ts";
 import { dayCost } from "../../pi-gaffer/src/budget.ts";
 import { budgetConfig, fplNow, idSalt } from "../../pi-gaffer/src/config.ts";
 import { FplClient } from "../../pi-gaffer/src/http.ts";
+import { readLedger } from "../../pi-gaffer/src/ledger.ts";
 import { lockHolder, runLockPath, sessionLockPath } from "../../pi-gaffer/src/lock.ts";
+import { readOutcomes, scorecard } from "../../pi-gaffer/src/outcomes.ts";
 import { readPrefs } from "../../pi-gaffer/src/prefs.ts";
+import type * as S from "../../pi-gaffer/src/schema/fpl.ts";
 import { hashTeamId } from "../../pi-gaffer/src/team-hash.ts";
 import { SnapshotStore } from "../../pi-gaffer/src/store.ts";
 import { parseEntries } from "../../pi-gaffer/src/usage.ts";
@@ -32,6 +36,11 @@ import { parseEntries } from "../../pi-gaffer/src/usage.ts";
 export const ASK_MAX = 280;
 export const NAME_MAX = 80;
 const IDLE_MS = 15 * 60_000;
+/**
+ * The browser terminal's own page, for the Result's "Open in terminal" (a link: the App opens no terminal of its
+ * own). The host's port for it is the Compose file's, so the stack says which (GAFFER_TERMINAL_URL).
+ */
+const TERMINAL_URL = /^http:\/\/(127\.0\.0\.1|localhost):\d{1,5}\/$/.test(process.env.GAFFER_TERMINAL_URL ?? "") ? process.env.GAFFER_TERMINAL_URL! : "http://127.0.0.1:7681/";
 const BODY_MAX = 16_384;
 const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const LOOPBACK = /^(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?$/;
@@ -57,8 +66,8 @@ export interface BridgeOptions {
 	spawnPi?: (sessionPath?: string) => Pi;
 	idleMs?: number;
 	fpl?: FplClient;
-	/** Replay mode: the home and team answers come from the recording, not FPL (replay.ts). */
-	replay?: { home(): Record<string, unknown>; team(id: number): unknown };
+	/** Replay mode: the home, team and player answers come from the recording, not FPL (replay.ts). */
+	replay?: { home(): Record<string, unknown>; team(id: number): unknown; players?(): unknown[] };
 	/** Extra files by URL path (replay mode's dev tools). */
 	devFiles?: Record<string, string>;
 }
@@ -185,24 +194,78 @@ export function historyOf(text: string): Record<string, unknown>[] {
 	});
 }
 
-/** The page's Start options, checked field by field: the only input that reaches `/run`'s JSON. */
+const int = (v: unknown, lo: number, hi: number) => Number.isInteger(v) && (v as number) >= lo && (v as number) <= hi;
+const CHIPS = ["wildcard", "freehit", "bboost", "3xc"];
+const RISKS = ["safe", "balanced", "aggressive"];
+/** A player is an FPL id: never a name, so no text from the page reaches a template. */
+const playerId = (v: unknown, field: string) => {
+	if (!int(v, 1, 99_999)) throw new HttpError(400, `${field} must be a player id`);
+	return v as number;
+};
+const gwNumber = (v: unknown, field: string) => {
+	if (!int(v, 1, 38)) throw new HttpError(400, `${field} must be a GW from 1 to 38`);
+	return v as number;
+};
+const riskAndChips = (o: Record<string, any>) => {
+	if (!RISKS.includes(o.risk)) throw new HttpError(400, "risk must be safe, balanced or aggressive");
+	if (!(o.max_hits_per_gw === null || int(o.max_hits_per_gw, 0, 15))) throw new HttpError(400, "max_hits_per_gw must be 0-15 or null");
+	if (!Array.isArray(o.save_chips) || o.save_chips.length > 4 || o.save_chips.some((c: unknown) => !CHIPS.includes(c as string))) throw new HttpError(400, "save_chips must list chips");
+	if (!Array.isArray(o.keep) || o.keep.length > 15 || o.keep.some((p: unknown) => !int(p, 1, 99_999))) throw new HttpError(400, "keep must list player ids");
+	return { risk: o.risk, max_hits_per_gw: o.max_hits_per_gw, save_chips: [...new Set(o.save_chips)], keep: [...new Set(o.keep)] };
+};
+
+/**
+ * The page's Start options, checked field by field: the only input that reaches `/run`'s JSON. Each action has its
+ * own fields; anything else in the body is dropped. Names are resolved from ids by `/run`, on the server.
+ */
 export function runSpec(body: Record<string, any>): Record<string, unknown> {
 	const o = body.options ?? {};
-	const int = (v: unknown, lo: number, hi: number) => Number.isInteger(v) && (v as number) >= lo && (v as number) <= hi;
 	if (!int(body.team_id, 1, 9_999_999_999)) throw new HttpError(400, "team_id must be a whole number");
-	if (!["safe", "balanced", "aggressive"].includes(o.risk)) throw new HttpError(400, "risk must be safe, balanced or aggressive");
-	if (!(o.max_hits_per_gw === null || int(o.max_hits_per_gw, 0, 15))) throw new HttpError(400, "max_hits_per_gw must be 0-15 or null");
-	if (!Array.isArray(o.save_chips) || o.save_chips.length > 4 || o.save_chips.some((c: unknown) => !["wildcard", "freehit", "bboost", "3xc"].includes(c as string))) throw new HttpError(400, "save_chips must list chips");
-	if (!Array.isArray(o.keep) || o.keep.length > 15 || o.keep.some((p: unknown) => !int(p, 1, 99_999))) throw new HttpError(400, "keep must list player ids");
-	if (o.ft !== undefined && o.ft !== null && !int(o.ft, 0, 5)) throw new HttpError(400, "ft must be 0-5");
-	if (o.pending !== undefined && o.pending !== null && o.pending !== "" && (typeof o.pending !== "string" || o.pending.length > 200 || !/^[^>,;]+>[^>,;]+(\s*[,;]\s*[^>,;]+>[^>,;]+)*$/.test(o.pending))) {
-		throw new HttpError(400, 'transfers already made look like "Salah>Palmer, Saka>Foden"');
+	const action = body.action ?? "recommend";
+	const spec = (options: Record<string, unknown>) => ({ action, team_id: body.team_id, options });
+	if (typeof o !== "object" || Array.isArray(o)) throw new HttpError(400, "options must be an object");
+	switch (action) {
+		case "recommend": {
+			const base = riskAndChips(o);
+			if (o.ft !== undefined && o.ft !== null && !int(o.ft, 0, 5)) throw new HttpError(400, "ft must be 0-5");
+			if (o.pending !== undefined && o.pending !== null && o.pending !== "" && (typeof o.pending !== "string" || o.pending.length > 200 || !/^[^>,;]+>[^>,;]+(\s*[,;]\s*[^>,;]+>[^>,;]+)*$/.test(o.pending))) {
+				throw new HttpError(400, 'transfers already made look like "Salah>Palmer, Saka>Foden"');
+			}
+			if (typeof o.save !== "boolean") throw new HttpError(400, "save must be true or false");
+			const options: Record<string, unknown> = { ...base, save: o.save };
+			if (Number.isInteger(o.ft)) options.ft = o.ft;
+			if (o.pending) options.pending = o.pending;
+			return spec(options);
+		}
+		case "whatif":
+			if (o.kind === "transfer") {
+				const out = playerId(o.out, "out");
+				const inn = playerId(o.in, "in");
+				if (out === inn) throw new HttpError(400, "in and out must be different players");
+				return spec({ kind: "transfer", out, in: inn, gw: gwNumber(o.gw, "gw") });
+			}
+			if (o.kind === "chip") {
+				if (!CHIPS.includes(o.chip)) throw new HttpError(400, "chip must be wildcard, freehit, bboost or 3xc");
+				return spec({ kind: "chip", chip: o.chip, gw: gwNumber(o.gw, "gw") });
+			}
+			if (o.kind === "keep") return spec({ kind: "keep", player: playerId(o.player, "player") });
+			throw new HttpError(400, "kind must be transfer, chip or keep");
+		case "explain":
+			if (o.against !== "recommendation" && o.against !== "squad") throw new HttpError(400, "against must be recommendation or squad");
+			return spec({ player: playerId(o.player, "player"), against: o.against });
+		case "chips": {
+			const from = gwNumber(o.from_gw, "from_gw");
+			const to = gwNumber(o.to_gw, "to_gw");
+			if (to < from || to - from + 1 > 12) throw new HttpError(400, "the range is 1 to 12 GWs, in order");
+			return spec({ from_gw: from, to_gw: to });
+		}
+		case "preferences": {
+			if (typeof o.clear !== "boolean") throw new HttpError(400, "clear must be true or false");
+			return spec({ ...riskAndChips(o), clear: o.clear });
+		}
+		default:
+			throw new HttpError(400, "action must be recommend, whatif, explain, chips or preferences");
 	}
-	if (typeof o.save !== "boolean") throw new HttpError(400, "save must be true or false");
-	const options: Record<string, unknown> = { risk: o.risk, max_hits_per_gw: o.max_hits_per_gw, save_chips: [...new Set(o.save_chips)], keep: [...new Set(o.keep)], save: o.save };
-	if (Number.isInteger(o.ft)) options.ft = o.ft;
-	if (o.pending) options.pending = o.pending;
-	return { action: "recommend", team_id: body.team_id, options };
 }
 
 /** Follow-up text (FR-UI-13's box, M1.1-4): plain words only, never a command or a shell line. */
@@ -223,7 +286,12 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 	const publicDir = resolve(opts.publicDir);
 	const live = new Map<string, Live>();
 	const done = new Map<string, { status: number; body: unknown }>();
-	let gwCache: { at: number; value: Promise<unknown> } | undefined;
+	let bootCache: { at: number; value: Promise<S.Bootstrap | undefined> } | undefined;
+	/** FPL's bootstrap (the snapshot store's copy while it is current), at most every five minutes; undefined if FPL is down. */
+	const boot = () => {
+		if (!bootCache || Date.now() - bootCache.at >= 5 * 60_000) bootCache = { at: Date.now(), value: fplBootstrap(new SnapshotStore(opts.dataDir), fpl, fplNow()).catch(() => undefined) };
+		return bootCache.value;
+	};
 
 	const indexHtml = readFileSync(join(publicDir, "index.html"), "utf8");
 	// The page's one inline script is its import map; the policy allows exactly that script by hash.
@@ -305,24 +373,29 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 		return l;
 	};
 
-	/** Send a prompt and wait for the run to start, or for Pi to say why it didn't (a warning or error notice). */
-	const promptAndStart = (l: Live, text: string, ms = 30_000) =>
-		new Promise<void>((ok, fail) => {
+	/**
+	 * Send a prompt and wait for the run to start, or for Pi to say why it didn't (a warning or error notice). With
+	 * `notice`, the command starts no run (a Preferences save): wait for its info notice instead, and answer with it.
+	 */
+	const promptAndStart = (l: Live, text: string, ms = 30_000, notice = false) =>
+		new Promise<string | void>((ok, fail) => {
 			l.historyBytes = sizeOf(l.file);
 			l.buffer = [];
 			let over = false;
-			const finish = (err?: Error) => {
+			const finish = (err?: Error, message?: string) => {
 				if (over) return;
 				over = true;
 				clearTimeout(timer);
 				l.waiters = l.waiters.filter((w) => w !== waiter);
 				if (err) fail(err);
-				else ok();
+				else ok(message);
 			};
-			const timer = setTimeout(() => finish(new HttpError(504, "The run didn't start in time.")), ms);
+			const timer = setTimeout(() => finish(new HttpError(504, notice ? "Gaffer didn't answer in time." : "The run didn't start in time.")), ms);
 			const waiter = (e: Record<string, any>) => {
-				if (e.type === "agent_start") finish();
-				else if (e.type === "extension_ui_request" && e.method === "notify" && (e.notifyType === "error" || e.notifyType === "warning")) finish(new HttpError(409, String(e.message)));
+				const said = e.type === "extension_ui_request" && e.method === "notify";
+				if (e.type === "agent_start" && !notice) finish();
+				else if (said && (e.notifyType === "error" || e.notifyType === "warning")) finish(new HttpError(409, String(e.message)));
+				else if (said && notice) finish(undefined, String(e.message));
 			};
 			l.waiters.push(waiter);
 			l.pi.prompt(text).catch((err: Error) => {
@@ -350,15 +423,16 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 
 	const pending = (listed = sessions()) => [...live.values()].filter((l) => !listed.some((s) => s.id === l.id)).map((l) => ({ id: l.id, live: l.running ? "running" : "open" }));
 	const home = async () => {
-		if (opts.replay) return { ...opts.replay.home(), pending: pending() };
+		if (opts.replay) return { terminal: TERMINAL_URL, ...opts.replay.home(), pending: pending() };
 		const cfg = budgetConfig();
-		gwCache = gwCache && Date.now() - gwCache.at < 5 * 60_000 ? gwCache : { at: Date.now(), value: fplBootstrap(new SnapshotStore(opts.dataDir), fpl, fplNow()).then(gwInfo).catch(() => null) };
+		const b = await boot();
 		const busy = lockHolder(runLockPath(opts.sessionsDir));
 		const listed = sessions();
 		// A session the other UI holds is running when that same process holds the run lock.
 		const otherRunning = (s: SessionSummary) => !!busy && !!s.lock && s.lock.pid === busy.pid && s.lock.ui === busy.ui;
 		return {
-			gw: await gwCache.value,
+			gw: b ? gwInfo(b) : null,
+			terminal: TERMINAL_URL,
 			now: fplNow(),
 			spend: { today: Math.round(dayCost(opts.sessionsDir, new Date()) * 1e6) / 1e6, daily: cfg.daily, soft: cfg.soft, hard: cfg.hard },
 			busy: busy ? { ui: busy.ui } : null,
@@ -368,18 +442,40 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 	};
 
 	const team = async (raw: string) => {
-		if (!/^\d{1,10}$/.test(raw) || Number(raw) < 1) throw new HttpError(400, "Digits only, from your Points page address");
-		const id = Number(raw);
+		const id = teamIdOf(raw);
 		if (opts.replay) return opts.replay.team(id);
 		const check = await checkTeam(fpl, id, AbortSignal.timeout(9500));
 		if (!check.ok) throw new HttpError(check.reason === "not_found" ? 404 : 502, check.reason === "not_found" ? "not found" : `FPL could not be reached (${check.message})`);
-		const b = await fplBootstrap(new SnapshotStore(opts.dataDir), fpl, fplNow()).catch(() => undefined);
-		const squad = b ? await teamSquad(fpl, b, id).catch(() => []) : [];
+		const b = await boot();
+		const [squad, chips] = b ? await Promise.all([teamSquad(fpl, b, id).catch(() => []), teamChips(fpl, b, id).catch(() => null)]) : [[], null];
 		const next = b ? gwInfo(b).next : null;
 		const hash = hashTeamId(id, idSalt());
 		const ft = sessions().find((s) => s.team?.id === id && s.ft && s.ft.gw === next)?.ft ?? null;
-		const { schema: _s, updated_at: _u, ...prefs } = readPrefs(opts.dataDir, hash) ?? { schema: "", updated_at: "" };
-		return { id, name: check.name, squad, prefs: "risk" in prefs ? prefs : null, ft };
+		const stored = readPrefs(opts.dataDir, hash);
+		const { schema: _s, updated_at: _u, ...prefs } = stored ?? { schema: "", updated_at: "" };
+		return { id, name: check.name, squad, chips, prefs: "risk" in prefs ? { ...prefs, updated_at: stored?.updated_at } : null, ft };
+	};
+
+	const teamIdOf = (raw: string) => {
+		if (!/^\d{1,10}$/.test(raw) || Number(raw) < 1) throw new HttpError(400, "Digits only, from your Points page address");
+		return Number(raw);
+	};
+
+	/** FR-EVL-04: the team's season from outcomes.jsonl (as /scorecard reads it), and the GWs still waiting to be scored. */
+	const scorecardOf = async (raw: string) => {
+		const id = teamIdOf(raw);
+		const hash = hashTeamId(id, idSalt());
+		const rows = readOutcomes(opts.dataDir);
+		const b = opts.replay ? undefined : await boot();
+		return { team_id: id, ...scorecard(rows, hash), waiting: waitingGws(readLedger(opts.dataDir), rows, hash, b) };
+	};
+
+	/** FPL's player list for the App's pickers (what-if, explain). */
+	const players = async () => {
+		if (opts.replay) return opts.replay.players?.() ?? [];
+		const b = await boot();
+		if (!b) throw new HttpError(502, "FPL could not be reached for its player list.");
+		return allPlayers(b);
 	};
 
 	const sessionView = (id: string) => {
@@ -436,6 +532,17 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 
 	const newRun = async (body: Record<string, any>) => {
 		const spec = runSpec(body);
+		// A Preferences save makes no model call and uses no sandbox: it needs no run lock, and its Pi process
+		// (a session with no messages, which Pi never writes to disk) stops as soon as it has answered.
+		if (spec.action === "preferences") {
+			const l = await open();
+			try {
+				const said = await promptAndStart(l, `/run ${JSON.stringify(spec)}`, 30_000, true);
+				return { status: 200, body: { ok: true, message: said ?? "" } };
+			} finally {
+				await stop(l, "done");
+			}
+		}
 		const busy = lockHolder(runLockPath(opts.sessionsDir));
 		if (busy) throw new HttpError(409, `A run is in progress in ${busy.ui === "terminal" ? "the browser terminal" : busy.ui === "app" ? "the Gaffer App" : "another Gaffer process"}. Gaffer runs one at a time here.`);
 		const l = await open();
@@ -527,6 +634,8 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 			let m: RegExpExecArray | null;
 			if (req.method === "GET" && p === "/api/home") return send(res, 200, await home());
 			if (req.method === "GET" && (m = /^\/api\/team\/([^/]+)$/.exec(p))) return send(res, 200, await team(m[1]));
+			if (req.method === "GET" && (m = /^\/api\/team\/([^/]+)\/scorecard$/.exec(p))) return send(res, 200, await scorecardOf(m[1]));
+			if (req.method === "GET" && p === "/api/players") return send(res, 200, await players());
 			if (req.method === "GET" && (m = /^\/api\/sessions\/([^/]+)$/.exec(p))) return send(res, 200, sessionView(m[1]));
 			if (req.method === "GET" && (m = /^\/api\/sessions\/([^/]+)\/events$/.exec(p))) return events(req, res, m[1]);
 			if (req.method === "POST" && p === "/api/runs") {

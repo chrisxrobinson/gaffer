@@ -54,7 +54,7 @@ function Counter({ rec, id }) {
 
 const conf = (level) => html`<span class=${`tag ${level}`}>${level}</span>`;
 
-export function ResultView({ rec, teamName, now = Date.now() }) {
+export function ResultView({ rec, teamName, now = Date.now(), terminal }) {
 	const P = rec.players;
 	const xi = rec.starting_xi;
 	const rowsOf = (n) => xi.filter((id) => pos(P[String(id)]) === n);
@@ -87,7 +87,7 @@ export function ResultView({ rec, teamName, now = Date.now() }) {
 
 		<section class="card" aria-labelledby="tr-h">
 			<header><h2 id="tr-h">Transfers</h2><span class="muted">${rec.transfers.length ? `${rec.transfers.length} of ${a.free_transfers ?? "?"} free · ${rec.hits ? `${rec.hits} hit${rec.hits > 1 ? "s" : ""} (−${rec.hit_cost})` : "no hits"}` : "None this week: roll the free transfer"}</span></header>
-			${rec.transfers.length ? html`<div class="scroll-x"><table>
+			${rec.transfers.length ? html`<div class="scroll-x" tabindex="0" role="region" aria-label="Transfers table"><table>
 				<thead><tr><th>Move</th><th class="n">Price</th><th class="n">xP 4 GW</th><th class="n">6 GW*</th><th>Conf.</th></tr></thead>
 				<tbody>${rec.transfers.map((t) => html`<tr data-transfer=${`${t.out.id}>${t.in.id}`}>
 					<td><div class="mv"><span class="out"><span class="sr">Out: </span>${t.out.name}<span class="club">${P[String(t.out.id)]?.team ?? ""}</span></span><span class="arr" aria-hidden="true">→</span><span class="in"><span class="sr">In: </span>${t.in.name}<span class="club">${P[String(t.in.id)]?.team ?? ""}</span></span></div><div class="why">${t.rationale}</div></td>
@@ -141,7 +141,7 @@ export function ResultView({ rec, teamName, now = Date.now() }) {
 		<section class="card" aria-labelledby="plan-h">
 			<header><h2 id="plan-h">${rec.plan.length}-GW plan</h2><span class="muted">Free transfers banked as shown</span></header>
 			<div class="spark" aria-hidden="true">${rec.plan.map((g) => html`<div><span class="v">${xp(g.expected_points)}</span><span class="b" style=${`height:${8 + (maxPlan > minPlan ? ((g.expected_points - minPlan) / (maxPlan - minPlan)) * 40 : 20)}px`}></span><span class="v">GW${g.gw}</span></div>`)}</div>
-			<div class="scroll-x"><table class="plan">
+			<div class="scroll-x" tabindex="0" role="region" aria-label="4-GW plan table"><table class="plan">
 				<thead><tr><th>GW</th><th>Moves</th><th>Captain</th><th class="n">FT</th><th class="n">xP</th></tr></thead>
 				<tbody>${rec.plan.map((g, i) => html`<tr class=${i === 0 ? "now" : ""} data-gw=${g.gw}>
 					<td class="gwc">${g.gw}</td>
@@ -158,8 +158,9 @@ export function ResultView({ rec, teamName, now = Date.now() }) {
 			<span class="row">
 				<button type="button" class="btn small" onClick=${() => download(`gaffer-${rec.rec_id}.json`, "application/json", exportJson(rec))}>Export JSON</button>
 				<button type="button" class="btn small" onClick=${() => download(`gaffer-gw${rec.gw}-${rec.rec_id}.csv`, "text/csv", exportCsv(rec))}>Export CSV</button>
+				${terminal ? html`<a class="btn small" href=${terminal} target="_blank" rel="noopener noreferrer">Open in terminal</a>` : null}
 			</span>
 		</div>
-		<p class="muted" style="font-size:12.5px">In the browser terminal this session is under /resume.</p>
+		<p class="muted" style="font-size:12.5px">${terminal ? "Open in terminal opens the browser terminal's own page in a new tab; " : "In the browser terminal "}this session is under /resume there. The App itself has no terminal.</p>
 	</article>`;
 }

@@ -1,5 +1,6 @@
-// The run states docs/ui §6 lists that a Recommend run can reach, as event streams derived from the recorded faux
-// run (faux-run.jsonl): for the states test and for `--replay` screenshots.
+// The run states docs/ui §6 lists, as event streams derived from the recorded faux run (faux-run.jsonl): those a
+// Recommend run reaches, the text answers of What-if, Explain and Chip planner (M1.1-4) with the states they reach,
+// and a follow-up asked about the result. For the states test and for `--replay` screenshots.
 //   node test/fixtures/states.mjs <out dir>   writes one <state>.jsonl per state (replay format {t, rec})
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -57,8 +58,50 @@ export function states() {
 		{ t: last.at(-1).t + 10, rec: { type: "agent_settled", aborted: false } }];
 	// Stopped by the user during the golden path.
 	out.stopped = [...ev.slice(0, bashStart + 8), { t: ev[bashStart + 8].t + 100, rec: { type: "agent_settled", aborted: true } }];
+
+	// The text answers (M1.1-4): the same snapshot and golden-path steps, then an answer in Markdown, no submission.
+	const bashEnd = at(ev, isEnd("bash"));
+	for (const [name, run, answer] of TEXT_RUNS) {
+		const head = ev.slice(0, bashEnd + 1).map((e) => (e.rec.entry?.customType === "gaffer.run" ? { ...e, rec: { ...e.rec, entry: { ...e.rec.entry, data: { ...e.rec.entry.data, ...run, prefs_file: null } } } } : e));
+		out[name] = [...head, ...said(ev[bashEnd].t + 400, answer, 0.0123)];
+	}
+	// A text run still streaming its answer, and one stopped at the hard cap before it answered.
+	out["whatif-running"] = out.whatif.slice(0, out.whatif.findLastIndex((e) => e.rec.assistantMessageEvent?.type === "text_delta"));
+	out["whatif-hardcap"] = [...out.whatif.slice(0, bashEnd + 1), budget(ev[bashEnd].t, { session_cost: 1.52, capped: "session" }),
+		{ t: ev[bashEnd].t + 10, rec: { type: "extension_ui_request", id: "n3", method: "notify", notifyType: "error", message: "Gaffer stopped this run: this session has cost $1.52, over the $1.50 cap (GAFFER_BUDGET_HARD). Anything above is a partial result." } },
+		{ t: ev[bashEnd].t + 50, rec: { type: "agent_settled", aborted: true } }];
+	// A follow-up about the result (FR-UI-13): the question, then its answer in the same session.
+	const end = ev.at(-1).t;
+	out.followup = [...ev, { t: end + 1000, rec: { type: "agent_start" } }, { t: end + 1000, rec: { type: "message_start", message: { role: "user", content: FOLLOW_UP } } }, ...said(end + 1500, FOLLOW_UP_ANSWER, 0.0141)];
 	return out;
 }
+
+/** An assistant message streaming `text` (a few deltas), ending the run: the events Pi sends for a text answer. */
+function said(t, text, cost) {
+	const parts = text.match(/[\s\S]{1,80}/g) ?? [];
+	const ev = (dt, rec) => ({ t: t + dt, rec });
+	return [
+		ev(0, { type: "message_start", message: { role: "assistant", content: [], usage: { cost: { total: 0 } } } }),
+		ev(10, { type: "message_update", usage: { cost: { total: cost / 2 } }, assistantMessageEvent: { type: "text_start", contentIndex: 0 } }),
+		...parts.map((d, i) => ev(20 + i * 30, { type: "message_update", usage: { cost: { total: cost / 2 } }, assistantMessageEvent: { type: "text_delta", contentIndex: 0, delta: d } })),
+		ev(30 + parts.length * 30, { type: "message_update", usage: { cost: { total: cost } }, assistantMessageEvent: { type: "text_end", contentIndex: 0, content: text } }),
+		ev(40 + parts.length * 30, { type: "message_end", message: { role: "assistant", content: [{ type: "text", text }], usage: { cost: { total: cost } }, stopReason: "stop" } }),
+		ev(50 + parts.length * 30, { type: "agent_end" }),
+		ev(60 + parts.length * 30, { type: "agent_settled", aborted: false }),
+	];
+}
+
+export const FOLLOW_UP = "Why Haaland as captain rather than Salah?";
+export const FOLLOW_UP_ANSWER = "**Haaland's 7.9 xP against Salah's 6.4** decides it: City are at home to the weakest attack-adjusted defence in GW8, and his P(start) is 0.96.\n\n- Salah's fixture is away to a top-four defence.\n- The gap is 1.5 xP, doubled to 3.0 as captain.";
+const TABLE = "| Plan | xP 4 GW | xP 6 GW | Hit |\n|---|---|---|---|\n| Best plan | 214.6 | 318.2 | 0 |\n| With the move | 211.9 | 316.0 | −4 |";
+const TEXT_RUNS = [
+	["whatif", { action: "whatif", title: "What-if: Watkins → Isak", options: { kind: "transfer", out: { id: 506, name: "Watkins", team: "AVL" }, in: { id: 661, name: "Isak", team: "NEW" }, gw: 8 } },
+		`**Not worth it this week.** Selling Watkins for Isak in GW8 costs a hit and gives back 2.7 xP over 4 GWs.\n\n${TABLE}\n\n- It is legal: the bank stays at £0.4m.\n- It uses your one free transfer, so a second move would cost −4.\n\nPlan 1 stays ahead; nothing was saved.`],
+	["explain", { action: "explain", title: "Explain Saka", options: { player: { id: 12, name: "Saka", team: "ARS" }, against: "recommendation", rec: { rec_id: "01M5CQS9CC8HCWMQV7HHCC37EW", gw: 8, role: "in the starting XI" } } },
+		"**Saka: 6.1 xP in GW8**, from 0.92 P(start) and 84 expected minutes.\n\n| GW | Fixture | xP |\n|---|---|---|\n| 8 | BOU (H) | 6.1 |\n| 9 | che (A) | 4.4 |\n| 10 | WOL (H) | 5.8 |\n\nFPL's own ep_next is 5.6. A knock or a rotation in the cup week would change the picture."],
+	["chips", { action: "chips", title: "Chip planner GW8–GW13", options: { from_gw: 8, to_gw: 13 } },
+		"**Keep all four for now.** No blank or double GW is announced before GW13.\n\n| Chip | Best GW | xP added | Next-best GW |\n|---|---|---|---|\n| Bench Boost | 11 | +6.8 | 9 |\n| Triple Captain | 10 | +7.4 | 8 |\n| Free Hit | 12 | +3.1 | 13 |\n| Wildcard | not evaluated | – | – |\n\nWildcard wasn't evaluated in the time budget. First-half chips expire at the GW19 deadline."],
+];
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
 	const dir = process.argv[2];

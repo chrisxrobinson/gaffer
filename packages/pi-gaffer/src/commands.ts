@@ -4,7 +4,7 @@
  */
 
 /** The commands Gaffer offers: its templates and commands, and four session basics. */
-export const GAFFER_COMMANDS = ["gw", "whatif", "explain", "team", "prefs", "scorecard", "usage", "export-rec", "new", "resume", "copy", "help"] as const;
+export const GAFFER_COMMANDS = ["gw", "whatif", "explain", "chips", "team", "prefs", "scorecard", "usage", "export-rec", "new", "resume", "copy", "help"] as const;
 
 const ALLOWED = new Set<string>(GAFFER_COMMANDS);
 
