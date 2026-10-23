@@ -1000,6 +1000,7 @@ The earliest Phase 1 can close is GW9's data check, about 2026-11-04, and only i
 - [x] The two chip runs choose the Triple Captain week by different measures (raw xP vs the decayed objective), so they name different weeks (GW11 vs GW9) for near-equal values. The template doesn't say which measure to rank by.
 - [x] In the App, the run's odds banner says "Bookmaker odds are unavailable (football-data.co.uk)" when the source was reachable but had nothing priced for GW9. The step line says it better: "no bookmaker odds yet".
 - [x] The browser-pane tool's `type` didn't reach the App's team ID field once; `form_input` did. A tool quirk (as in M1.1-4).
+- [x] **The terminal takes one browser at a time** (ttyd `--max-clients 1`, by design). At 18:34Z your Chrome tab got only "Press ⏎ to Reconnect", because my browser-pane tab still held the connection; the log says "refuse to serve WS client due to the --max-clients option". Closing my tab freed it. The page gives no hint that another tab holds the terminal.
 
 ## Proposed (not built; outside this close)
 - `app.mjs` should stop with one clear failure when FPL is unavailable, and `verify.sh` should say "FPL is updating, re-run later" on a 503 from `entry/`.
@@ -1007,3 +1008,4 @@ The earliest Phase 1 can close is GW9's data check, about 2026-11-04, and only i
 - The chips template should name its ranking measure (raw xP over the range, with the decayed objective as a tie-break).
 - The App's odds banner should tell "not priced yet" apart from "unavailable".
 - The ADR 0009 window rule needs your decision for future deploys: it was waived once here.
+- The terminal's page (`ttyd-index.html`) could say "The terminal is open in another tab or window" when ttyd refuses a second client, instead of only "Press ⏎ to Reconnect".
