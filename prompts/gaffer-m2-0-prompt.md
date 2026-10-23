@@ -37,7 +37,7 @@ Look at how BUILD.md records each milestone; this one gets a section in the same
 
 ## The task
 
-Build M2-0 on a new branch, `build-m2-0`, cut from `main` after the Phase 2 plan is merged. Commit at sensible points. Don't push, open a PR or merge; I'll review the branch.
+Build M2-0 on a new branch, `build-m2-0`, cut from `main` once `phase-2-plan` is merged. If it isn't merged yet, cut it from `phase-2-plan`, which holds `phase-1.1-close`, the Phase 2 briefs and the accepted ADRs 0015–0020. Commit at sensible points. Don't push, open a PR or merge; I'll review the branch.
 
 1. **Identity in the harness (ADR 0016).** All of this is off unless `GAFFER_AUTH=alb`; the Mac keeps today's behaviour. Log the mode at start-up.
    - **`gaffer-web`:**
