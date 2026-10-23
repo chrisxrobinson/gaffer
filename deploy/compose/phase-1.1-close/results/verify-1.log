@@ -1,0 +1,162 @@
+17:31:24
+== NFR-SEC-04: the web TUI and the Gaffer App published on 127.0.0.1 only (gaffer)
+{"7681/tcp":[{"HostIp":"127.0.0.1","HostPort":"7681"}],"7682/tcp":[{"HostIp":"127.0.0.1","HostPort":"7682"}]}
+GET http://127.0.0.1:7681/ -> 200
+GET http://127.0.0.1:7682/ (the App) -> 200
+== NFR-SEC-01/02: sandbox isolation
+PASS  [NFR-SEC-01] no network tools in the sandbox image
+      no curl/wget/nc in image
+PASS  [NFR-SEC-01] HTTP to the internet fails (FPL API)
+      URLError <urlopen error [Errno -3] Temporary failure in name resolution>
+PASS  [NFR-SEC-01] raw TCP to public IPs fails
+      1.1.1.1 OSError [Errno 101] Network is unreachable
+      8.8.8.8 OSError [Errno 101] Network is unreachable
+PASS  [NFR-SEC-01] public DNS does not resolve
+      gaierror [Errno -3] Temporary failure in name resolution
+PASS  [NFR-SEC-01] sandbox cannot reach the harness web TUI (ttyd :7681)
+      gaffer ConnectionRefusedError [Errno 111] Connection refused
+      172.18.0.2 OSError [Errno 101] Network is unreachable
+PASS  [NFR-SEC-01] runs as non-root (id -u ≠ 0)
+      10001
+      uid=10001(sandbox) gid=10001(sandbox) groups=10001(sandbox)
+PASS  [NFR-SEC-01] cap-drop ALL, no-new-privileges, seccomp filtering
+      CapInh:	0000000000000000
+      CapPrm:	0000000000000000
+      CapEff:	0000000000000000
+      CapBnd:	0000000000000000
+      CapAmb:	0000000000000000
+      NoNewPrivs:	1
+      Seccomp:	2
+PASS  [NFR-SEC-01] writes to / and site-packages fail (read-only root)
+      touch: cannot touch '/should-fail': Read-only file system
+      exit=1
+      touch: cannot touch '/usr/local/lib/python3.14/site-packages/evil.py': Read-only file system
+      exit=1
+PASS  [NFR-SEC-01 / FR-DAT-07] /data (snapshots) is read-only to the sandbox
+      admin
+      cache
+      evals
+      exports
+      ledger
+      snapshots
+      users
+      touch: cannot touch '/data/should-fail': Read-only file system
+      exit=1
+      /bin/bash: line 2: /data/snapshots/2026-27/6/20261001T205152Z-9cc137f03526/live-2.json: Permission denied
+      append_exit=1
+PASS  [NFR-SEC-01] /work is writable tmpfs
+      ok
+      tmpfs           256M  4.0K  256M   1% /work
+PASS  [NFR-SEC-01] resource limits: pids 128, memory 2 GiB, 2 CPUs
+      128
+      2147483648
+      200000 100000
+PASS  [NFR-SEC-01] per-command process cap below the pids limit (RLIMIT_NPROC 96)
+      96
+PASS  [NFR-SEC-01] fork bomb is contained (pids limit + timeout) and the sandbox survives
+      timed_out=true; ; healthz=true
+PASS  [NFR-SEC-02] command env is the fixed minimal set
+      PYTHONUNBUFFERED PWD HOME LANG TMPDIR SHLVL MPLCONFIGDIR PYTHONDONTWRITEBYTECODE PATH _
+PASS  [NFR-SEC-02] /proc/*/environ holds no key-like values, no LLM key, no ID salt
+      key-like lines: 0; LLM key present in harness: true, found in sandbox: false; salt found in sandbox: false
+PASS  [NFR-SEC-02] no secrets mounted or on disk in the sandbox
+      ls: cannot access '/run/secrets': No such file or directory
+      done
+PASS  [NFR-SEC-01] no zombie processes left behind (init reaps orphans)
+      zombies: 0
+
+17/17 checks passed
+== NFR-SEC-08: Pi's built-in MCP, codemode, tool search and llama.cpp locked off
+pi --session-dir $TMP/sessions --no-context-files --no-mcp --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences --approve --mode rpc --provider faux --model faux-1 -e $TMP/faux.ts
+PASS  no MCP server started (agent mcp.json, trusted project mcp.json + +builtin:mcp)
+      markers: [], processes: 0
+PASS  no codemode, tool_search or mcp__* tool registered
+      read, bash, edit, write, fpl_snapshot, submit_recommendation, set_preferences
+PASS  the model is offered exactly Gaffer's seven tools on every request
+      5 requests; bash, edit, fpl_snapshot, read, set_preferences, submit_recommendation, write
+PASS  no MCP section in the system prompt
+      false, false, false, false, false
+PASS  every MCP, codemode and tool_search call failed
+      mcp__agent_direct__pwn:error, mcp__project_direct__pwn:error, codemode:error, tool_search:error
+PASS  /mcp and /llama are absent from RPC get_commands
+      help, team, run, prefs, export-rec, usage, scorecard, chips, explain, gw, whatif, skill:chip-strategy, skill:fpl-rules-2026-27, skill:gaffer-workflow, skill:risk-and-ownership, skill:team-news, skill:transfer-and-captaincy
+NFR-SEC-08 lockdown check passed
+== FR-UI-06: only Gaffer's commands in the real TUI (tmux, 100 columns); the shortcuts do nothing
+pi --session-dir $TMP/sessions --no-context-files --no-mcp --tools read,write,edit,bash,fpl_snapshot,submit_recommendation,set_preferences --tui-mode fullscreen --provider faux --model faux-1 --thinking medium -e $TMP/faux.ts (tmux 100x40)
+ok   header: Gaffer's wordmark and tagline
+ok   footer: the status strip and spend against the caps
+ok   no Pi logo, version, key hints, resource list, cwd or token counter
+ok   title: Gaffer (no snapshot yet)
+ok   "/" lists exactly Gaffer's 13 commands
+ok   /settings: refused, nothing ran
+ok   /model: refused, nothing ran
+ok   /tree: refused, nothing ran
+ok   /thinking: refused, nothing ran
+ok   /scoped-models: refused, nothing ran
+ok   /export: refused, nothing ran
+ok   /import: refused, nothing ran
+ok   /share: refused, nothing ran
+ok   /bug: refused, nothing ran
+ok   /name: refused, nothing ran
+ok   /session: refused, nothing ran
+ok   /changelog: refused, nothing ran
+ok   /hotkeys: refused, nothing ran
+ok   /fork: refused, nothing ran
+ok   /clone: refused, nothing ran
+ok   /trust: refused, nothing ran
+ok   /login: refused, nothing ran
+ok   /logout: refused, nothing ran
+ok   /compact: refused, nothing ran
+ok   /reload: refused, nothing ran
+ok   /quit: refused, nothing ran
+ok   /debug: refused, nothing ran
+ok   /arminsayshi: refused, nothing ran
+ok   /dementedelves: refused, nothing ran
+ok   /mcp: refused, nothing ran
+ok   /llama: refused, nothing ran
+ok   /skill:gaffer-workflow: refused, nothing ran
+ok   /model faux-2: refused, nothing ran
+ok   /thinking high: refused, nothing ran
+ok   /export /data/x.html: refused, nothing ran
+ok   /import /etc/passwd: refused, nothing ran
+ok   /login anthropic: refused, nothing ran
+ok   C-l (model selector) does nothing
+ok   C-p (model cycle) does nothing
+ok   BTab (thinking cycle) does nothing
+ok   C-g (external editor) does nothing
+ok   C-z (suspend) does nothing
+ok   Esc Esc (tree) does nothing
+ok   a plain message reaches the model
+ok   /copy sends the last answer to the terminal's clipboard (OSC 52)
+ok   !ls is blocked
+ok   /help is Gaffer's, with /chips
+ok   /new: a fresh session with the wordmark and strip
+ok   /resume lists the earlier session
+ok   /resume: Ctrl+D and Ctrl+R neither delete nor rename
+ok   /resume: the session reopens with the branding
+ok   /quit and Ctrl+Z left Pi running
+FR-UI-06 TUI check passed
+== The Gaffer App's bridge: NFR-SEC-05/07 fuzz, a Recommend run with a scripted model (FR-UI-08/09/11), NFR-LAT-04, the locks (NFR-REL-03)
+ok   the App's page is served with its content security policy
+ok   every RPC command sent to the bridge is refused (48/48)
+ok   path-traversal session ids and static paths: 404
+ok   another origin, no origin, another host name, a cross-site fetch: refused
+ok   an over-long follow-up and / or ! prompts are refused
+ok   the other actions' fields: unknown actions, names or markup for ids, GWs and ranges outside the season refused (13/13)
+ok   no side effect: no Pi process started, no session file written
+ok   home: next GW 8, deadline 2026-10-23T17:30:00Z
+FAIL FR-UI-08: a team that doesn't exist is "not found" in 2635 ms
+     {"status":502,"body":{"error":"FPL could not be reached (FPL entry/999999999/ unavailable after 4 tries: HTTP 503)"}}
+FAIL the team check: undefined players in the squad
+     {"error":"FPL could not be reached (FPL entry/1/ unavailable after 4 tries: HTTP 503)"}
+file:///work/[eval1]:175
+	const keep = team.body.squad.find((p) => p.position === "MID") ?? team.body.squad[5];
+	                             ^
+
+TypeError: Cannot read properties of undefined (reading 'find')
+    at file:///work/[eval1]:175:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.21.0
+exit=1
+17:32:22

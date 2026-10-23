@@ -583,6 +583,7 @@ Every grader passed (injection 1/1, preferences 1/1, expectations 1/1, follow-up
 - **Not taken / skipped:** none. 1.3.0 is the target; later releases are for the next upgrade under ADR 0009's cadence.
 
 ## Live deploy
+**Done on 2026-10-23 by the combined Phase 1.1 deploy** (M1.1-1 to M1.1-4 together, `main` at `9b24717`, live 15:40:53Z, rollback tag `:pre-phase-1.1`; the dated windows were waived): see [Phase 1.1 close and deploy](#gaffer--phase-11-close-and-deploy). The plan below is kept as it was written.
 **Not done: waiting for your go-ahead and the window** (2026-10-23 17:30Z – 2026-10-25 17:30Z, ADR 0009). Steps 1 and 3 are in the same images, so they deploy together. The plan, from `deploy/compose`:
 1. Tag the running images as the rollback: `docker tag gaffer-harness:local gaffer-harness:pi-0.87.1 && docker tag gaffer-sandbox:local gaffer-sandbox:pi-0.87.1`.
 2. `docker compose up -d --build`; check `docker compose exec -T gaffer pi --version` → 1.3.0.
@@ -656,6 +657,7 @@ Both recommendations were valid and accepted on the first attempt (`01M5854F23YD
 | Live stack untouched | **Pass** | `gaffer-gaffer-1` still runs `b6c8c63111ac` and `gaffer-sandbox-1` `3a759eda6c6c`, both started 16:18:17Z. |
 
 ## Live deploy
+**Done on 2026-10-23 by the combined Phase 1.1 deploy** (M1.1-1 to M1.1-4 together, `main` at `9b24717`, live 15:40:53Z, rollback tag `:pre-phase-1.1`; the dated windows were waived): see [Phase 1.1 close and deploy](#gaffer--phase-11-close-and-deploy). The plan below is kept as it was written.
 **Not done: waiting for your go-ahead, M1.1-1's deploy, and the window** (2026-10-31 11:00Z – 2026-11-02 11:00Z). The live stack still runs M1.1-0 on Pi 0.87.1 until M1.1-1 deploys (2026-10-23 17:30Z – 10-25 17:30Z). The plan, from `deploy/compose`, after M1.1-1 is live:
 1. Tag the running images as the rollback: `docker tag gaffer-harness:local gaffer-harness:pre-m1.1-2 && docker tag gaffer-sandbox:local gaffer-sandbox:pre-m1.1-2`.
 2. `docker compose up -d --build`.
@@ -770,6 +772,7 @@ All three recommendations were valid on the first attempt (`01M5CQS9CC8HCWMQV7HH
 **Screenshots** (`deploy/compose/m113/screenshots/`, 76, from `screenshots.mjs` against `--replay` of the recorded run and its states): for each of light and dark at 1280 and 375 px: `01-start` (the empty state), `02-start-options`, `03-state-daily-cap`, `04-state-run-in-terminal`, `05-run-streaming` (the golden path's "main solve … s of 43 s"), `06-run-done`, `07-result`, `08-result-full`, `09-state-open-in-terminal`, `10-state-reconnecting`, and `state-running`, `-thinking`, `-softcap`, `-hardcap`, `-stale`, `-oddsdown`, `-novalid`, `-stopped`, `-deadline-passed`. The real runs were watched in the browser pane at 1280 px.
 
 ## Live deploy
+**Done on 2026-10-23 by the combined Phase 1.1 deploy** (M1.1-1 to M1.1-4 together, `main` at `9b24717`, live 15:40:53Z, rollback tag `:pre-phase-1.1`; the dated windows were waived): see [Phase 1.1 close and deploy](#gaffer--phase-11-close-and-deploy). The plan below is kept as it was written.
 **Not done: approved on 2026-10-20 ("Go ahead with the M1.1-3 live deploy inside the window, after M1.1-2 is live; tag the pre-m1.1-3 images first"); waiting for the window** (2026-11-06 18:30Z, the GW10 deadline, to 2026-11-19 11:00Z, 48 hours before GW11's), and after M1.1-2 is live (its window is 2026-10-31 11:00Z – 11-02 11:00Z; M1.1-1's is 10-23 17:30Z – 10-25 17:30Z). The plan, from `deploy/compose`:
 1. Tag the running images as the rollback: `docker tag gaffer-harness:local gaffer-harness:pre-m1.1-3 && docker tag gaffer-sandbox:local gaffer-sandbox:pre-m1.1-3`.
 2. `docker compose up -d --build` (the Compose file now publishes `127.0.0.1:7682` too).
@@ -889,6 +892,7 @@ Branch `build-m1.1-4`, cut from `main` after M1.1-3 merged (`6651a57`, #10); the
 **Screenshots** (`deploy/compose/m114/screenshots/`, from `pages.mjs` against `--replay`): for each of light and dark at 1280 and 375 px: `01-start-empty`, `02-drawer-open` and `03-drawer-closed` (375), `04-start-recommend`, `05-start-whatif-transfer`, `06-start-whatif-chip`, `07-start-explain`, `08-start-chips`, `09-state-daily-cap`, `10-state-run-in-terminal`, `11-state-deadline-passed-start`, `12-run-done`, `13-result`, `14-ask-box`, `15-followup-answered`, `16-result-full`, `17-rename` (375), `18-state-open-in-terminal`, `19-run-streaming`, `20-state-reconnecting`, `21-answer-whatif`, `-explain`, `-chips`, `-whatif-running`, `-whatif-hardcap`, `22-scorecard`, `23-preferences`, `24-preferences-saved`, `25-preferences-clear-confirm`, `30-state-running`, `-thinking`, `-softcap`, `-hardcap`, `-stale`, `-oddsdown`, `-novalid`, `-stopped`, `31-state-deadline-passed-result`. The real runs were watched in the browser pane at 1280 px.
 
 ## Live deploy
+**Done on 2026-10-23 by the combined Phase 1.1 deploy** (M1.1-1 to M1.1-4 together, `main` at `9b24717`, live 15:40:53Z, rollback tag `:pre-phase-1.1`; the dated windows were waived): see [Phase 1.1 close and deploy](#gaffer--phase-11-close-and-deploy). The plan below is kept as it was written.
 **Not done: waiting for your go-ahead and the window**, after M1.1-3 is live (its approved window is 2026-11-06 18:30Z – 11-19 11:00Z). First choice: the 48 hours after the GW11 deadline, **2026-11-21 11:00Z – 11-23 11:00Z**; fallback: the 48 hours after GW12's (2026-11-27; its exact time to be taken from FPL's `events` then). Never in the 48 hours before a deadline; live before the GW13 deadline (2026-12-02). The plan, from `deploy/compose`:
 1. Tag the running images as the rollback: `docker tag gaffer-harness:local gaffer-harness:pre-m1.1-4 && docker tag gaffer-sandbox:local gaffer-sandbox:pre-m1.1-4`.
 2. `docker compose up -d --build` (the Compose file is unchanged by M1.1-4; `GAFFER_TERMINAL_URL` defaults to `http://127.0.0.1:7681/`).
@@ -922,3 +926,84 @@ Branch `build-m1.1-4`, cut from `main` after M1.1-3 merged (`6651a57`, #10); the
 - **Title App sessions with `gaffer.run.title`** through `pi.setSessionName` at `/run`, so the terminal's `/resume` lists "What-if: Palmer → Mbeumo" rather than the prompt text (it would then count as a name in the rail, which is fine).
 - **The chip planner's cost:** at What-if's and Explain's $0.12–0.13 (12–13 calls of exploratory Python), a chip planner over 12 weeks may cost more; a `gaffer_lib` helper that runs the forced-chip grid in one command would make it one call, but that is a `gaffer_lib` change.
 - **`verify.sh` could wait for both ports to answer** before its first check.
+
+# Gaffer — Phase 1.1 close and deploy
+
+Branch `phase-1.1-close`, cut from `main` after M1.1-4 merged (`9b24717`, #11); the brief (`prompts/gaffer-phase-1.1-close-prompt.md`) is its first commit. M1.1-1 to M1.1-4 were deployed to the live stack together, on 2026-10-23, **with every dated rule in ADR 0009, ROADMAP and this file waived by you for this deploy**. The deploy went in 1 h 49 min before the GW8 deadline (2026-10-23T17:30Z, from FPL's `events`), which ADR 0009 would not allow; the rollback rule was "roll back if it isn't healthy, or isn't working 90 minutes before the deadline". No code changed: the live images are `main` as merged. Evidence was gathered on macOS / Docker Desktop 27.3.1 (arm64), on the live project `gaffer`.
+
+**How to re-run the evidence**
+- From `deploy/compose`: `./tests/verify.sh` (both ports must answer 200 first), and from the repo root `npx pnpm@12.6.0 eval --no-build` (the cases in `var/evals/cases`, as M1.1-4 ran them).
+- Egress: `docker run -d --name gaffer-egress --net container:gaffer-gaffer-1 nicolaka/netshoot tcpdump -n -l -i any 'not (src host 127.0.0.1 and dst host 127.0.0.1) and not port 7681 and not port 7682'` during an App run, then `docker logs gaffer-egress`.
+- Outcomes: `docker compose exec -T gaffer node /opt/tools/gaffer-eval/main.ts --gw <n>`; admin: `docker compose exec -T gaffer node /opt/tools/gaffer-admin/main.ts`.
+- Results are in `deploy/compose/phase-1.1-close/results/`.
+
+## Live deploy
+- **Time and safety:** 15:39:37Z, deadline 17:30:00Z (`bootstrap-static` `events[7]`, `is_next`). Before anything else the running images were tagged **`gaffer-harness:pre-phase-1.1`** (`b6c8c63111ac`) and **`gaffer-sandbox:pre-phase-1.1`** (`3a759eda6c6c`), M1.1-0 on Pi 0.87.1. `:pre-m1.1-0` (`be0dee8924ce`, `645193abd6aa`) is kept as well.
+- **M1.1-0's Compose file** is `git show 5124556:deploy/compose/docker-compose.yml`: with `-p gaffer --project-directory deploy/compose` its `config --hash gaffer` is `3079110e…`, the same as the running container's `com.docker.compose.config-hash`. It differs from `main`'s by the 7682 binding, `GAFFER_TERMINAL_THEME` and two comments.
+- **Deploy:** `docker compose up -d --build` in `deploy/compose` on `main` (`9b24717`; the branch differs only by the brief), 15:40:02–15:40:47Z. The build used cached layers and needed no scratch `DOCKER_CONFIG`. Both containers were recreated on **`gaffer-harness:local` `3e35aa8a87b7`** (created 15:40:42Z) and **`gaffer-sandbox:local` `ac82591322ec`**, and both ports answered 200 at 15:40:53Z: **7681** (the Gaffer Terminal) and **7682** (the Gaffer App), both bound on `127.0.0.1` only (`docker port`). Pi in the image is **1.3.0** (`pi --version`, `/opt/pi/package.json`). Sessions and data are in the volumes and were kept (no `down`, no `-v`).
+- **Fast checks**, 15:40:53–15:44:00Z, each as `verify.sh` runs it: `isolation.mjs` 17/17; `lockdown.mjs` passed; `commands.mjs` passed ("`/` lists exactly Gaffer's 13 commands", `/help` with `/chips`); `app.mjs` passed (35 checks) and `live-snapshot.mjs` passed (golden path 31.6 s, 10 of 10 next-GW fixtures priced, odds used), both for your team. No rollback was needed.
+- **Rollback** (from `deploy/compose`). The brief's command needs `--project-directory .`, because `-f /tmp/…` otherwise resolves `./secrets` and the build contexts against `/tmp`:
+  `docker tag gaffer-harness:pre-phase-1.1 gaffer-harness:local && docker tag gaffer-sandbox:pre-phase-1.1 gaffer-sandbox:local && git -C ../.. show 5124556:deploy/compose/docker-compose.yml > /tmp/m110-compose.yml && docker compose -f /tmp/m110-compose.yml --project-directory . up -d`
+
+## Real-model sessions
+`anthropic/claude-sonnet-5-5`, thinking medium, on the live images, all for your team. Cost is Pi's `usage.cost.total` summed over each session's assistant messages.
+
+| Run | Window (UTC) | Calls | Pi's total | Shown |
+|---|---|---|---|---|
+| **Yours:** App, *Recommend GW8* (defaults) | 15:44:26 – 15:45:35.3 | 6 | **$0.063932** | "Done in 70 s · $0.064"; valid on attempt 1 |
+| Test: App, *Chip planner* GW9–GW14 | 18:13:19.7 – 18:15:07.0 | 11 | $0.106478 | "Answered in 107 s · $0.106"; no submission |
+| Test: terminal, `/chips` (the default range, GW9–GW14) | 18:20:41.8 – 18:22:45.6 | 10 | $0.099778 | answer in text with its table; no submission |
+| **All, 2026-10-23** | | 27 | **$0.270188** | the App's "Today $0.27"; the terminal's "today $0.2702 of $5.00" |
+
+The test runs cost **$0.206256** of the $0.50 allowed.
+
+**Your GW8 recommendation:** Saka → Tavernier (Saka injured, 0% to play) and Maguire → Gabriel, 2 transfers with 1 free (−4), net **+15.0 xP over 4 GWs**; 58.8 xP this GW; Haaland captain, Gabriel vice; 4-4-2 with Rushworth in goal and Kinsky, Barry, Yirenkyi, Robertson on the bench; no chip (Triple Captain best in GW13, Free Hit in GW12, Bench Boost used in GW2); confidence **low** (plans 1–3 within 0.3 xP). Gaffer derived **1 FT and £1.0m in the bank**. That matches your public history (3 FTs banked going into GW7, 4 transfers made, a −4 hit → 1 for GW8), and you confirmed 1. After the deadline the App showed £1.2m in the bank, and a squad with Gabriel and Tavernier.
+
+**The two chip runs** agree on Wildcard (GW9, +7.2 raw / +8.5 decayed) and Free Hit (GW12, +2.8 / +3.3; no blank or double in range). They rank Triple Captain differently: the App's run gives GW11 as best by raw xP, and the terminal's gives GW9 by the decayed objective (+6.9). Both note that GW9, GW11 and GW13 are within about 0.3 xP of each other. Both said no Bench Boost is left this half.
+
+## Checks
+| ID | Status | Evidence |
+|---|---|---|
+| `verify.sh` (all of it) | **Pass** on run 2 | Run 1, 17:31:24–17:32:22Z: **exit 1** in `app.mjs`. FPL's `entry/` answered **HTTP 503** after 4 tries for both teams (`entry/999999999/`, `entry/1/`): FPL's post-deadline update. The test then threw a `TypeError` on the missing squad (see Proposed). This is not the known odds-down flake; everything before it passed (bindings, 17/17, lockdown, FR-UI-06). FPL answered 200 again at 18:01:28Z. Run 2, 18:08:05–18:12:50Z: **exit 0**: both bindings `127.0.0.1`; 17/17 isolation; the lock check; FR-UI-06 (13 commands); the App check 35/35 (NFR-LAT-04: 99 events, p50 0 ms, p95 1 ms); golden path 36.6 s and odds down 38.8 s (GW9 odds not priced yet, so Dixon-Coles in both); M4 "REPRODUCED, 134 numbers identical"; M5 (privacy: none of 67 team ids or 43 names in ledger/, users/, exports/ or admin/). Logs: `results/verify-1.log`, `results/verify-2.log`. |
+| Faux eval through live | **Pass** | `20261023T174246-faux`, 17:42:46–18:07:51Z, nothing else running. **31/31 valid** (all within two retries). **Points equal to G0** in all 29 scorable cases (1,819 each). Preferences 2/2, injection 2/2, expectations 1/1, follow-up 1/1; ajv 31, none invalid. **p50 52.9 s (M1.1-4 52.9 s), p95 59.6 s (59.6 s)**. Run during FPL's outage: the runner uses its own stand-in API. `results/2026-10-23-faux.summary.json`, `results/faux-eval.log`. |
+| NFR-PRIV-02 (live, App open) | **Pass** | tcpdump in `gaffer-gaffer-1`'s network namespace, 18:13:06–18:19:30Z, during the App's real *Chip planner* run. DNS (Docker's resolver `192.168.65.7`) only for `fantasy.premierleague.com` (CNAME `pl.ismfg.net`) and `api.anthropic.com`, plus the sandbox's service name on `127.0.0.11`. TCP only to `140.248.134.133:443` (FPL), `160.79.104.10:443` (Anthropic) and the sandbox, `172.19.0.2:8080`; nothing else. The UI ports are filtered out. `results/2026-10-23T1813-egress-app-chip-run.txt`. |
+| The terminal at 100 columns | **Pass** | tmux 100×42 in the browser pane. Header (mark, wordmark, tagline) and the two-line strip (team, GW9 countdown, FT, bank; today's and the session's spend; model). `/` lists the 13 commands with `/chips`. `/share` refused in one line ("not available in Gaffer"). The App's GW8 recommendation drawn within 100 columns, and `/chips`'s answer with its table. PageUp back to the header and Ctrl+End to the latest. Shift+Enter gives two lines. Ctrl+C clears them. PageUp and Ctrl+C were dispatched into xterm, as in M1.1-2 to M1.1-4: the pane's browser keeps the real keys. A reload re-attached to the same session (tmux created 18:20:12). |
+| `--continue` after a restart | **Pass** | `docker compose restart gaffer` at 18:23:37Z, both ports 200 at 18:23:43Z. The terminal resumed the newest session (the `/chips` one) as the writer (lock `ui: terminal`, pid 37). The App's Chip planner session lock from the old process was left behind (pid 1809, last heartbeat 18:23:35Z), as M1.1-4 saw. |
+| The App's six actions | **Pass**, What-if and Explain not run with the real model | *Recommend* and *Chip planner*: the real runs above. *Scorecard*: GW7 scored (Gaffer 60, you 60, B0 50, B1 52, xP 60.6; projection error Gaffer 2.067 vs ep_next 3.133); GW8 waiting "before the GW9 deadline". *Preferences*: your current squad, "Nothing saved for this team yet"; nothing was saved. *What-if* and *Explain a pick*: the forms open with your squad (15) and FPL's player list (653 and 668). Both ran through the bridge with a scripted model in `app.mjs`, and with the real model in M1.1-4 on the same code; a real run of each (about $0.12–0.13) would have taken the test spend close to $0.50. |
+| Pi 0.87.1 sessions on 1.3.0 | **Pass** | The App opened the 2026-10-16 GW7 session (written by Pi 0.87.1) and drew its result (rec `01M53BA5WT7H0ABK0JY422JH7P`, "pi 0.87.1", the XI, confidence low). The terminal's `/resume` listed all 8 top-level sessions back to 2026-10-01 and resumed the same one, with its recommendation drawn. `gaffer admin` read all 77 sessions (349 calls, $2.4330, 71 recommendations, p50 59.3 s, p95 85.3 s). `gaffer-eval` scored the GW7 recommendations from them (below). |
+| `/chips` and the Chip planner (real model) | **Pass** | Above: both answered in text with a best and next-best week per chip, the chips left and their expiry, and what they couldn't evaluate. Neither made a submission. |
+
+## Phase 1 exit (three consecutive live GWs scored)
+**Not met.** On 2026-10-23, `outcomes.jsonl` was empty and `recommendations.jsonl` held 11 rows: ten for GW7 (5 real, 5 faux test rows) and one for GW8 (yours, today). FPL's `events` show GWs 1–7 finished and data-checked. `gaffer-eval --gw 7` at about 15:46Z scored the five real GW7 recommendations ("scored now: 5; unscorable: 0; test rows skipped: 5"); for your team's GW7 run (`01M53BA5…`) that was Gaffer 60, actual 60, B0 50, B1 52. `verify.sh`'s M5 step re-ran it at 18:12:50Z (idempotent: still 5 rows). **Scored live GWs: GW7 only.** Still missing:
+- **GW8:** your recommendation is in the ledger. It is scored once FPL checks GW8, about two days after its last match (around 2026-10-27/28), and only if someone runs `gaffer-eval`.
+- **GW9:** no recommendation yet. One is needed before 2026-10-31T11:00Z, then scoring after GW9 is checked (about 2026-11-04).
+
+The earliest Phase 1 can close is GW9's data check, about 2026-11-04, and only if GW8 and GW9 are both scored.
+
+## Blocked on you
+- **What runs `gaffer-eval`** after each GW is checked (carried from M5). Until you choose, it has to be run by hand: GW8 next, around 2026-10-28.
+- **A GW9 recommendation** before 2026-10-31T11:00Z, for the Phase 1 exit.
+- **The open decisions from earlier milestones** (requirement and ADR wording, not changed here):
+  - **NFR-LAT-04:** "first thinking or text delta ≤ 5 s after Go" can't be measured for `/gw` runs (no output before the first tool call). M1.1-3 proposed measuring "first streamed token", as FR-UI-02 does.
+  - **FR-UI-10:** "the 30 eval recommendations" should read "every eval recommendation" (31 since M1.1-0).
+  - **FR-UI-08:** names only *Recommend*; it should cover the other actions as M1.1-4 decided. **FR-UI-13:** the 25% follow-up ratio moves with the recommendation's length, so it needs restating (M1.1-4's Proposed).
+  - **ADR 0014 item 4:** "read-only" bridge versus Preferences saving through Pi as a `/run` action.
+  - **NFR-MNT-04:** "faux eval 30/30" should read "every case valid" (31 cases).
+  - **NFR-COST-03:** the Console checks for M1.1-3's and M1.1-4's windows, and today's: 15:44:40–15:45:36Z ($0.063932), 18:13:19–18:15:08Z ($0.106478) and 18:20:41–18:22:46Z ($0.099778). The key is shared; nothing else used it today.
+
+## Discovered
+- [x] **FPL's API returns HTTP 503 for about 30 minutes after a deadline** (`entry/…` from at least 17:32Z to 18:01Z today). `verify.sh` fails then. Gaffer's own message is right ("FPL could not be reached … HTTP 503"), but `app.mjs` throws a `TypeError` afterwards instead of stopping cleanly.
+- [x] **The brief's rollback command** runs `docker compose -f /tmp/m110-compose.yml` without `--project-directory .`, so Compose would have looked for `secrets/` and the build contexts under `/tmp`. The corrected command is recorded above (not run).
+- [ ] **The App's run page stayed blank** ("Nothing has run in this session yet") for about six minutes during and after the real *Chip planner* run, a reload included, while spend rose. Then it showed the whole run and its answer. The browser pane was hidden at the time, so the page ran as a background tab; that may be the cause, but it isn't confirmed. *Recommend*, run with the pane showing, drew live. To check: a text run in a visible normal browser tab.
+- [x] **Free transfers:** Gaffer's derived 1 FT matched your history and your confirmation. Its own warning (derived, not published by FPL) is right.
+- [x] `/chips`'s hint still gives "e.g. GW8-GW19" as its example range, and the terminal's strip shows "bank ?" for a resumed 0.87.1 session (that session's snapshot has no bank line). Both are cosmetic.
+- [x] The two chip runs choose the Triple Captain week by different measures (raw xP vs the decayed objective), so they name different weeks (GW11 vs GW9) for near-equal values. The template doesn't say which measure to rank by.
+- [x] In the App, the run's odds banner says "Bookmaker odds are unavailable (football-data.co.uk)" when the source was reachable but had nothing priced for GW9. The step line says it better: "no bookmaker odds yet".
+- [x] The browser-pane tool's `type` didn't reach the App's team ID field once; `form_input` did. A tool quirk (as in M1.1-4).
+
+## Proposed (not built; outside this close)
+- `app.mjs` should stop with one clear failure when FPL is unavailable, and `verify.sh` should say "FPL is updating, re-run later" on a 503 from `entry/`.
+- Check the blank run page in a visible browser. If it reproduces, have the session view read the session file once the run's `gaffer.run` entry exists, rather than waiting for events.
+- The chips template should name its ranking measure (raw xP over the range, with the decayed objective as a tie-break).
+- The App's odds banner should tell "not priced yet" apart from "unavailable".
+- The ADR 0009 window rule needs your decision for future deploys: it was waived once here.
