@@ -402,7 +402,7 @@ This section is how the theory in the brief gets tested. There are four layers, 
   - harness metrics alongside points: runs that end without a successful submission, cache-read share of input, cost per session
 
 ### 6.4 Live tracking (every GW, automatic)
-- **Trigger:** `gaffer-eval` (`tools/gaffer-eval`) is a one-shot command that does nothing until FPL marks a GW finished and `data_checked`, and is idempotent, so whatever runs it can run it often. What runs it in phase 1 is not decided (the same question as FR-DAT-10's pre-deadline snapshot): cron on the host, a Compose service that loops, or a scheduled `docker compose run`. In phase 2 it is a scheduled Fargate task.
+- **Trigger:** `gaffer-eval` (`tools/gaffer-eval`) is a one-shot command that does nothing until FPL marks a GW finished and `data_checked`, and is idempotent, so whatever runs it can run it often. In Phase 1 it was run by hand. From Phase 2 a host systemd timer runs it every 3 hours (`deploy/compose/jobs/score.sh`, [ADR 0019](decisions/0019-scheduler.md)), beside an hourly `tools/gaffer-snapshot` for FR-DAT-10's pre-deadline snapshot.
 - **For every ledgered recommendation** of a checked GW it computes, on the pre-deadline snapshot the recommendation was made on:
   - (a) the realised points of Gaffer's recommended XI, captain and chip, after auto-subs, minus its hits
   - (b) the user's actual points, from the public `entry` endpoints (`entry_history.points − event_transfers_cost`), and the same recomputed from their picks as a check
@@ -424,7 +424,7 @@ The decisions are [ADR 0005](decisions/0005-web-tui.md) (Phase 1), [ADR 0013](de
 - Gaffer's mark and ASCII wordmark replace Pi's header; a two-line footer shows team, GW and a live deadline countdown, free transfers, bank, spend against the caps and the model; the title is "Gaffer · GW8 · 6d"
 - `gaffer-dark` and `gaffer-light` themes, with the matching xterm.js palette given to ttyd
 - only Gaffer's commands (`/gw /whatif /explain /chips /team /prefs /scorecard /usage /export-rec /new /resume /copy /help`; `/chips` from M1.1-4); the rest are hidden and refused, and their shortcuts unbound
-- **Connection:** a WebSocket from the browser to ttyd, with `--check-origin`. Locally the port is published on the host's `127.0.0.1` only, and inside the container ttyd listens only on the egress-network interface (never the sandbox network); in the cloud it sits behind ALB/OIDC (`-H` auth-proxy header, idle timeout 3600 s).
+- **Connection:** a WebSocket from the browser to ttyd, with `--check-origin`. Locally the port is published on the host's `127.0.0.1` only, and inside the container ttyd listens only on the egress-network interface (never the sandbox network); on the Phase 2 host it is reached only through Tailscale Serve on `:8443`, with `-H Tailscale-User-Login`, and `gaffer-pi` refuses to start Pi unless ttyd's `TTYD_USER` is the allowed login ([ADR 0016](decisions/0016-front-door-identity.md)).
 - **Streaming:** native. Pi's TUI renders token deltas, summarized thinking and tool progress, and ttyd relays the PTY bytes.
 - **Scrolling:** Pi runs fullscreen and scrolls its own transcript (wheel, PageUp/PageDown, Ctrl+Home/Ctrl+End since Pi 1.0.3).
 - **Copy:** Pi's OSC 52 is passed by tmux (`set-clipboard on`) to a small handler in ttyd's page (S9: copy never worked before Phase 1.1).
@@ -448,42 +448,48 @@ The decisions are [ADR 0005](decisions/0005-web-tui.md) (Phase 1), [ADR 0013](de
 ---
 
 ## 8. Deployment
-The full decision is in [ADR 0006](decisions/0006-deployment.md).
+The decisions are [ADR 0006](decisions/0006-deployment.md) (the Compose design; its AWS column is now the Phase 3 mapping) and, for Phase 2, [ADR 0015](decisions/0015-host.md) (host), [0016](decisions/0016-front-door-identity.md) (front door and identity), [0017](decisions/0017-egress-allowlist.md) (egress), [0018](decisions/0018-data-secrets-backups.md) (data and backups), [0019](decisions/0019-scheduler.md) (scheduler) and [0020](decisions/0020-build-deploy-observe.md) (build, deploy, observe).
 
 ```mermaid
 flowchart TB
-  subgraph Local["Phase 1 — docker compose (single user)"]
+  subgraph Local["Phase 1 / 1.1 — docker compose on the Mac (single user)"]
     direction LR
     g1[gaffer<br/>Pi + ttyd + gaffer-web<br/>127.0.0.1:7681, :7682] -- sandbox_net internal --> s1[sandbox<br/>sandboxd]
     g1 --- v1[(vol: sessions)]
     g1 --- v2[(vol: data)]
     s1 -. ro .- v2
   end
-  subgraph AWS["Phase 2 — AWS (single user)"]
+  subgraph Host["Phase 2 — one Hetzner server, same Compose file + overlays"]
     direction LR
-    alb[ALB + OIDC<br/>idle 3600s] --> svc[ECS Fargate service: gaffer]
-    svc -- RunTask / HTTP private --> tsk[Fargate task: sandbox<br/>no egress, no IAM role]
-    svc --- efs[(EFS: /sessions, /data)] --> s3[(S3 nightly copy)]
-    sm[Secrets Manager] -. LLM key .-> svc
+    ts[tailscaled + Serve<br/>:443 App, :8443 terminal<br/>adds Tailscale-User-Login] --> door[door<br/>Caddy<br/>127.0.0.1:7681, :7682]
+    door -- front internal --> g2[gaffer<br/>checks identity]
+    g2 -- egress_in internal --> eg[egress<br/>Squid allowlist] --> net((Anthropic, FPL,<br/>football-data))
+    g2 -- sandbox_net internal --> s2[sandbox<br/>runsc]
+    g2 --- v3[(sessions, data)]
+    tm[systemd timers<br/>score, snapshot, backup, heartbeat] -.-> g2
+    tm -. restic .-> sb[(Storage Box<br/>encrypted)]
+    tm -. pings .-> hc[healthchecks.io]
   end
 ```
 
-| Concern | Local (Compose) | AWS | Generic host (Hetzner/Fly/K8s) |
+| Concern | Local (Compose, Phases 1–1.1) | Phase 2 host (ADRs 0015–0020) | AWS (Phase 3 mapping, ADR 0006) |
 |---|---|---|---|
-| Harness | `gaffer` container: ttyd (7681) and, from Phase 1.1, `gaffer-web` (7682) | Fargate service, 0.5 vCPU / 1 GB; the ALB routes `/` to the App and `/terminal` to ttyd | Container + Caddy + oauth2-proxy |
-| Sandbox | `sandbox` container on `internal: true` network, `runsc` if Linux | **Separate** Fargate task (not a sidecar), SG ingress from harness only, no egress, no public IP; warm pool of 1 | Container with `runsc`; K8s: Pod with gVisor RuntimeClass + NetworkPolicy deny-all |
-| Sessions/data | Named volumes | EFS (+ S3 nightly) | Volume + restic/S3 backup |
-| Secrets | Compose `secrets:` → harness only | Secrets Manager → harness task only | SOPS/env file → harness only |
-| Auth | Localhost bind | ALB OIDC (Cognito or IdP) | oauth2-proxy |
-| Egress | Harness: default | Harness: NAT with a **required** allowlist (LLM provider, FPL, football-data) via Network Firewall (ADR 0013) | Host firewall |
+| Harness | `gaffer` container: ttyd (7681) and `gaffer-web` (7682), published on `127.0.0.1` | Same container, on internal networks only (`front`, `egress_in`, `sandbox_net`); `door` publishes `127.0.0.1:7681/7682` | Fargate service, 0.5 vCPU / 1 GB; the ALB routes `/` to the App and `/terminal` to ttyd |
+| Sandbox | `sandbox` container on `internal: true` network | Same, under gVisor (`runsc`) | **Separate** Fargate task, SG ingress from harness only, no egress, no public IP; warm pool of 1 |
+| Sessions/data | Named volumes | Named volumes on the server's disk; restic nightly to a Storage Box, encrypted | EFS (+ S3 nightly) |
+| Secrets | Compose `secrets:` → harness only | Same files, 0600 root on the host; inside the encrypted backup | Secrets Manager → harness task only |
+| Auth | Localhost bind; Origin checks | Tailscale Serve (no domain, nothing public) + the harness's own identity check (NFR-SEC-10) | ALB OIDC (Cognito or IdP) |
+| Egress | Harness: default | Harness: only via the Squid allowlist (NFR-SEC-11); host: unrestricted | NAT with a required allowlist |
+| Scheduled jobs | By hand | systemd timers + healthchecks.io | EventBridge Scheduler tasks |
+| Images | Built on the Mac | Built on the host for its arch; previous images tagged for rollback | CI-built, pulled by digest |
 
-**Config** is all environment variables: `GAFFER_PROVIDER`, `GAFFER_MODEL`, `GAFFER_THINKING`, `GAFFER_BUDGET_{SOFT,HARD,DAILY}`, `GAFFER_SESSIONS_ROOT` (the directory the daily cap sums), `GAFFER_ID_SALT`, `SANDBOX_PROVIDER=compose|ecs`, `SANDBOX_URL`, `PI_TELEMETRY=0`. The eval runner alone sets `GAFFER_CLOCK_OFFSET_MS` (§6.3).
+**Config** is all environment variables: `GAFFER_PROVIDER`, `GAFFER_MODEL`, `GAFFER_THINKING`, `GAFFER_BUDGET_{SOFT,HARD,DAILY}`, `GAFFER_SESSIONS_ROOT` (the directory the daily cap sums), `GAFFER_ID_SALT`, `SANDBOX_PROVIDER=compose|ecs`, `SANDBOX_URL`, `PI_TELEMETRY=0`; from Phase 2, `GAFFER_PUBLIC_ORIGIN`, `GAFFER_IDENTITY_HEADER`, `GAFFER_ALLOWED_LOGIN` (ADR 0016) and `NODE_USE_ENV_PROXY`, `HTTPS_PROXY`, `NO_PROXY` (ADR 0017). The eval runner alone sets `GAFFER_CLOCK_OFFSET_MS` (§6.3).
 
 **Scaling path and multi-user seams** are identified here but not built:
 
 | Seam | Where it lives now | Phase 3 change |
 |---|---|---|
-| Auth | Localhost (Phase 1.1: Origin checks on ttyd and `gaffer-web`) / ALB OIDC | `gaffer-web` validates OIDC and maps the user to a tenant |
+| Auth | Localhost (Phase 1.1: Origin checks on ttyd and `gaffer-web`); Phase 2: Tailscale identity checked by `gaffer-web` and `gaffer-pi` against one allowed login | `gaffer-web` maps each allowed identity (Tailscale login or OIDC) to a tenant |
 | Tenancy | Single `/sessions`, `/data/users/<hash>` | `/sessions/<tenant>/`, `/data/users/<tenant>/…`; snapshots of *public* bootstrap data shared, per-user data partitioned |
 | Per-user sandboxes | One per session already | Unchanged. `SandboxProvider=ecs` warm pool, or E2B/AgentCore if cold start is >15 s |
 | Per-user budgets | `gaffer-budget` reads env caps | Caps looked up per tenant; daily sums from the tenant's sessions |
@@ -517,7 +523,7 @@ Tool calls are content blocks with name and args; tool results are `toolResult` 
 
 **Delivery by phase:**
 - **Phase 1:** `gaffer admin` (`tools/gaffer-admin`) is a Node script in the harness image. It scans `/sessions` and `/data/ledger` and writes a static `admin.html` (default `/data/admin/admin.html`; no script, no external resource) with tables and sparklines, and prints its totals. `/usage` is a TUI summary for the current session and day, and `/scorecard` shows the season-to-date results. Both read the same code as the report (`src/usage.ts`, `src/outcomes.ts`).
-- **Phase 2:** the same page is served read-only by `gaffer-web` behind the same OIDC (no separate server).
+- **Phase 2:** the same page is served read-only by `gaffer-web` at `/admin`, behind the same identity check as the App (ADR 0016; no separate server). It also lists the scheduled jobs' last runs from `/data/admin/jobs.jsonl` (ADR 0019).
 - **Phase 3:** queries move to the Postgres index, and optional OpenTelemetry export (GenAI semconv, still "Development" status) comes from a `gaffer-otel` extension on `turn_end` and `tool_result`.
 
 ---
