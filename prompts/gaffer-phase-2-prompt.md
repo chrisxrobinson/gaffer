@@ -1,5 +1,7 @@
 # Project Gaffer — Phase 2 Brief: Gaffer on a small host, behind sign-in
 
+> **Note, 2026-10-23 (after this run):** you then changed Phase 2 to AWS ("keep it professional"). The plan this brief produced is kept as the small-host alternative (research 13–16). The current plan is ROADMAP's Phase 2, ADRs 0015–0020 (the AWS versions) and research 17, and the build briefs `gaffer-m2-0` to `gaffer-m2-2` follow it.
+
 ## Where we are
 
 Gaffer is a Fantasy Premier League agent built as a Pi package (`packages/pi-gaffer`) on `@earendil-works/pi-coding-agent` 1.3.0. Its harness container (Pi, `ttyd` for the Gaffer Terminal on 7681, `gaffer-web` for the Gaffer App on 7682) runs beside a no-network Python sandbox. Phase 0, Phase 1 (M1–M5) and Phase 1.1 (M1.1-0 to M1.1-4) are built and merged. Phase 1.1 was deployed on 2026-10-23 to the only live stack: Docker Compose on my Mac (project `gaffer`, `deploy/compose`), with both ports bound to `127.0.0.1`. BUILD.md's last section, "Phase 1.1 close and deploy", records the deploy and its evidence.
