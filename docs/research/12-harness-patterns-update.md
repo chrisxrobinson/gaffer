@@ -1,6 +1,6 @@
 # R12 — Agent harness patterns, August–October 2026: an update to note 02
 
-_Researched 2026-10-17 (researcher R12, Phase 1.1). Paraphrased; quotes kept under 15 words. Web research plus source reading; no spikes and no paid model calls. The prompt-caching claims are measured by spike S6 (`spikes/s6-prompt-cache/`), which this note cites but does not repeat._
+_Researched 2026-10-17 (researcher R12, Phase 1.1). Paraphrased; quotes kept under 15 words. Web research plus source reading; no spikes and no paid model calls. The prompt-caching claims are measured by spike S6 (`docs/spikes/s6-prompt-cache.md`), which this note cites but does not repeat._
 
 **Scope.** What was published from mid-August to mid-October 2026 on nine harness topics, read against [note 02](02-harness-patterns.md) (2026-09-27), [ARCHITECTURE §5](../ARCHITECTURE.md), [ADR 0007](../decisions/0007-no-subagents.md) and [ADR 0008](../decisions/0008-model-and-budget.md). A few earlier sources that note 02 did not cite are included and dated as such.
 
@@ -353,7 +353,7 @@ Others
 - https://arxiv.org/abs/2608.13608 (11 Aug 2026)
 - Search results only: Cloudflare Code Mode MCP (20 Feb 2026); AWS AgentCore AG-UI (13 Mar 2026); Google Agent Executor (20 May 2026); Temporal Series E (14 Sep 2026) and Restate Series A (30 Sep 2026) news; Managed Agents "Outcomes" (May 2026, secondary write-ups).
 - Discovery only, not cited as evidence: https://github.com/ai-boost/awesome-harness-engineering , https://github.com/Picrew/awesome-agent-harness
-- Gaffer: `harness/models.json`, `packages/pi-gaffer/src/{prompt,budget,guard}.ts`, `packages/pi-gaffer/extensions/gaffer-budget/index.ts`, `sandbox/sandboxd.py`, `spikes/s6-prompt-cache/README.md` (2026-10-17)
+- Gaffer: `harness/models.json`, `packages/pi-gaffer/src/{prompt,budget,guard}.ts`, `packages/pi-gaffer/extensions/gaffer-budget/index.ts`, `sandbox/sandboxd.py`, `docs/spikes/s6-prompt-cache.md` (2026-10-17)
 
 ## Unconfirmed
 

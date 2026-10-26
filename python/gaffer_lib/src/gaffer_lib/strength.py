@@ -9,7 +9,7 @@ goals conceded and saves coherently in `xp`.
 - Where both exist they are blended geometrically, weighted towards the market.
 
 The constants below were chosen from the literature before any backtest and have not been tuned on
-the seasons the backtest reports (BUILD.md, FR-EVL-01).
+the seasons the backtest reports (FR-EVL-01).
 """
 
 from __future__ import annotations

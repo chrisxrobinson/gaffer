@@ -1,6 +1,6 @@
 # ADR 0012 — Codemode, MCP, tool search and llama.cpp: off, locked by flag and setting
 
-**Status:** Accepted · **Date:** 2026-10-17 · **Amends:** [ADR 0002](0002-data-access.md) (context) · **Evidence:** [research 09](../research/09-codemode-and-mcp.md), [spike S3](../../spikes/s3-mcp-lockdown/README.md), [spike S4](../../spikes/s4-codemode-guards/README.md) · **Requirements:** NFR-SEC-01, -02, -08
+**Status:** Accepted · **Date:** 2026-10-17 · **Amends:** [ADR 0002](0002-data-access.md) (context) · **Evidence:** [research 09](../research/09-codemode-and-mcp.md), [spike S3](../spikes/s3-mcp-lockdown.md), [spike S4](../spikes/s4-codemode-guards.md) · **Requirements:** NFR-SEC-01, -02, -08
 
 ## Context
 Pi 0.99.0 added four **built-in extensions** that load in the CLI by default: MCP (servers from `mcp.json` or `pi.registerMcpServer()`, plus `/mcp`), codemode (a `codemode` tool that runs model-written JavaScript in a QuickJS-in-wasm worker thread of the Pi process), tool search (`tool_search`, which declares deferred tools), and a llama.cpp provider (plus `/llama`). Gaffer's 0.87.1 pin had none of them. The brief requires every new built-in to be off unless an ADR turns it on, and the security posture to stay the same or get stronger.

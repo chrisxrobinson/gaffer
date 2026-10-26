@@ -1,9 +1,0 @@
-{
-  "name": "s5-tui-branding",
-  "private": true,
-  "type": "module",
-  "description": "Spike S5: Gaffer branding of the Pi 1.3.0 TUI from an extension",
-  "dependencies": {
-    "@earendil-works/pi-coding-agent": "1.3.0"
-  }
-}

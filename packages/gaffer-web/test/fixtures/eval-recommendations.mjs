@@ -1,6 +1,6 @@
 // Writes eval-recommendations.json from a faux eval run's results (gitignored): every recommendation, with the
 // team hash replaced, so the renderer test (FR-UI-10) has all of them in CI.
-//   node test/fixtures/eval-recommendations.mjs ../../deploy/compose/m113/results/<run>-faux.jsonl
+//   node test/fixtures/eval-recommendations.mjs ../../evals/results/<run>-faux.jsonl
 import { readFileSync, writeFileSync } from "node:fs";
 
 const [file] = process.argv.slice(2);

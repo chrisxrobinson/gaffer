@@ -2,7 +2,7 @@
 
 Research date: 2026-10-17.
 
-**Version read:** `@earendil-works/pi-coding-agent` **1.3.0** (2026-10-15, commit `71023aec`), with `pi-codemode` 1.3.0 and `pi-mcp` 1.3.0. Gaffer is pinned to 0.87.1, which had none of this: codemode, `tool_search`, MCP and llama.cpp arrived as built-in extensions in **0.99.0** (2026-09-29). Citations are `packages/<pkg>/<path>:LINE @v1.3.0`; `src/…` means `packages/coding-agent/src/…`. Spikes: [`spikes/s3-mcp-lockdown`](../../spikes/s3-mcp-lockdown/README.md) and [`spikes/s4-codemode-guards`](../../spikes/s4-codemode-guards/README.md), both run against Pi 1.3.0 with the faux model only.
+**Version read:** `@earendil-works/pi-coding-agent` **1.3.0** (2026-10-15, commit `71023aec`), with `pi-codemode` 1.3.0 and `pi-mcp` 1.3.0. Gaffer is pinned to 0.87.1, which had none of this: codemode, `tool_search`, MCP and llama.cpp arrived as built-in extensions in **0.99.0** (2026-09-29). Citations are `packages/<pkg>/<path>:LINE @v1.3.0`; `src/…` means `packages/coding-agent/src/…`. Spikes: [`spikes/s3-mcp-lockdown`](../spikes/s3-mcp-lockdown.md) and [`spikes/s4-codemode-guards`](../spikes/s4-codemode-guards.md), both run against Pi 1.3.0 with the faux model only.
 
 ---
 

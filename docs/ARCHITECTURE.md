@@ -62,7 +62,7 @@ Both UIs drive the same Pi configuration and the same session store (ADR 0013, A
 ## 1. Turning Pi into Gaffer
 
 ### 1.1 Pi extension points used
-Every one of these is a real API in Pi 0.87.1. Each was tested in [Spike S1](../spikes/s1-extension-hooks/README.md) (S1-n) or is cited to source.
+Every one of these is a real API in Pi 0.87.1. Each was tested in [Spike S1](spikes/s1-extension-hooks.md) (S1-n) or is cited to source.
 
 | Need | Pi mechanism | Evidence |
 |---|---|---|
@@ -277,7 +277,7 @@ The full decision is in [ADR 0002](decisions/0002-data-access.md). Summary:
 - **Retries:** exponential backoff with full jitter (0.5 s base, 8 s cap, 4 tries).
 - **Downtime:** a 503 or non-JSON response means "game updating". The tool serves the last good snapshot with `stale: true`, and the recommendation carries a warning and confidence ≤ medium. Near the deadline, if per-user data can't be refreshed, Gaffer **refuses to finalise transfers** (it will still discuss them) and says why (FR-DAT-05).
 - **Validation:** TypeBox schemas for the consumed fields, plus invariants: 15 picks, 20 teams, one `is_next`, 8 chip definitions, 10 fixtures or a detected BGW/DGW. A failure is a hard error, never silent.
-- **Historical store:** every snapshot is immutable and content-hashed under `/data/snapshots/<season>/<gw>/`. Past seasons come from `vaastav/Fantasy-Premier-League` (licence unclear, used privately only, fetched into a gitignored directory by `tools/fetch_history.py`). Pre-deadline `ep_next` is recorded by us (every snapshot carries it; the index remembers the latest pre-deadline snapshot per GW), because the vaastav xP column can't serve: it is populated for 11 of 38 GWs in 2025/26, and in every season its value for a GW was captured after that GW's matches and contains their points (BUILD.md, M3).
+- **Historical store:** every snapshot is immutable and content-hashed under `/data/snapshots/<season>/<gw>/`. Past seasons come from `vaastav/Fantasy-Premier-League` (licence unclear, used privately only, fetched into a gitignored directory by `tools/fetch_history.py`). Pre-deadline `ep_next` is recorded by us (every snapshot carries it; the index remembers the latest pre-deadline snapshot per GW), because the vaastav xP column can't serve: it is populated for 11 of 38 GWs in 2025/26, and in every season its value for a GW was captured after that GW's matches and contains their points (found in M3).
 - **Odds:** `include: ["odds"]` adds football-data.co.uk's next-round odds and the previous and current season's results as `odds.json`. When the source is down, the plan falls back to Dixon-Coles and says so.
 
 ---

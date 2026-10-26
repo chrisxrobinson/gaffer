@@ -1,6 +1,6 @@
 # Migrating Gaffer from Pi 0.87.1 to Pi 1.3.0
 
-**Status:** Phase 1.1 plan, 2026-10-18 · **Decisions:** [ADR 0009](decisions/0009-pi-version-policy.md) (version policy), [ADR 0010](decisions/0010-context-as-section-patches.md) (model entry, prices, `usage` entries), [ADR 0012](decisions/0012-builtins-locked-off.md) (built-ins locked off), [ADR 0013](decisions/0013-gaffer-terminal.md) (command surface) · **Evidence:** [spike S2](../spikes/s2-pi-1x-upgrade/README.md), [research 07](research/07-pi-1x-migration.md), [spike S6](../spikes/s6-prompt-cache/README.md), [spike S3](../spikes/s3-mcp-lockdown/README.md), [spike S10](../spikes/s10-real-model-1x/README.md) · **Roadmap:** M1.1-0 and M1.1-1
+**Status:** Phase 1.1 plan, 2026-10-18 · **Decisions:** [ADR 0009](decisions/0009-pi-version-policy.md) (version policy), [ADR 0010](decisions/0010-context-as-section-patches.md) (model entry, prices, `usage` entries), [ADR 0012](decisions/0012-builtins-locked-off.md) (built-ins locked off), [ADR 0013](decisions/0013-gaffer-terminal.md) (command surface) · **Evidence:** [spike S2](spikes/s2-pi-1x-upgrade.md), [research 07](research/07-pi-1x-migration.md), [spike S6](spikes/s6-prompt-cache.md), [spike S3](spikes/s3-mcp-lockdown.md), [spike S10](spikes/s10-real-model-1x.md) · **Roadmap:** M1.1-0 and M1.1-1
 
 **Bottom line.** Gaffer runs on Pi 1.3.0 with no change to extension or `src/` code. Spike S2 bumped the versions and fixed one test that hard-coded `"0.87.1"`, with these results:
 - 237/237 tests pass;
@@ -121,7 +121,7 @@ SDK hosts get none of the built-ins, because `DefaultResourceLoader` only knows 
 
 | Item | Where | Status | Change | Citation |
 |---|---|---|---|---|
-| `createAgentSession({cwd, agentDir, model, modelRuntime?, thinkingLevel?, resourceLoader, sessionManager, settingsManager, tools: string[]})` | `test/harness.ts:157`; `evals/runner/run.ts:110-113`; `deploy/compose/tests/live-snapshot.mjs:50`, `recommend.mjs:43`; `spikes/s1-extension-hooks/run-spike.ts` | unchanged | None | `core/sdk.ts:48-103, 191` |
+| `createAgentSession({cwd, agentDir, model, modelRuntime?, thinkingLevel?, resourceLoader, sessionManager, settingsManager, tools: string[]})` | `test/harness.ts:157`; `evals/runner/run.ts:110-113`; `deploy/compose/tests/live-snapshot.mjs:50`, `recommend.mjs:43` | unchanged | None | `core/sdk.ts:48-103, 191` |
 | `new DefaultResourceLoader({cwd, agentDir, settingsManager, extensionFactories, noExtensions, noContextFiles, additionalSkillPaths, additionalPromptTemplatePaths})` + `reload()` | `test/harness.ts:145-155`; `evals/runner/run.ts:96-99`; compose `*.mjs:40-47` | unchanged | None. New option `disabledBuiltinExtensions`. No built-ins load unless passed in | `core/resource-loader.ts:282-292, 376-395` |
 | `SessionManager.create(cwd, dir)` | `test/harness.ts:156`; `run.ts:112`; compose `*.mjs` | unchanged | None | `core/session-manager.ts:1755` |
 | `SettingsManager.create(cwd, agentDir)` | `test/harness.ts:135`; `run.ts:89` | unchanged | None | `core/settings-manager.ts:310` |
@@ -181,13 +181,13 @@ Each step leaves Gaffer working and has its own gate. Steps 0a and 0b don't need
 | **1** | Bump `packages/pi-gaffer/package.json:31-33`, `evals/package.json:11-12`, `pnpm-lock.yaml` and `harness/Dockerfile:29`. Fix `test/recommend.test.ts:74` to use `VERSION` (S2's commits `000ae2a` and `fb269b3`). Keep `harness/models.json` in this step, so the request shape doesn't change yet | `pnpm test`: 237/237, including `test/s1.test.ts` 8/8. Typecheck: no new errors (S2: 17 before, the same 17 after). Image build; `pi --version` = 1.3.0; TUI startup with no warnings. `deploy/compose/tests/verify.sh` with `-p` and the port parameterised (S2's `verify-s2.sh`). `pnpm eval --model faux`: 30/30 valid |
 | **2** | Pin the image's transitive deps (lockfile + `npm ci`), now that the shrinkwrap is gone | Build the image twice from clean and compare `npm ls`; step 1's gates |
 | **3** | `settings.json`: `extensions: ["-builtin:mcp", "-builtin:codemode", "-builtin:tool-search", "-builtin:llama.cpp"]`, `sessionShareDestination: "gist"`, `externalEditor: "/bin/false"`, `enableSkillCommands: false`, `doubleEscapeAction: "none"` (in `harness/Dockerfile:80-81`); `keybindings.json` from ADR 0013; **`--no-mcp`** in `harness/gaffer-pi` and the compose test scripts. **Ships in the same deploy as step 1** (ADR 0012) | S3's checks as tests (NFR-SEC-08): no MCP process starts with a marker server in the agent's and the project's `mcp.json`; no `codemode`, `tool_search` or `mcp__*` tool registered; `/mcp` and `/llama` absent from RPC `get_commands`; verify.sh |
-| **4** | Delete `harness/models.json` and `harness/Dockerfile:69-70`. Update `README.md:83`, ADR 0008 and `BUILD.md`: Sonnet 5.5 now comes from Pi's catalogue | `pnpm test`; the faux eval. **Real model:** 3–5 cases with a follow-up prompt, checking cost per session, cache reads on the follow-up, that the effort beta is accepted, and the `/usage` figures. A TUI run checking that reasoning shows. *Pre-checked in spike S10:* the catalogue entry's request shape (`drop_block`, effort markers, mid-conversation sections) is accepted by the API and follow-ups read the cache |
-| **5** | Docs and cosmetics: the `$schema` at `themes/gaffer.json:2`; `Ctrl+Home`/`Ctrl+End` in `README.md:71`, `docs/ARCHITECTURE.md:400` and `harness/gaffer-pi:5`; the lazy-file comments; `docs/REPO_LAYOUT.md:9`. `spikes/s1-extension-hooks/package.json` stays at `^0.87.1` (historical) | Manual: the TUI in a browser, `Ctrl+Home`/`Ctrl+End`, PageUp |
+| **4** | Delete `harness/models.json` and `harness/Dockerfile:69-70`. Update `README.md:83`, ADR 0008 and the build record: Sonnet 5.5 now comes from Pi's catalogue | `pnpm test`; the faux eval. **Real model:** 3–5 cases with a follow-up prompt, checking cost per session, cache reads on the follow-up, that the effort beta is accepted, and the `/usage` figures. A TUI run checking that reasoning shows. *Pre-checked in spike S10:* the catalogue entry's request shape (`drop_block`, effort markers, mid-conversation sections) is accepted by the API and follow-ups read the cache |
+| **5** | Docs and cosmetics: the `$schema` at `themes/gaffer.json:2`; `Ctrl+Home`/`Ctrl+End` in `README.md:71`, `docs/ARCHITECTURE.md:400` and `harness/gaffer-pi:5`; the lazy-file comments; `docs/REPO_LAYOUT.md:9`. spike S1's `package.json` stays at `^0.87.1` (historical) | Manual: the TUI in a browser, `Ctrl+Home`/`Ctrl+End`, PageUp |
 | **6** (optional) | Take latency in `src/usage.ts` from `AssistantMessage.durationMs` / `ToolResultMessage.durationMs` | `pnpm test` (the usage and admin tests); compare one session's figures before and after |
 
 ## Every Gaffer source line that must change for 1.3.0
 
-*Steps 1–5 done in M1.1-1 (BUILD.md, M1.1-1 section); step 6 is still optional.*
+*Steps 1–5 done in M1.1-1 (recorded in the build record, kept outside the repo); step 6 is still optional.*
 
 **Required for the upgrade itself (S2):**
 - `packages/pi-gaffer/package.json:31-33`: `0.87.1` → `1.3.0` (pi-ai, pi-coding-agent, pi-tui)
@@ -208,5 +208,5 @@ Each step leaves Gaffer working and has its own gate. Steps 0a and 0b don't need
 **Docs and cosmetics:**
 - `packages/pi-gaffer/themes/gaffer.json:2`: `$schema` → `https://pi.dev/schemas/theme.schema.json`
 - `README.md:71`, `docs/ARCHITECTURE.md:400`, `harness/gaffer-pi:5`: Home/End → Ctrl+Home/Ctrl+End
-- `README.md:83, 109`, `docs/REPO_LAYOUT.md:9`, `docs/decisions/0008-model-and-budget.md:6, 11`, `BUILD.md:18, 42`: version and catalogue wording
+- `README.md:83, 109`, `docs/REPO_LAYOUT.md:9`, `docs/decisions/0008-model-and-budget.md:6, 11` and the build record: version and catalogue wording
 - `packages/pi-gaffer/extensions/gaffer-core/index.ts:132` and `test/harness.ts:176`: comments on lazy file creation (the file now appears at the first user message, not the first reply)

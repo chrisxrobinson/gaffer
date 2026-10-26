@@ -2,7 +2,7 @@
 
 Research date: 2026-10-17.
 
-**Version read:** `@earendil-works/pi-durable` **1.3.0** (2026-10-15), monorepo tag `v1.3.0` (`71023aec`). Path conventions: `durable/…` = `packages/durable/…`, `env/…` = `packages/env/…`, `coding-agent/…` = `packages/coding-agent/…`, all cited `@v1.3.0` unless marked otherwise. Removed code is cited by commit. The Cloudflare sample is `earendil-works/pi-durable-cloudflare` @ `dcb56ce` (2026-10-15). The spike is [S8](../../spikes/s8-durable-gaffer/README.md).
+**Version read:** `@earendil-works/pi-durable` **1.3.0** (2026-10-15), monorepo tag `v1.3.0` (`71023aec`). Path conventions: `durable/…` = `packages/durable/…`, `env/…` = `packages/env/…`, `coding-agent/…` = `packages/coding-agent/…`, all cited `@v1.3.0` unless marked otherwise. Removed code is cited by commit. The Cloudflare sample is `earendil-works/pi-durable-cloudflare` @ `dcb56ce` (2026-10-15). The spike is [S8](../spikes/s8-durable-gaffer.md).
 
 ---
 
@@ -247,7 +247,7 @@ Check point: the existing "Pi API churn" checkpoint at each Pi release (ROADMAP 
 - Cloudflare Containers limits, https://developers.cloudflare.com/containers/platform-details/limits/ (undated, fetched 2026-10-17)
 - Cloudflare Durable Objects limits, https://developers.cloudflare.com/durable-objects/platform/limits/ (undated, fetched 2026-10-17)
 - SQLite, "Write-Ahead Logging", https://sqlite.org/wal.html (undated): WAL needs shared memory and does not work over a network filesystem
-- Spike S8, `spikes/s8-durable-gaffer/` (2026-10-17): `spike-output.txt`, `baseline/baseline-output.txt`
+- Spike S8, `docs/spikes/s8-durable-gaffer.md` (2026-10-17): `spike-output.txt`, `baseline/baseline-output.txt`
 
 ## Unconfirmed
 

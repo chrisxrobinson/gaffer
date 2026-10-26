@@ -18,8 +18,8 @@ Where docs, changelog and source disagreed, the source at the tag was trusted.
 
 Companion documents:
 - `docs/MIGRATION-PI-1X.md`: the full inventory, one row per Pi item Gaffer touches, and the upgrade order
-- spike S2 (`spikes/s2-pi-1x-upgrade/`): the upgrade run
-- the lead's spike S6 (`spikes/s6-prompt-cache/`): the prompt-cache path, measured with a real model
+- spike S2 (`docs/spikes/s2-pi-1x-upgrade.md`): the upgrade run
+- the lead's spike S6 (`docs/spikes/s6-prompt-cache.md`): the prompt-cache path, measured with a real model
 
 ---
 
@@ -240,8 +240,8 @@ So since 0.99.0 the tested surface and the shipped TUI differ by four extensions
   - pi-ai, `packages/ai/src/`: `api/anthropic-messages.ts`, `utils/transcript.ts`, `utils/text.ts`, `types.ts`, `providers/faux.ts`
   - docs, `packages/coding-agent/docs/`: `session-format.md`, `settings.md`, `json.md`, `themes.md`
 - npm tarballs `@earendil-works/pi-coding-agent@1.3.0` and `@earendil-works/pi-ai@1.3.0`, installed by pnpm on 2026-10-17: `dist/providers/data/anthropic.json`, the generated catalogue, which isn't in the repo.
-- Spike S2: `spikes/s2-pi-1x-upgrade/README.md`, results and captures, 2026-10-17. Branch `spike/s2-pi-1x-upgrade` (`000ae2a`, `fb269b3`, `28d7800`).
-- Spike S6 (the lead): `spikes/s6-prompt-cache/README.md`, 2026-10-17. Real-model cache measurements, and Anthropic's pricing page fetched that day: Sonnet 5.5 cache reads are $0.10/MTok.
+- Spike S2: `docs/spikes/s2-pi-1x-upgrade.md`, results and captures, 2026-10-17. Branch `spike/s2-pi-1x-upgrade` (`000ae2a`, `fb269b3`, `28d7800`).
+- Spike S6 (the lead): `docs/spikes/s6-prompt-cache.md`, 2026-10-17. Real-model cache measurements, and Anthropic's pricing page fetched that day: Sonnet 5.5 cache reads are $0.10/MTok.
 - Gaffer at commit `f884c33` (2026-10-16): `packages/pi-gaffer/**`, `harness/**`, `evals/runner/**`, `deploy/compose/**`, `tools/**`, `spikes/s1-extension-hooks/**`.
 
 ## Unconfirmed

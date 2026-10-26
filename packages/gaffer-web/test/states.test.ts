@@ -1,7 +1,7 @@
 /**
  * The states of docs/ui §6 that a Recommend run can reach, as the Run view shows them (fixtures/states.mjs derives
  * each from the recorded faux run). The page-level ones (empty, daily cap, a run in the other UI, reconnecting,
- * open elsewhere) are in main.js and start.js and are checked in the browser (BUILD.md, M1.1-3).
+ * open elsewhere) are in main.js and start.js and are checked in the browser (scripts/pages.mjs).
  */
 import { renderToString } from "preact-render-to-string";
 import { describe, expect, it } from "vitest";

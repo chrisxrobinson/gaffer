@@ -7,7 +7,7 @@
 # submit gate: rejected, corrected, stored, exported and replayed. No LLM key is needed: the model is Pi's
 # scripted faux provider.
 # The live stack by default; another Compose project with its own file and host ports, for example:
-#   GAFFER_PROJECT=gaffer-m113 GAFFER_PORT=17685 GAFFER_APP_PORT=17686 COMPOSE_FILE=m113/docker-compose.m113.yml ./tests/verify.sh
+#   GAFFER_PROJECT=gaffer-test GAFFER_PORT=17681 GAFFER_APP_PORT=17682 COMPOSE_FILE=docker-compose.yml:test.override.yml ./tests/verify.sh
 set -eu
 cd "$(dirname "$0")/.."
 PROJECT="${GAFFER_PROJECT:-gaffer}"; PORT="${GAFFER_PORT:-7681}"; APP_PORT="${GAFFER_APP_PORT:-7682}"

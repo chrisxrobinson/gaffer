@@ -173,7 +173,7 @@ def test_cli_derive_and_validate():
 # FR-RUL-02 as built rejects any squad with more than `squad_team_limit` players from a club. FPL
 # lets a manager keep a fourth player who joined that club in real life; only *adding* to the club
 # is barred. Today `validate` therefore fails every plan for such a manager, and so would the
-# submit gate. The change proposed in BUILD.md (M4, "Blocked on you") is: CLUB_LIMIT applies to a GW
+# submit gate. The change proposed in M4 (waiting on the owner's approval) is: CLUB_LIMIT applies to a GW
 # only if that GW's transfers bring a player in from a club that is over the limit afterwards.
 # These tests state that behaviour. They are expected to fail until the change is approved and made
 # (strict: they will fail the suite, as a reminder to remove the marker, once it is).

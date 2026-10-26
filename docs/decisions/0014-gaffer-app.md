@@ -1,6 +1,6 @@
 # ADR 0014 — Gaffer App: a local web app over `pi --mode rpc`, sharing one session store with the terminal
 
-**Status:** Accepted · **Date:** 2026-10-18 · **Supersedes:** the Phase 3 part of [ADR 0005](0005-web-tui.md) (RPC bridge) · **Evidence:** [research 11](../research/11-structured-agent-ui.md), [spike S7](../../spikes/s7-rpc-events/README.md), [research 08](../research/08-pi-durable.md) (S8: one owner per store), [docs/ui](../ui/README.md) · **Requirements:** FR-UI-08…13, NFR-SEC-05, -07, NFR-REL-03, NFR-LAT-04, NFR-A11Y-01
+**Status:** Accepted · **Date:** 2026-10-18 · **Supersedes:** the Phase 3 part of [ADR 0005](0005-web-tui.md) (RPC bridge) · **Evidence:** [research 11](../research/11-structured-agent-ui.md), [spike S7](../spikes/s7-rpc-events.md), [research 08](../research/08-pi-durable.md) (S8: one owner per store), [docs/ui](../ui/README.md) · **Requirements:** FR-UI-08…13, NFR-SEC-05, -07, NFR-REL-03, NFR-LAT-04, NFR-A11Y-01
 
 ## Context
 The brief asks for a second UI, the **Gaffer App**: a structured web app laid out like a desktop agent client (sessions on the left; a structured start; a streaming run with collapsible steps; the recommendation drawn from its JSON). It asked four questions: do both UIs share one backend and session store; is the App local and single-user in Phase 1.1 with the auth and tenancy seams named; how does it avoid any shell path into the harness; and what does it need that the agent doesn't emit.

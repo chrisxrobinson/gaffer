@@ -1,6 +1,6 @@
 /**
  * Spike S1's eight checks, as tests against the real Gaffer extensions (NFR-MNT-02: these gate Pi upgrades).
- * See spikes/s1-extension-hooks/README.md.
+ * See docs/spikes/s1-extension-hooks.md.
  */
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

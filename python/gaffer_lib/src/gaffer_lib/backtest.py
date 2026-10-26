@@ -18,7 +18,7 @@ Honesty notes, which the output repeats:
   the deadline (90 minutes before the GW's first kick-off), and the price and ownership recorded for
   the GW itself. Tests change later GWs and check that earlier decisions don't move.
 - The official xP. vaastav's `xP` column for GW g was captured after GW g's matches and contains
-  their points (BUILD.md), so the baselines use the value recorded for the previous GW: the last
+  their points (found in M3), so the baselines use the value recorded for the previous GW: the last
   official xP that existed before the deadline. Where that is missing the season is reported with
   its coverage, and B1 can't be built for the uncovered GWs (it holds).
 - The fixture list for later GWs is the final one (reschedulings announced later are visible to G0's

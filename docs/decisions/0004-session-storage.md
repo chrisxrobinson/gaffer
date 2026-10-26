@@ -9,7 +9,7 @@ Gaffer needs four things stored:
 - per-user preferences
 - enough usage data for the admin centre
 
-Pi already writes an append-only JSONL session per conversation. Each entry is a tree node (`id`/`parentId`). Every assistant message records provider, model, token usage and cost. Extensions can add `custom` entries with `pi.appendEntry(customType, data)` that stay out of model context ([research 01 §5](../research/01-pi-internals.md), and [spike S1](../../spikes/s1-extension-hooks/README.md) check 7). Managed Agents treats the session as a durable append-only log that lives outside the context window ([research 02](../research/02-harness-patterns.md)).
+Pi already writes an append-only JSONL session per conversation. Each entry is a tree node (`id`/`parentId`). Every assistant message records provider, model, token usage and cost. Extensions can add `custom` entries with `pi.appendEntry(customType, data)` that stay out of model context ([research 01 §5](../research/01-pi-internals.md), and [spike S1](../spikes/s1-extension-hooks.md) check 7). Managed Agents treats the session as a durable append-only log that lives outside the context window ([research 02](../research/02-harness-patterns.md)).
 
 ## Options considered
 1. **A parallel store** (Postgres or SQLite tables for runs, recommendations and usage). Queries are easy, but it duplicates what Pi already writes and the two can drift. Rejected for MVP.

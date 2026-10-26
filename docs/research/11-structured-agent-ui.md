@@ -8,7 +8,7 @@ Research date: 2026-10-17. Draft by R11 for the Phase 1.1 lead.
 - `earendil-works/pi-durable-cloudflare` at `dcb56ce` (2026-10-15).
 - AG-UI 1.0 (`@ag-ui/core` 1.0.3, 2026-10-16), A2UI v0.9.1 / v1.0 RC, MCP Apps spec `2026-01-26` (`@modelcontextprotocol/ext-apps` 2.0.3).
 
-Path conventions: `docs/X.md` and `src/…` mean `packages/coding-agent/…` at `v1.3.0` unless marked otherwise. "S7" is the spike in `spikes/s7-rpc-events/` (README, `events.jsonl`, `summary.json`).
+Path conventions: `docs/X.md` and `src/…` mean `packages/coding-agent/…` at `v1.3.0` unless marked otherwise. "S7" is the spike in `docs/spikes/s7-rpc-events.md` (README, `events.jsonl`, `summary.json`).
 
 ---
 
@@ -224,7 +224,7 @@ Related work, 2026:
 
 ## 4. Spike S7 and the draft event → UI mapping
 
-S7 (`spikes/s7-rpc-events/README.md`) ran Pi 1.3.0 RPC with a faux model and a Gaffer-shaped stub, recording 643 records. Its key results:
+S7 (`docs/spikes/s7-rpc-events.md`) ran Pi 1.3.0 RPC with a faux model and a Gaffer-shaped stub, recording 643 records. Its key results:
 - Thinking, text and tool-call deltas stream as typed events.
 - `fpl_snapshot` `details` and `submit_recommendation` `details.recommendation` arrive whole in `tool_execution_end`.
 - `pi.appendEntry` arrives as `entry_appended` in order.
@@ -448,7 +448,7 @@ The lead's observation fixes the design: thinking is a short summary (~200 chara
 - Pi @ `v0.87.1` (`f07218c4`): `rpc-types.ts`, `rpc-mode.ts` and the five docs above, diffed against 1.3.0 on 2026-10-17
 - `packages/durable/README.md`, `test/examples/05-watches.ts`, `21-late-join.ts` @ `v1.3.0`
 - earendil-works/pi-durable-cloudflare @ `dcb56ce` (2026-10-15): `README.md`, `package.json`, `src/protocol.ts`, `src/session.ts`, `src/client/*`, cloned 2026-10-17
-- Spike S7: `spikes/s7-rpc-events/` (README, `events.jsonl`, `summary.json`), run 2026-10-17
+- Spike S7: `docs/spikes/s7-rpc-events.md` (README, `events.jsonl`, `summary.json`), run 2026-10-17
 - AG-UI, all fetched 2026-10-17:
   - https://github.com/ag-ui-protocol/ag-ui (GitHub API: 16,649 stars, pushed and released `release/2026-10-17`)
   - https://docs.ag-ui.com/concepts/events

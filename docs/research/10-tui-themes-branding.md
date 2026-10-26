@@ -6,7 +6,7 @@ Research date: 2026-10-17/18.
 
 Path conventions: `src/…` = `packages/coding-agent/src/…`, `tui/…` = `packages/tui/src/…`, `docs/X.md` = `packages/coding-agent/docs/X.md` = `https://pi.dev/docs/latest/X`. `IM` = `src/modes/interactive/interactive-mode.ts`. All line numbers are `@v1.3.0` unless marked.
 
-**Spikes:** S5 `spikes/s5-tui-branding/` (branding extension, real `pi` 1.3.0 in a 100×40 tmux pane, `--network none`), S9 `spikes/s9-web-terminal/` (the same through ttyd 1.7.7 + tmux in a browser). Both READMEs have the commands to re-run.
+**Spikes:** S5 `docs/spikes/s5-tui-branding.md` (branding extension, real `pi` 1.3.0 in a 100×40 tmux pane, `--network none`), S9 `docs/spikes/s9-web-terminal.md` (the same through ttyd 1.7.7 + tmux in a browser). Both READMEs have the commands to re-run.
 
 ---
 

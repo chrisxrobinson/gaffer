@@ -1,6 +1,6 @@
 # ADR 0010 — Per-prompt FPL context as mid-conversation system messages; prices from the live price list
 
-**Status:** Accepted · **Date:** 2026-10-17 · **Amends:** [ADR 0008](0008-model-and-budget.md) (prices, `models.json`) · **Evidence:** [spike S6](../../spikes/s6-prompt-cache/README.md), [research 07](../research/07-pi-1x-migration.md)
+**Status:** Accepted · **Date:** 2026-10-17 · **Amends:** [ADR 0008](0008-model-and-budget.md) (prices, `models.json`) · **Evidence:** [spike S6](../spikes/s6-prompt-cache.md), [research 07](../research/07-pi-1x-migration.md)
 
 ## Context
 `gaffer-core` sets two system-prompt sections in `before_agent_start` on every prompt: `fpl_context` (team, GW, deadline, a countdown and `now:`) and `user_preferences` (ARCHITECTURE §1.3). `fpl_context` changes on every prompt by design, because the model must know how close the deadline is.
@@ -34,5 +34,5 @@ Two more findings bear on the same config:
 ## Consequences
 - Follow-up prompts in the TUI and the Gaffer App cost about a tenth of what they do today, and can't hit the preserved-thinking 400 on newer accounts. A one-prompt recommendation costs the same.
 - The leading system prompt keeps the first prompt's `fpl_context`. Later prompts see "Updated system prompt section…" messages after it. In S6 the model always used the latest values; the eval case above keeps checking it.
-- Cost figures recorded after 2026-10-07 (BUILD.md M4 and M5, the eval summaries, the admin report) overstate cache reads. They are not rewritten: the session files hold token counts, so `gaffer admin` can recompute them with corrected prices if wanted. NFR-COST-03's Console comparison should use the corrected price.
+- Cost figures recorded after 2026-10-07 (M4 and M5's build record, the eval summaries, the admin report) overstate cache reads. They are not rewritten: the session files hold token counts, so `gaffer admin` can recompute them with corrected prices if wanted. NFR-COST-03's Console comparison should use the corrected price.
 - Pi's Anthropic adapter only asks for `thinking.display` `"summarized"` or `"omitted"`; Sonnet 5.5's `"updates"` progress notes are never requested. Gaffer does not add a request hook for them (research 07): both UIs show the summarized thinking Pi already records.

@@ -14,7 +14,7 @@ export const ACTIONS = [
 	["scorecard", "Scorecard", "Season so far: Gaffer vs you vs baselines"],
 	["prefs", "Preferences", "Risk, chips to save, players to keep"],
 ];
-/** What a run of each action usually takes and costs (BUILD.md, M1.1-4's real-model runs). */
+/** What a run of each action usually takes and costs (M1.1-4's real-model runs). */
 const EXPECT = {
 	recommend: "About 75 s and $0.06. Data is fetched fresh from FPL at the start.",
 	whatif: "About 60 s and $0.05: a solve with the move forced, against the best plan.",

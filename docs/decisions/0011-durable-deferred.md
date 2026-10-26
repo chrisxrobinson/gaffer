@@ -1,6 +1,6 @@
 # ADR 0011 — Pi Durable: stay on pi-coding-agent, build two seams, revisit on stated triggers
 
-**Status:** Accepted · **Date:** 2026-10-17 · **Evidence:** [research 08](../research/08-pi-durable.md), [spike S8](../../spikes/s8-durable-gaffer/README.md)
+**Status:** Accepted · **Date:** 2026-10-17 · **Evidence:** [research 08](../research/08-pi-durable.md), [spike S8](../spikes/s8-durable-gaffer.md)
 
 ## Context
 Pi Durable (`@earendil-works/pi-durable`, harness since 1.0.0 on 2026-10-01) is a separate agent harness built on pi-ai. It commits conversations, model turns, tool calls and typed documents to storage (SQLite, JSONL, Durable Object SQLite) before showing them, resumes interrupted runs on reopen, forks a conversation at any entry, and lets clients `watch()` a conversation. Earendil's Cloudflare sample runs one Durable Object per session with a React UI over WebSockets.

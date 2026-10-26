@@ -1,6 +1,6 @@
 # ADR 0009 — Pi version: move to 1.3.0 in Phase 1.1, then one minor at a time, landed after a deadline
 
-**Status:** Accepted · **Date:** 2026-10-17 · **Evidence:** [research 07](../research/07-pi-1x-migration.md), [MIGRATION-PI-1X](../MIGRATION-PI-1X.md), [spike S2](../../spikes/s2-pi-1x-upgrade/README.md), [spike S6](../../spikes/s6-prompt-cache/README.md) · **Requirements:** NFR-MNT-01, -02, -04, -05
+**Status:** Accepted · **Date:** 2026-10-17 · **Evidence:** [research 07](../research/07-pi-1x-migration.md), [MIGRATION-PI-1X](../MIGRATION-PI-1X.md), [spike S2](../spikes/s2-pi-1x-upgrade.md), [spike S6](../spikes/s6-prompt-cache.md) · **Requirements:** NFR-MNT-01, -02, -04, -05
 
 ## Context
 Gaffer was pinned to `@earendil-works/pi-coding-agent` 0.87.1 (2026-09-22) for Phase 1. Pi has since shipped 0.99.0–0.99.2, 1.0.0–1.0.4, 1.1.0, 1.2.0 and 1.3.0 (2026-10-15): eleven releases in 24 days. Five things from that history shape the policy:

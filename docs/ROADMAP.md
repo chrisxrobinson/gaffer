@@ -65,14 +65,14 @@ Runs on one machine with `docker compose up`, then `http://127.0.0.1:7681`. It h
 
 **Status on 2026-10-17:** M1–M5 are built and merged. The Phase 1 exit is **not yet met**: the ledger holds five real GW7 recommendations and no scored outcome. GW7 is scored once FPL checks it (about 2026-10-21); recommendations are still needed for GW8 and GW9, so the earliest close is GW9's data check, about 2026-11-04. Phase 1.1 runs alongside and must not interrupt it.
 
-**Status on 2026-10-23:** the Phase 1 exit is still **not met**. **GW7 is scored**: `gaffer-eval` wrote its five real recommendations to `outcomes.jsonl`. **GW8** has one real recommendation, made before the deadline, and is scored once FPL checks GW8 (about 2026-10-28). **GW9** still needs a recommendation before 2026-10-31 11:00Z. The earliest close is GW9's data check, about 2026-11-04, if `gaffer-eval` is run after each check ([BUILD.md](../BUILD.md#phase-1-exit-three-consecutive-live-gws-scored)).
+**Status on 2026-10-23:** the Phase 1 exit is still **not met**. **GW7 is scored**: `gaffer-eval` wrote its five real recommendations to `outcomes.jsonl`. **GW8** has one real recommendation, made before the deadline, and is scored once FPL checks GW8 (about 2026-10-28). **GW9** still needs a recommendation before 2026-10-31 11:00Z. The earliest close is GW9's data check, about 2026-11-04, if `gaffer-eval` is run after each check.
 
 ## Phase 1.1 — Pi 1.x and Gaffer's own UIs (single user, local)
 A short phase between the local MVP and the cloud. It brings Gaffer onto Pi 1.3.0 with every new built-in locked off, makes the browser terminal Gaffer's own, and adds the Gaffer App, a structured web app over the same agent and session store. Design: [ADRs 0009–0014](decisions/README.md), [docs/ui](ui/README.md), [MIGRATION-PI-1X](MIGRATION-PI-1X.md), research 07–12.
 
 **Rules for every milestone** (ADR 0009):
 - Each milestone leaves a working Gaffer and lands in the 48 hours after a GW deadline, never in the 48 hours before one. The previous harness image stays tagged for rollback until the next milestone lands.
-  - **Waived on 2026-10-23, for one deploy:** M1.1-1 to M1.1-4 went live together at 15:40Z, 1 h 49 min before the GW8 deadline, with the M1.1-0 images tagged `:pre-phase-1.1` for rollback ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
+  - **Waived on 2026-10-23, for one deploy:** M1.1-1 to M1.1-4 went live together at 15:40Z, 1 h 49 min before the GW8 deadline, with the M1.1-0 images tagged `:pre-phase-1.1` for rollback.
 - Security can only stay the same or get stronger: no user shell; the sandbox has no network and no secrets; the LLM key stays in the harness; team IDs are hashed at rest; every new built-in is off unless an ADR turns it on.
 - Each milestone's exit includes the regression set: `pnpm test` (with the S1 checks), the sandboxd and `gaffer_lib` suites, `verify.sh`, `pnpm eval --model faux` (30/30 valid, points equal to G0).
 
@@ -86,7 +86,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
 - **Exit:** NFR-COST-04, NFR-COST-05; three real-model cases including one follow-up (the follow-up's cache-read share ≥ 80%); the regression set.
 
 ### M1.1-1 — Pi 1.3.0, locked down (deploy 2026-10-23 17:30Z – 10-25 17:30Z, between the GW8 and GW9 deadlines)
-- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived.
 - **Scope:**
   - MIGRATION-PI-1X steps 1–5: versions, `test/recommend.test.ts`, the harness image's Pi install from a committed lockfile (`npm ci`), drop the `models.json` override for Sonnet 5.5, docs and keys (`Ctrl+Home`/`Ctrl+End`)
   - ADR 0012's lock in the same change: `--no-mcp` on every CLI launch, `-builtin:` entries for MCP, codemode, tool search and llama.cpp in `settings.json`, the `--tools` allowlist kept
@@ -96,7 +96,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
 - **Exit:** NFR-MNT-01 (whole Pi tree pinned), NFR-MNT-04, NFR-MNT-05, NFR-SEC-08; the regression set on 1.3.0; ≥ 5 real-model Sonnet 5.5 cases including a follow-up, with cost per recommendation within NFR-COST-01 and no rise against M1.1-0; a TUI check in the browser (reasoning shown, recommendation at 100 columns, FR-OUT-02).
 
 ### M1.1-2 — Gaffer Terminal (deploy after the GW9 deadline, 2026-10-31 11:00Z – 11-02, before GW10)
-- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived.
 - **Scope** (ADR 0013, docs/ui §3):
   - header with the mark and ASCII wordmark; two-line footer (status strip with live countdown; spend and model); title
   - `gaffer-dark` and `gaffer-light` themes and the matching ttyd palette
@@ -106,7 +106,7 @@ Ships what doesn't need the upgrade and pays off immediately in live use.
 
 ### M1.1-3 — Gaffer App: recommend (international break, 2026-11-07 – 11-19; GW11 deadline 2026-11-21)
 The break is the longest gap between deadlines this autumn, so the largest change lands here.
-- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived.
 - **Scope** (ADR 0014, docs/ui §4–8):
   - `gaffer-web` in the harness container: RPC process per open session, the command allowlist, SSE with replay, the Origin check, `--replay` dev mode
   - in Gaffer's package: the session lock and the run lock; `/run {json}` and `gaffer.run`; the plan-step tag; golden-path progress lines
@@ -115,7 +115,7 @@ The break is the longest gap between deadlines this autumn, so the largest chang
 - **Exit:** FR-UI-08 (*Recommend*), FR-UI-09, FR-UI-10, FR-UI-11, FR-UI-12; NFR-SEC-05, NFR-SEC-07, NFR-REL-03, NFR-LAT-04; NFR-PRIV-02 re-run with the App open (no third-party request).
 
 ### M1.1-4 — Gaffer App: complete (by the GW13 deadline, 2026-12-02)
-- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived ([BUILD.md](../BUILD.md#gaffer--phase-11-close-and-deploy)).
+- **Deployed 2026-10-23** with M1.1-1 to M1.1-4 together; the dated window was waived.
 - **Scope:** the *What-if*, *Explain a pick*, *Chip planner* (with a new template), *Scorecard* and *Preferences* actions; the follow-up box; every state in docs/ui §6; rename; the phone layout; accessibility.
 - **Exit:** FR-UI-08 (all actions), FR-UI-13, NFR-A11Y-01, NFR-COST-04 measured through the App.
 

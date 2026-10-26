@@ -1,6 +1,6 @@
 # Gaffer — Proposed repository layout
 
-**Date:** 2026-09-27, updated 2026-10-18 for Phase 1.1. This is a monorepo: TypeScript for the Pi package (pnpm workspace) and Python for the library and sandbox (uv).
+**Date:** 2026-09-27, updated 2026-10-18 for Phase 1.1 and 2026-10-26 for the Phase 2 cleanup (the tree as it is, not as proposed). This is a monorepo: TypeScript for the Pi package (pnpm workspace) and Python for the library and sandbox (uv).
 
 ```
 gaffer/
@@ -25,6 +25,7 @@ gaffer/
 │       ├── server.ts              #   entry: --host/--port, or --replay <events.jsonl> (no Pi, no model)
 │       ├── src/                   #   bridge.ts: node: built-ins + Pi's RpcClient; one gaffer-pi --mode rpc per open session; command allowlist; SSE + POST; Origin/Host checks;
 │       │                          #   replay.ts: a recorded run (and a follow-up after it) served as a session
+│       ├── scripts/               #   pages.mjs: every screen in headless Chrome, light and dark, 1280 and 375 px: screenshots, axe-core, a keyboard walk
 │       ├── public/                #   no-build frontend: index.html (import map), app/ (main, parts, start, run, result, followup, screens, md, reduce, format;
 │       │                          #   style.css from docs/ui/brand),
 │       │                          #   vendor/ (Preact 10.29.8 + hooks, htm 3.1.1, as published), fonts/ (Barlow Condensed, IBM Plex Sans and Mono, WOFF2)
@@ -39,27 +40,21 @@ gaffer/
 ├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux + gaffer-web), tmux.conf, entrypoint (ttyd and gaffer-web), gaffer-pi launcher (TUI and --mode rpc), ttyd page script (keys, OSC 52 copy, title, viewport) and ttyd's palette from docs/ui/brand/tokens.json;
 │                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013; M1.1-1); models.json only for models the catalogue lacks (none today)
 ├── deploy/
-│   ├── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs, commands.mjs and app.mjs, the NFR-SEC-08, FR-UI-06 and App gates), m1xx/ (each milestone's separate evidence stack)
-│   ├── aws/                       #   Phase 2 IaC: ECS service/task defs, ALB+OIDC, EFS, S3, Secrets Manager
-│   └── generic/                   #   Caddy + oauth2-proxy compose override for Hetzner/Fly-style hosts
+│   └── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs, commands.mjs and app.mjs, the NFR-SEC-08, FR-UI-06 and App gates), m1xx/ (each milestone's separate evidence stack)
 ├── evals/                         # A workspace package: `pnpm eval` (runner/cli.ts)
 │   ├── cases/                     #   30 fixed team×GW cases (*.json); data/: id-free fixtures of Gaffer's own 2026/27 snapshots
 │   ├── build/                     #   extract_live.py (snapshots → cases/data), build_cases.py (cases → gitignored var/evals)
 │   ├── runner/                    #   SDK-based headless runner (calls bindExtensions), stand-in FPL API, faux policy, code graders
-│   └── results/                   #   dated results JSONL (gitignored except summaries)
+│   └── results/                   #   dated results JSONL and summaries (gitignored; CI uploads them as an artifact)
 ├── tools/                         # Operator scripts, plain node, also in the harness image (/opt/tools)
 │   ├── gaffer-admin/              #   scans /sessions + /data → admin.html
 │   └── gaffer-eval/               #   post-data_checked live tracker → /data/ledger/outcomes.jsonl
 ├── .github/workflows/ci.yml       # CI: vitest (with the S1 checks), the Python suites, the stack and `pnpm eval --model faux`
 ├── renovate.json                  # Pi upgrades as one gated pull request (NFR-MNT-02)
 ├── schemas/                       # Exported JSON Schemas (recommendation-1.json) for consumers
-├── spikes/                        # Throwaway design spikes, never imported: S1 (Phase 0), S2–S10 (Phase 1.1: Pi 1.3 upgrade, MCP lock, codemode guards,
-│                                  #   TUI branding, prompt cache, RPC events, Durable, web terminal, real-model checks)
-├── docs/                          # Research, ADRs, architecture, requirements, roadmap, MIGRATION-PI-1X;
-│   └── ui/                        #   UI spec for both UIs, brand (mark, ASCII wordmark, tokens), clickable mockups (1.1)
-├── TASKS.md                       # Phase 0 checklist
-├── TASKS-1.1.md                   # Phase 1.1 checklist
-└── BUILD.md                       # Build checklist and exit-criteria evidence, per milestone
+└── docs/                          # Research, ADRs, architecture, requirements, roadmap, MIGRATION-PI-1X;
+    ├── spikes/                    #   each design spike's findings (S1–S10), the evidence the ADRs cite
+    └── ui/                        #   UI spec for both UIs, brand (mark, ASCII wordmark, tokens), clickable mockups (1.1)
 ```
 
 ## Top-level folders
@@ -70,12 +65,11 @@ gaffer/
 | `python/` | `gaffer_lib`: the deterministic FPL rules, projections, optimiser wrapper, validator and backtester |
 | `sandbox/` | The no-network Python execution environment and its `sandboxd` exec service |
 | `harness/` | The Pi + Gaffer + ttyd + `gaffer-web` container image (the "brain") |
-| `deploy/` | Compose for local, IaC for AWS, overrides for generic hosts |
+| `deploy/` | Compose for the local stack and its stack checks (IaC for AWS comes with that phase) |
 | `evals/` | LLM-in-the-loop evaluation cases, runner and results |
 | `tools/` | Operator scripts: admin report and live outcome tracker |
 | `schemas/` | Published JSON Schemas for machine-readable output |
-| `spikes/` | Design spikes that prove or disprove assumptions |
-| `docs/` | Design documentation, including the UI spec and mockups (`docs/ui`) |
+| `docs/` | Design documentation, including the UI spec and mockups (`docs/ui`) and the design spikes' findings (`docs/spikes`) |
 
 ## What to build
 
