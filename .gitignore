@@ -14,3 +14,8 @@ evals/results/*.jsonl
 
 # Third-party history for backtests (tools/fetch_history.py); never committed
 var/
+
+# Dev-only: build prompts and build journals stay on this machine, never on GitHub
+prompts/
+dev-docs/
+*.pem
