@@ -40,7 +40,7 @@ gaffer/
 ├── harness/                       # Harness image: Dockerfile (node + Pi + pi-gaffer + ttyd + tmux + gaffer-web), tmux.conf, entrypoint (ttyd and gaffer-web), gaffer-pi launcher (TUI and --mode rpc), ttyd page script (keys, OSC 52 copy, title, viewport) and ttyd's palette from docs/ui/brand/tokens.json;
 │                                  #   1.1: pi/package.json + package-lock.json (the image's whole Pi tree pinned, ADR 0009), settings.json and keybindings.json (ADRs 0012, 0013; M1.1-1); models.json only for models the catalogue lacks (none today)
 ├── deploy/
-│   └── compose/                   #   docker-compose.yml (gaffer, sandbox; egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs, commands.mjs and app.mjs, the NFR-SEC-08, FR-UI-06 and App gates), m1xx/ (each milestone's separate evidence stack)
+│   └── compose/                   #   docker-compose.yml (gaffer, sandbox, the optional tunnel connector (ADR 0015); egress + internal networks; secrets), init-secrets.sh, tests/ (stack checks; 1.1: lockdown.mjs, commands.mjs and app.mjs, the NFR-SEC-08, FR-UI-06 and App gates), m1xx/ (each milestone's separate evidence stack)
 ├── evals/                         # A workspace package: `pnpm eval` (runner/cli.ts)
 │   ├── cases/                     #   30 fixed team×GW cases (*.json); data/: id-free fixtures of Gaffer's own 2026/27 snapshots
 │   ├── build/                     #   extract_live.py (snapshots → cases/data), build_cases.py (cases → gitignored var/evals)
@@ -102,4 +102,4 @@ gaffer/
 `/gw` (full recommendation), `/whatif <scenario>`, `/explain <player>`; Phase 1.1 adds `/chips` for the App's Chip planner (also usable in the terminal).
 
 ### Services and images (2)
-`harness` (gaffer: ttyd and, from Phase 1.1, the `gaffer-web` process in the same container), `sandbox` (sandboxd). No new service: the App's bridge shares the harness's image, key, volumes and sandbox network (ADR 0014). Justification for `gaffer-web`: the Gaffer App needs a server that owns its Pi processes and allowlists their commands; ttyd can't do either.
+`harness` (gaffer: ttyd and, from Phase 1.1, the `gaffer-web` process in the same container), `sandbox` (sandboxd). No new service: the App's bridge shares the harness's image, key, volumes and sandbox network (ADR 0014). Justification for `gaffer-web`: the Gaffer App needs a server that owns its Pi processes and allowlists their commands; ttyd can't do either. Phase 2 adds one optional service from a published image, `tunnel` (Cloudflare's `cloudflared`, Compose profile `tunnel`): the way in from outside, with Cloudflare Access in front (ADR 0015).

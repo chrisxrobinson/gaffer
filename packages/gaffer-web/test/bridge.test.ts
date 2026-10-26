@@ -85,10 +85,13 @@ writeFileSync(existingFile, `${JSON.stringify({ type: "session", version: 3, id:
 let fakes: FakePi[] = [];
 let spawned: (string | undefined)[] = [];
 let n = 0;
+const PUBLIC = "gaffer.example.test"; // the App's host name behind the tunnel (ADR 0015)
 const bridge = createBridge({
 	sessionsDir,
 	dataDir,
 	publicDir: resolve(import.meta.dirname, "../public"),
+	publicHost: PUBLIC,
+	publicTerminalHost: "term.example.test",
 	replay: { home: () => ({ gw: { next: 9 }, sessions: [] }), team: (id) => ({ id, name: "Test XI", squad: [] }), players: () => [{ id: 8, name: "Saka", team: "ARS", position: "MID", price: 10.1 }] },
 	spawnPi: (file) => {
 		spawned.push(file);
@@ -187,6 +190,48 @@ describe("NFR-SEC-05 / NFR-SEC-07: only the allowlist reaches Pi", () => {
 		const xsite = await raw("GET", `/api/sessions/${EXISTING}`, "", { "sec-fetch-site": "cross-site" });
 		expect(xsite.status).toBe(403);
 		expect(spawned).toEqual([]);
+	});
+
+	it("behind the tunnel: the public host name is served only to https://<it>; every other origin is refused", async () => {
+		const ok = { host: PUBLIC, origin: `https://${PUBLIC}` };
+		const home = await raw("GET", "/api/home", "", ok);
+		expect(home.status).toBe(200);
+		expect(JSON.parse(home.body).terminal).toBe("https://term.example.test/"); // the App's link follows the host
+		expect(JSON.parse((await raw("GET", "/api/home", "", {})).body).terminal).toBe("http://127.0.0.1:7681/");
+		expect((await raw("GET", "/", "", { host: PUBLIC, "sec-fetch-site": "none" })).status).toBe(200); // the page itself
+		const cases: [Record<string, string>, number][] = [
+			[{ host: PUBLIC, origin: `http://${PUBLIC}` }, 403], // the tunnel's name only over https
+			[{ host: PUBLIC, origin: "https://evil.example" }, 403],
+			[{ host: PUBLIC, origin: `https://${PUBLIC}.evil.example` }, 403],
+			[{ host: PUBLIC, origin: `https://${host}` }, 403],
+			[{ host: PUBLIC, origin: "null" }, 403],
+			[{ host: PUBLIC }, 403], // a POST must say where it comes from
+			[{ ...ok, "sec-fetch-site": "cross-site" }, 403],
+			[{ host: "evil.example", origin: "https://evil.example" }, 421], // DNS rebinding onto another name
+			[{ host: `${PUBLIC}:8443`, origin: `https://${PUBLIC}:8443` }, 421],
+			[{ host: `x.${PUBLIC}`, origin: `https://x.${PUBLIC}` }, 421],
+			[{ host, origin: `https://${host}` }, 403], // a loopback name only over http
+		];
+		for (const [headers, status] of cases) {
+			const res = await raw("POST", "/api/runs", JSON.stringify(run()), headers);
+			expect(res.status, JSON.stringify(headers)).toBe(status);
+		}
+		expect(spawned).toEqual([]);
+		const accepted = await raw("POST", "/api/runs", JSON.stringify(run()), ok);
+		expect(accepted.status).toBe(201);
+		expect(spawned).toHaveLength(1);
+	});
+
+	it("with no public host configured (or a malformed one), the tunnel's name is refused like any other", async () => {
+		for (const publicHost of [undefined, "", "gaffer.example.test:443", "https://gaffer.example.test", "GAFFER.example.test", "localhost"]) {
+			const local = createBridge({ sessionsDir, dataDir, publicDir: resolve(import.meta.dirname, "../public"), publicHost, replay: { home: () => ({ sessions: [] }), team: () => ({}) } });
+			await new Promise<void>((r) => local.server.listen(0, "127.0.0.1", r));
+			const to = `127.0.0.1:${(local.server.address() as AddressInfo).port}`;
+			const res = await raw("GET", "/api/home", "", { host: "gaffer.example.test", origin: "https://gaffer.example.test" }, to);
+			expect(res.status, String(publicHost)).toBe(421);
+			if (publicHost === "localhost") expect((await raw("GET", "/api/home", "", { host: "localhost", origin: "https://localhost" }, to)).status).toBe(403);
+			await local.close();
+		}
 	});
 
 	it("follow-ups: over 280 characters, starting with / or !, or with control characters, are refused; others are sent as text", async () => {
@@ -437,13 +482,13 @@ async function sse(id: string, after: number, count: number): Promise<{ id: numb
 }
 
 /** A raw HTTP request, so Host and Origin can be anything. */
-async function raw(method: string, path: string, body: string, headers: Record<string, string>): Promise<{ status: number }> {
+async function raw(method: string, path: string, body: string, headers: Record<string, string>, to = host): Promise<{ status: number; body: string }> {
 	const { request } = await import("node:http");
-	const [h, port] = host.split(":");
+	const [h, port] = to.split(":");
 	return new Promise((ok, fail) => {
-		const req = request({ host: h, port: Number(port), method, path, headers: { host, "content-type": "application/json", ...headers } }, (res) => {
-			res.resume();
-			ok({ status: res.statusCode ?? 0 });
+		const req = request({ host: h, port: Number(port), method, path, headers: { host: to, "content-type": "application/json", ...headers } }, (res) => {
+			let text = "";
+			res.setEncoding("utf8").on("data", (c) => (text += c)).on("end", () => ok({ status: res.statusCode ?? 0, body: text }));
 		});
 		req.on("error", fail);
 		req.end(body);

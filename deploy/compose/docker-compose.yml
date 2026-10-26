@@ -1,5 +1,8 @@
 # Gaffer, local single-user (ADR 0006). Run from this directory:
 #   ./init-secrets.sh && docker compose up --build   then open http://127.0.0.1:7682 (the App) or :7681 (the terminal)
+# Shared through Cloudflare Tunnel with Access in front (ADR 0015), once its token and host names are set:
+#   docker compose up -d tunnel      on
+#   docker compose stop tunnel       off
 name: gaffer
 
 services:
@@ -28,6 +31,10 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       SANDBOX_PROVIDER: compose
       SANDBOX_URL: http://sandbox:8080
+      # The tunnel's host names (ADR 0015), from .env; empty, the App answers on 127.0.0.1/localhost only. Set whether
+      # the tunnel runs or not, so switching it never recreates this container.
+      GAFFER_PUBLIC_APP_HOST: ${GAFFER_PUBLIC_APP_HOST:-}
+      GAFFER_PUBLIC_TERMINAL_HOST: ${GAFFER_PUBLIC_TERMINAL_HOST:-}
     secrets: [anthropic_api_key, gaffer_id_salt]
     volumes:
       - sessions:/sessions
@@ -59,6 +66,22 @@ services:
     cpus: 2
     restart: unless-stopped
 
+  tunnel:
+    # The way in from outside (ADR 0015): Cloudflare's connector dials out to Cloudflare and forwards the App's and the
+    # terminal's host names to gaffer:7682 and gaffer:7681. Cloudflare Access checks who it is first, and the connector
+    # checks Access's token again ("Protect with Access" on each route). Only with `docker compose up -d tunnel`.
+    image: cloudflare/cloudflared:2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07
+    profiles: [tunnel]
+    command: ["tunnel", "--no-autoupdate", "run", "--token-file", "/run/secrets/cloudflared_token"]
+    networks: [egress]   # never sandbox_net; no ports: nothing listens on the host
+    secrets: [cloudflared_token]   # its own token only: no LLM key, no salt
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    depends_on: [gaffer]
+    restart: unless-stopped
+
 networks:
   egress: {}
   sandbox_net:
@@ -73,3 +96,5 @@ secrets:
     file: ./secrets/anthropic_api_key
   gaffer_id_salt:
     file: ./secrets/gaffer_id_salt
+  cloudflared_token:
+    file: ./secrets/cloudflared_token

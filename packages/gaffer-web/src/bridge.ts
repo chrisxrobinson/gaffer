@@ -10,7 +10,8 @@
  *   minutes. Sessions are addressed by id and resolved to a path here: no client path reaches Pi.
  * - Server-sent events with sequence ids; the current run's events are kept per session, so a reconnect replays
  *   from Last-Event-ID and then follows live (FR-UI-03). Commands are POSTs with request ids, answered once.
- * - Every request must come from the App's own origin on a loopback host name (DNS rebinding, cross-site).
+ * - Every request must come from the App's own origin on a loopback host name (DNS rebinding, cross-site), or,
+ *   behind the tunnel (ADR 0015), from https://<publicHost> under that one host name.
  * - Read-only calls into Gaffer's src/ for the session list, the next GW, the team check (its squad, chips and
  *   preferences), FPL's player list, spend and the scorecard. Saving preferences goes through Pi (`/run`).
  */
@@ -44,6 +45,8 @@ const TERMINAL_URL = /^http:\/\/(127\.0\.0\.1|localhost):\d{1,5}\/$/.test(proces
 const BODY_MAX = 16_384;
 const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const LOOPBACK = /^(127\.0\.0\.1|localhost|\[::1\])(:\d{1,5})?$/;
+/** A public DNS name, lower case, no port: what the tunnel's hostnames must look like. */
+const HOSTNAME = /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 
 /** What the bridge needs of a Pi process: RpcClient's allowlisted methods, and a way to cancel a dialog. */
 export type Pi = Pick<RpcClient, "start" | "stop" | "onEvent" | "prompt" | "steer" | "abort" | "getState" | "setSessionName"> & {
@@ -70,6 +73,13 @@ export interface BridgeOptions {
 	replay?: { home(): Record<string, unknown>; team(id: number): unknown; players?(): unknown[] };
 	/** Extra files by URL path (replay mode's dev tools). */
 	devFiles?: Record<string, string>;
+	/**
+	 * The App's host name behind the tunnel (GAFFER_PUBLIC_APP_HOST, ADR 0015). Requests under it are accepted only
+	 * from https://<it>; unset, the App answers on loopback names only.
+	 */
+	publicHost?: string;
+	/** The terminal's host name behind the tunnel (GAFFER_PUBLIC_TERMINAL_HOST), for the App's link when opened there. */
+	publicTerminalHost?: string;
 }
 
 interface Frame {
@@ -284,6 +294,13 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 	const idleMs = opts.idleMs ?? IDLE_MS;
 	const fpl = opts.fpl ?? new FplClient({ timeoutMs: 8000 });
 	const publicDir = resolve(opts.publicDir);
+	const named = (name: string, value?: string) => {
+		if (!value) return undefined;
+		if (HOSTNAME.test(value)) return value;
+		console.error(`gaffer-web: ${name} ${JSON.stringify(value)} is not a host name; ignored`);
+	};
+	const publicHost = named("GAFFER_PUBLIC_APP_HOST", opts.publicHost);
+	const publicTerminalHost = named("GAFFER_PUBLIC_TERMINAL_HOST", opts.publicTerminalHost);
 	const live = new Map<string, Live>();
 	const done = new Map<string, { status: number; body: unknown }>();
 	let bootCache: { at: number; value: Promise<S.Bootstrap | undefined> } | undefined;
@@ -422,8 +439,10 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 	};
 
 	const pending = (listed = sessions()) => [...live.values()].filter((l) => !listed.some((s) => s.id === l.id)).map((l) => ({ id: l.id, live: l.running ? "running" : "open" }));
-	const home = async () => {
-		if (opts.replay) return { terminal: TERMINAL_URL, ...opts.replay.home(), pending: pending() };
+	/** The terminal link for a page on this host: the public terminal behind the tunnel, else the local one. */
+	const terminalFor = (overTunnel: boolean) => (overTunnel ? (publicTerminalHost ? `https://${publicTerminalHost}/` : null) : TERMINAL_URL);
+	const home = async (terminal: string | null) => {
+		if (opts.replay) return { terminal, ...opts.replay.home(), pending: pending() };
 		const cfg = budgetConfig();
 		const b = await boot();
 		const busy = lockHolder(runLockPath(opts.sessionsDir));
@@ -432,7 +451,7 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 		const otherRunning = (s: SessionSummary) => !!busy && !!s.lock && s.lock.pid === busy.pid && s.lock.ui === busy.ui;
 		return {
 			gw: b ? gwInfo(b) : null,
-			terminal: TERMINAL_URL,
+			terminal,
 			now: fplNow(),
 			spend: { today: Math.round(dayCost(opts.sessionsDir, new Date()) * 1e6) / 1e6, daily: cfg.daily, soft: cfg.soft, hard: cfg.hard },
 			busy: busy ? { ui: busy.ui } : null,
@@ -617,22 +636,25 @@ export function createBridge(opts: BridgeOptions): { server: Server; close(): Pr
 		res.setHeader("referrer-policy", "no-referrer");
 		res.setHeader("x-frame-options", "DENY");
 		try {
-			// DNS rebinding: the page is only served under a loopback name. Cross-site: only from its own origin.
+			// DNS rebinding: the page is only served under a loopback name, or the tunnel's one public name (over https,
+			// ADR 0015). Cross-site: only from its own origin.
 			const host = req.headers.host ?? "";
-			if (!LOOPBACK.test(host)) throw new HttpError(421, "wrong host");
+			const overTunnel = publicHost !== undefined && host === publicHost;
+			if (!overTunnel && !LOOPBACK.test(host)) throw new HttpError(421, "wrong host");
+			const own = `${overTunnel ? "https" : "http"}://${host}`;
 			const origin = req.headers.origin;
 			const write = req.method !== "GET" && req.method !== "HEAD";
-			if ((origin !== undefined || write) && origin !== `http://${host}`) throw new HttpError(403, "cross-origin request refused");
+			if ((origin !== undefined || write) && origin !== own) throw new HttpError(403, "cross-origin request refused");
 			const site = req.headers["sec-fetch-site"];
 			if (site !== undefined && site !== "same-origin" && site !== "none") throw new HttpError(403, "cross-site request refused");
-			const url = new URL(req.url ?? "/", `http://${host}`);
+			const url = new URL(req.url ?? "/", own);
 			const p = url.pathname;
 			if (!p.startsWith("/api/")) {
 				if (write) throw new HttpError(405, "method not allowed");
 				return serveStatic(res, p);
 			}
 			let m: RegExpExecArray | null;
-			if (req.method === "GET" && p === "/api/home") return send(res, 200, await home());
+			if (req.method === "GET" && p === "/api/home") return send(res, 200, await home(terminalFor(overTunnel)));
 			if (req.method === "GET" && (m = /^\/api\/team\/([^/]+)$/.exec(p))) return send(res, 200, await team(m[1]));
 			if (req.method === "GET" && (m = /^\/api\/team\/([^/]+)\/scorecard$/.exec(p))) return send(res, 200, await scorecardOf(m[1]));
 			if (req.method === "GET" && p === "/api/players") return send(res, 200, await players());

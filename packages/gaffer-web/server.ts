@@ -1,6 +1,7 @@
 /**
  * gaffer-web, the Gaffer App's bridge (ADR 0014): run by the harness entrypoint beside ttyd, bound like ttyd to
- * the egress interface and published on the host's 127.0.0.1 only.
+ * the egress interface and published on the host's 127.0.0.1 only. Behind the tunnel (ADR 0015) it also answers
+ * on GAFFER_PUBLIC_APP_HOST, over https only.
  *
  *   node server.ts --host <ip> [--port 7682]                       the App over the real session store
  *   node server.ts --replay events.jsonl [--speed 4] [--port 7682]  a recorded run, no Pi, no model (dev)
@@ -30,6 +31,8 @@ const bridge = createBridge({
 	sessionsDir: replay ? mkdtempSync(join(tmpdir(), "gaffer-web-replay-")) : values.sessions!,
 	dataDir: values.data!,
 	publicDir: join(here, "public"),
+	publicHost: process.env.GAFFER_PUBLIC_APP_HOST,
+	publicTerminalHost: process.env.GAFFER_PUBLIC_TERMINAL_HOST,
 	...(replay && { spawnPi: replay.spawn, replay: replay.api, devFiles: existsSync(axe) ? { "/dev/axe.min.js": axe } : {} }),
 });
 bridge.server.listen(Number(values.port), values.host, () => console.log(`gaffer-web on http://${values.host}:${values.port}${replay ? ` (replay of ${values.replay})` : ""}`));

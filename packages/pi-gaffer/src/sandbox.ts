@@ -1,6 +1,6 @@
 /**
  * Sandbox access for Pi's built-in tools (ADR 0001): bash/read/write/edit operations that run in the
- * no-network sandbox through sandboxd, behind a SandboxProvider (compose now, ecs in phase 2).
+ * no-network sandbox through sandboxd, behind a SandboxProvider (compose now, ecs in the AWS phase).
  */
 import { readFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
@@ -48,7 +48,7 @@ export class ComposeSandboxProvider implements SandboxProvider {
 export function providerFromEnv(env: NodeJS.ProcessEnv = process.env): SandboxProvider {
 	const kind = env.SANDBOX_PROVIDER ?? "compose";
 	if (kind === "compose") return new ComposeSandboxProvider(env.SANDBOX_URL ?? "http://sandbox:8080");
-	throw new Error(`SANDBOX_PROVIDER=${kind} is not implemented yet (ecs lands in ROADMAP phase 2)`);
+	throw new Error(`SANDBOX_PROVIDER=${kind} is not implemented yet (ecs lands in ROADMAP's AWS phase)`);
 }
 
 /** One sandbox per Pi session: provisioned lazily on first use, released after idleMs without use. */

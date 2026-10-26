@@ -450,6 +450,8 @@ The decisions are [ADR 0005](decisions/0005-web-tui.md) (Phase 1), [ADR 0013](de
 ## 8. Deployment
 The full decision is in [ADR 0006](decisions/0006-deployment.md).
 
+**Reached now** (Phase 2, local hosting, 2026-10-26, [ADR 0015](decisions/0015-tunnel.md)): the local stack as above, plus an optional `tunnel` service: Cloudflare's connector, `cloudflared`, on the `egress` network only, with no published port and only its own token as a secret. It dials out to Cloudflare and forwards the App's and the terminal's host names to `gaffer:7682` and `gaffer:7681`. Cloudflare Access puts a login in front of each: an email allowlist with a one-time PIN, the trusted few for the App and the owner alone for the terminal. The connector checks Access's token again. The ports stay on `127.0.0.1`. `gaffer-web` also accepts its public host name, over https only, and ttyd's `--check-origin` accepts the terminal's. On is `docker compose up -d tunnel`, off is `docker compose stop tunnel`, and without it Gaffer is local as before. Phase numbers in the rest of this section predate that phase: its "Phase 2 — AWS" is now Phase 3, and its "Phase 3" (multi-user) is Phase 4 ([ROADMAP](ROADMAP.md)).
+
 ```mermaid
 flowchart TB
   subgraph Local["Phase 1 — docker compose (single user)"]
@@ -474,7 +476,7 @@ flowchart TB
 | Sandbox | `sandbox` container on `internal: true` network, `runsc` if Linux | **Separate** Fargate task (not a sidecar), SG ingress from harness only, no egress, no public IP; warm pool of 1 | Container with `runsc`; K8s: Pod with gVisor RuntimeClass + NetworkPolicy deny-all |
 | Sessions/data | Named volumes | EFS (+ S3 nightly) | Volume + restic/S3 backup |
 | Secrets | Compose `secrets:` → harness only | Secrets Manager → harness task only | SOPS/env file → harness only |
-| Auth | Localhost bind | ALB OIDC (Cognito or IdP) | oauth2-proxy |
+| Auth | Localhost bind; shared through the `tunnel` service with Cloudflare Access in front (ADR 0015) | ALB OIDC (Cognito or IdP) | oauth2-proxy |
 | Egress | Harness: default | Harness: NAT with a **required** allowlist (LLM provider, FPL, football-data) via Network Firewall (ADR 0013) | Host firewall |
 
 **Config** is all environment variables: `GAFFER_PROVIDER`, `GAFFER_MODEL`, `GAFFER_THINKING`, `GAFFER_BUDGET_{SOFT,HARD,DAILY}`, `GAFFER_SESSIONS_ROOT` (the directory the daily cap sums), `GAFFER_ID_SALT`, `SANDBOX_PROVIDER=compose|ecs`, `SANDBOX_URL`, `PI_TELEMETRY=0`. The eval runner alone sets `GAFFER_CLOCK_OFFSET_MS` (§6.3).

@@ -3,9 +3,9 @@
 # NFR-SEC-04 port bindings, NFR-SEC-01/02 sandbox isolation, NFR-SEC-08 the built-ins locked off, FR-UI-06
 # the command allowlist in the real TUI, the Gaffer App's bridge (tests/app.mjs, M1.1-3), a live
 # fpl_snapshot round trip with odds, the gaffer_lib golden path in the sandbox within NFR-LAT-03's 60 s,
-# FR-DAT-09's fallback with the odds source down, and (M4) a scripted model's recommendation through the
-# submit gate: rejected, corrected, stored, exported and replayed. No LLM key is needed: the model is Pi's
-# scripted faux provider.
+# FR-DAT-09's fallback with the odds source down, ADR 0015's origin checks for the tunnel's host names, and (M4)
+# a scripted model's recommendation through the submit gate: rejected, corrected, stored, exported and replayed.
+# No LLM key is needed: the model is Pi's scripted faux provider.
 # The live stack by default; another Compose project with its own file and host ports, for example:
 #   GAFFER_PROJECT=gaffer-test GAFFER_PORT=17681 GAFFER_APP_PORT=17682 COMPOSE_FILE=docker-compose.yml:test.override.yml ./tests/verify.sh
 set -eu
@@ -22,6 +22,35 @@ code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/")"
 echo "GET http://127.0.0.1:$PORT/ -> $code"; [ "$code" = 200 ]
 code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$APP_PORT/")"
 echo "GET http://127.0.0.1:$APP_PORT/ (the App) -> $code"; [ "$code" = 200 ]
+
+echo "== ADR 0015: the tunnel's host names accepted, every other origin refused"
+# ttyd --check-origin: a WebSocket upgrade only when the Origin's host is the Host (through the tunnel, the terminal's
+# name); a refused one gets no reply at all (curl: 000). A handshake alone: ttyd starts nothing until the page's first
+# message. --max-clients 1: close any open browser terminal first, or the accepted case is refused too.
+term_host="$(dc exec -T gaffer printenv GAFFER_PUBLIC_TERMINAL_HOST 2>/dev/null || true)"; term_host="${term_host:-term.example.test}"
+ws() { curl -s -o /dev/null -w '%{http_code}' --max-time 3 --http1.1 -H "Host: $term_host" -H "Origin: $1" -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' -H 'Sec-WebSocket-Protocol: tty' "http://127.0.0.1:$PORT/ws" || true; }
+code="$(ws "https://$term_host")"; echo "ttyd upgrade, Host and Origin $term_host -> $code"; [ "$code" = 101 ] || { echo "FAIL: refused (is a browser terminal open? --max-clients 1)"; exit 1; }
+for o in https://evil.example "https://$term_host.evil.example" "http://127.0.0.1:$PORT"; do
+  code="$(ws "$o")"; echo "ttyd upgrade, Host $term_host, Origin $o -> $code (refused)"; [ "$code" = 000 ]
+done
+# gaffer-web: under GAFFER_PUBLIC_APP_HOST only from https://<it>; unset, that name is refused like any other.
+app_host="$(dc exec -T gaffer printenv GAFFER_PUBLIC_APP_HOST 2>/dev/null || true)"
+app() { curl -s -o /dev/null -w '%{http_code}' -H "Host: ${app_host:-gaffer.example.test}" -H "Origin: $1" "http://127.0.0.1:$APP_PORT/api/home"; }
+if [ -n "$app_host" ]; then
+  code="$(app "https://$app_host")"; echo "App, Host and Origin https://$app_host -> $code"; [ "$code" = 200 ]
+  for o in "http://$app_host" https://evil.example "https://$app_host.evil.example"; do
+    code="$(app "$o")"; echo "App, Host $app_host, Origin $o -> $code"; [ "$code" = 403 ]
+  done
+else
+  code="$(app https://gaffer.example.test)"; echo "App, no public host set, Host gaffer.example.test -> $code"; [ "$code" = 421 ]
+fi
+# The connector, when on: no published port, and on the egress network only (never sandbox_net).
+if [ -n "$(dc ps -q tunnel 2>/dev/null)" ]; then
+  [ "$(docker inspect "$(dc ps -q tunnel)" --format '{{json .HostConfig.PortBindings}}')" = "{}" ] || { echo "FAIL: tunnel publishes ports"; exit 1; }
+  nets="$(docker inspect "$(dc ps -q tunnel)" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}')"
+  echo "tunnel networks: $nets"; [ "$nets" = "${PROJECT}_egress " ] || { echo "FAIL: tunnel networks"; exit 1; }
+fi
 
 echo "== NFR-SEC-01/02: sandbox isolation"
 dc exec -T gaffer node --input-type=module - < tests/isolation.mjs

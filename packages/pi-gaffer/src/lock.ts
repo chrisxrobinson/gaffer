@@ -5,7 +5,7 @@
  * - The session lock, `<session file>.lock`: one writer per session. Taken on session_start, released on
  *   shutdown or switch; a second process opens the session read-only.
  * - The run lock, `<sessions root>/.gaffer-run.lock`: one run at a time per harness (Phase 1.1 only; per-session
- *   sandboxes retire it in Phase 2). The Compose provider clears /work only while holding it.
+ *   sandboxes retire it in the AWS phase). The Compose provider clears /work only while holding it.
  *
  * A lock is a file created with O_EXCL holding its owner's pid, host, process start time and a heartbeat that the
  * owner rewrites every few seconds. It is stale when its heartbeat is older than STALE_MS, or when it names a

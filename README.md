@@ -2,7 +2,7 @@
 
 A Fantasy Premier League advisor built as a [Pi](https://pi.dev) package. Pi's agent loop runs unchanged. Everything FPL-specific lives in Gaffer's extensions, skills and theme, a tested Python library, and a sandbox with no network where the model's code runs. You use it in your browser, through the Gaffer App or the Gaffer Terminal (Pi's terminal UI).
 
-**Status: Phase 1.1 deployed** (2026-10-23: Pi 1.3.0, the Gaffer Terminal and the Gaffer App live). **Phase 1 is not closed yet:** its exit needs three consecutive live GWs scored, and so far only GW7 is (GW8 is waiting for FPL's data check; GW9 is still to come). Gaffer loads your team from the public FPL API and recommends what to do for the next gameweek: transfers, starting XI and bench, captain and vice-captain, chip, and a plan for the next four gameweeks. Its model (bookmaker odds and a Dixon-Coles team model, expected minutes, component expected points) feeds an optimiser; the language model reads the team news, chooses between the optimiser's plans and explains the choice. Nothing is shown as a recommendation until deterministic code has checked it against FPL's rules and your preferences and recomputed every number in it. Once a GW is finished, Gaffer can score its recommendations against what you actually scored and two simple baselines (`/scorecard`), and a static admin report shows sessions, cost, latency, errors and data-source health. A 31-case eval suite tests the whole agent. See [docs/ROADMAP.md](docs/ROADMAP.md).
+**Status: Phase 1.1 deployed** (2026-10-23: Pi 1.3.0, the Gaffer Terminal and the Gaffer App live); **Phase 2 in progress** (local hosting: a link with a login, through Cloudflare Tunnel and Access). **Phase 1 is not closed yet:** its exit needs three consecutive live GWs scored, and GW7 and GW8 are (GW9 is still to come). Gaffer loads your team from the public FPL API and recommends what to do for the next gameweek: transfers, starting XI and bench, captain and vice-captain, chip, and a plan for the next four gameweeks. Its model (bookmaker odds and a Dixon-Coles team model, expected minutes, component expected points) feeds an optimiser; the language model reads the team news, chooses between the optimiser's plans and explains the choice. Nothing is shown as a recommendation until deterministic code has checked it against FPL's rules and your preferences and recomputed every number in it. Once a GW is finished, Gaffer can score its recommendations against what you actually scored and two simple baselines (`/scorecard`), and a static admin report shows sessions, cost, latency, errors and data-source health. A 31-case eval suite tests the whole agent. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 Gaffer is read-only. It never logs in to FPL and never changes your team.
 
@@ -102,6 +102,41 @@ To stop the stack, run `docker compose down`. Your sessions and snapshots are ke
 - Closing the tab doesn't stop anything: reopen the URL and you're back in the same session, including a run that was in progress. If the container restarts, Pi resumes the most recent session, unless the Gaffer App has it open: then the newest one it doesn't. A session the App has open is read-only here; `/new` starts another.
 - **Only one browser tab can be connected at a time.** A second tab shows "Press ⏎ to Reconnect" and won't connect until the first tab is closed. See [Troubleshooting](#troubleshooting).
 
+### Sharing it: a link with a login
+
+Gaffer can be reached from outside your machine, from your phone or by a few people you trust, through a Cloudflare Tunnel with Cloudflare Access in front ([ADR 0015](docs/decisions/0015-tunnel.md)). Nothing listens beyond `127.0.0.1`: the `tunnel` service, Cloudflare's connector, dials out to Cloudflare. It needs a domain on a Cloudflare account; Cloudflare's Zero Trust Free plan covers it.
+
+Turn it on and off from `deploy/compose`:
+
+```bash
+docker compose up -d tunnel
+```
+
+```bash
+docker compose stop tunnel
+```
+
+With it off, or never set up, Gaffer works locally exactly as above.
+
+**Who can get in:** only the email addresses in each Access policy, after a one-time code sent to that address. As set up below, the App is open to you and the people you list, and the terminal to you alone. A browser that isn't signed in sees Cloudflare's login page and nothing of Gaffer. Everyone you let into the App sees every session in it, yours included, spends from the same daily cap (`GAFFER_BUDGET_DAILY`), and waits while another person's run is going (one run at a time), so keep the list to people you trust. Cloudflare terminates the HTTPS connection, so it can see what passes through it.
+
+One-time setup, in the Cloudflare dashboard (the names may move around):
+
+1. Add your domain to Cloudflare, with a full setup (Cloudflare's nameservers) or a partial (CNAME) one.
+2. Open Zero Trust, choose a team name and the Free plan. One-time PIN login is on by default.
+3. Under Access, **before** the routes in step 5, add two **self-hosted** applications, each with an *Allow* policy and a 24-hour session:
+   - `gaffer.<your domain>`: include the emails of you and the people you trust;
+   - `term.<your domain>`: include only your email.
+4. Under Networks → Tunnels, create a **Cloudflared** tunnel named `gaffer`. Don't install the connector; copy the token from the install command into `deploy/compose/secrets/cloudflared_token` (one line; `./init-secrets.sh` creates the empty file).
+5. In the tunnel, add two published application routes (public hostnames): `gaffer.<your domain>` → `HTTP` `gaffer:7682`, and `term.<your domain>` → `HTTP` `gaffer:7681`. On each, turn on **Protect with Access** and choose its application, so the connector checks Access's token too.
+6. Put the names in `deploy/compose/.env`, then run `docker compose up -d` once so Gaffer picks them up:
+   ```
+   GAFFER_PUBLIC_APP_HOST=gaffer.<your domain>
+   GAFFER_PUBLIC_TERMINAL_HOST=term.<your domain>
+   ```
+
+Then turn the tunnel on and open `https://gaffer.<your domain>`. To let someone else in, or out, change the App's Access policy; nothing in Gaffer changes.
+
 ### Configuration
 
 Set these in your shell or in a `deploy/compose/.env` file, then run `docker compose up -d`.
@@ -116,6 +151,8 @@ Set these in your shell or in a `deploy/compose/.env` file, then run `docker com
 | `GAFFER_BUDGET_DAILY` | `5` | USD per UTC day, across sessions. New prompts are refused once it's reached |
 | `GAFFER_MAX_TURNS` | `40` | Turns per run |
 | `GAFFER_SESSIONS_ROOT` | `/sessions` (image) | The directory whose sessions the daily cap and `/usage` sum |
+| `GAFFER_PUBLIC_APP_HOST` | (empty) | The App's host name behind the tunnel, for example `gaffer.example.com`. Empty: the App answers on `127.0.0.1` and `localhost` only |
+| `GAFFER_PUBLIC_TERMINAL_HOST` | (empty) | The terminal's host name behind the tunnel; the App's *Open in terminal* link uses it when the App is opened there |
 | `GAFFER_TERMINAL_THEME` | `dark` | The browser terminal's palette, `dark` or `light`. Pi follows it with the `gaffer-dark` or `gaffer-light` theme |
 
 To use another provider, set `GAFFER_PROVIDER` and `GAFFER_MODEL`, and its key: `docker-compose.yml` reads the Anthropic key from `secrets/` and passes `OPENAI_API_KEY` and `GEMINI_API_KEY` through from your shell. A model newer than Pi's catalogue, or a local OpenAI-compatible server, is declared in a `models.json` in the agent dir (`/opt/pi-agent`); the image ships none (ADR 0009). The eval suite is what qualifies a model: `pnpm eval --model <provider>/<model>` (see Develop).
@@ -231,6 +268,12 @@ Conventions:
 ## Troubleshooting
 
 **"Press ⏎ to Reconnect" and nothing happens.** Another browser tab, or an embedded browser pane, is already connected. ttyd allows one client (`--max-clients 1`). Close the other tab and reload. To confirm, run `docker compose logs gaffer | grep max-clients`: a refused connection logs `refuse to serve WS client due to the --max-clients option`. If there are no refusals in the log, check that the container is up with `docker compose ps`.
+
+**The link shows a Cloudflare error page ("Error 1033" or "tunnel error").** The tunnel is off, or its token is wrong: `docker compose logs tunnel`. A *Bad gateway* page means the tunnel is up but Gaffer isn't: `docker compose up -d`.
+
+**The App says "wrong host" or "cross-origin request refused" through the link.** `GAFFER_PUBLIC_APP_HOST` in `.env` doesn't match the link's host name, or Gaffer was started before it was set. Fix it and run `docker compose up -d`.
+
+**The App stops responding through the link after a day.** The Access session has expired: reload the page and sign in again.
 
 **"Your credit balance is too low to access the Anthropic API".** The key is valid but its account has no credit. Add credit under Plans & Billing in the Anthropic Console.
 

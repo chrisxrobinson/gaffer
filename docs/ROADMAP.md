@@ -1,6 +1,6 @@
 # Gaffer — Roadmap
 
-**Date:** 2026-09-27, updated 2026-10-18 (Phase 1.1 added; Phases 2 and 3 revised) and 2026-10-23 (Phase 1.1 deployed). Each phase lists its scope and **exit criteria**. Exit criteria refer to [REQUIREMENTS](REQUIREMENTS.md) IDs and must all pass before the next phase starts. Timing follows the FPL calendar, checked live on 2026-10-17: GW8's deadline is 2026-10-23 17:30Z, GW9's 2026-10-31 11:00Z, GW10's 2026-11-06 18:30Z, then an international break to GW11 (2026-11-21 11:00Z), GW12 2026-11-27, GW13 2026-12-02; first-half chips expire at the GW19 deadline (2027-01-01 18:30Z); blanks and doubles historically fall in GW29–37.
+**Date:** 2026-09-27, updated 2026-10-18 (Phase 1.1 added; Phases 2 and 3 revised), 2026-10-23 (Phase 1.1 deployed) and 2026-10-26 (Phase 2 is now local hosting; AWS moves to Phase 3 and multi-user to Phase 4, both as written). Documents dated before 2026-10-26 (ADRs, research, ARCHITECTURE) call the AWS phase "Phase 2" and multi-user "Phase 3". Each phase lists its scope and **exit criteria**. Exit criteria refer to [REQUIREMENTS](REQUIREMENTS.md) IDs and must all pass before the next phase starts. Timing follows the FPL calendar, checked live on 2026-10-17: GW8's deadline is 2026-10-23 17:30Z, GW9's 2026-10-31 11:00Z, GW10's 2026-11-06 18:30Z, then an international break to GW11 (2026-11-21 11:00Z), GW12 2026-11-27, GW13 2026-12-02; first-half chips expire at the GW19 deadline (2027-01-01 18:30Z); blanks and doubles historically fall in GW29–37.
 
 ## Phase 0 — Research & architecture ✅ (this run)
 - **Scope:** research notes 01–06, spike S1, ADRs 0001–0008, ARCHITECTURE, REQUIREMENTS, ROADMAP, REPO_LAYOUT.
@@ -67,6 +67,8 @@ Runs on one machine with `docker compose up`, then `http://127.0.0.1:7681`. It h
 
 **Status on 2026-10-23:** the Phase 1 exit is still **not met**. **GW7 is scored**: `gaffer-eval` wrote its five real recommendations to `outcomes.jsonl`. **GW8** has one real recommendation, made before the deadline, and is scored once FPL checks GW8 (about 2026-10-28). **GW9** still needs a recommendation before 2026-10-31 11:00Z. The earliest close is GW9's data check, about 2026-11-04, if `gaffer-eval` is run after each check.
 
+**Status on 2026-10-26:** still **not met**, one GW to go. **GW8 is scored** (FPL checked it early; `gaffer-eval` scored its one real recommendation: Gaffer 61, actual 61, baselines B0 44 and B1 41). **GW9** needs a recommendation before 2026-10-31 11:00Z; the earliest close is still GW9's data check, about 2026-11-04.
+
 ## Phase 1.1 — Pi 1.x and Gaffer's own UIs (single user, local)
 A short phase between the local MVP and the cloud. It brings Gaffer onto Pi 1.3.0 with every new built-in locked off, makes the browser terminal Gaffer's own, and adds the Gaffer App, a structured web app over the same agent and session store. Design: [ADRs 0009–0014](decisions/README.md), [docs/ui](ui/README.md), [MIGRATION-PI-1X](MIGRATION-PI-1X.md), research 07–12.
 
@@ -127,9 +129,25 @@ The break is the longest gap between deadlines this autumn, so the largest chang
 - The *Chip planner* is available before the GW16 deadline (2026-12-19), so first-half chips can be planned before they expire at GW19.
   - **Status 2026-10-23: met.** It has been live since 2026-10-23, in the App and as `/chips`, and was run with the real model in both.
 - The Phase 1 exit (three consecutive live GWs scored) is met, whichever finishes first.
-  - **Status 2026-10-23: not met.** GW7 is scored, GW8 is waiting for FPL's check and GW9 needs a recommendation (see Phase 1 above).
+  - **Status 2026-10-23: not met.** GW7 is scored, GW8 is waiting for FPL's check and GW9 needs a recommendation (see Phase 1 above). **2026-10-26:** GW8 is scored too; GW9 remains.
 
-## Phase 2 — Cloud deployment (single user, AWS; also documented for a generic host)
+## Phase 2 — Local hosting (shared from the owner's Mac, behind a login)
+Planned and started 2026-10-26, in place of the AWS phase, which moves to Phase 3 as written. Gaffer stays on Docker Compose on the owner's Mac; a free tunnel gives it an HTTPS link that the owner can open from a phone and send to a few trusted people, with an identity check in front ([ADR 0015](decisions/0015-tunnel.md)).
+- **Scope:**
+  - a clean repository: build journals, per-milestone stacks, spike code and output, and result dumps out of the tree (the build record stays on the owner's machine, outside the repo); each spike's findings kept in `docs/spikes/`
+  - the `tunnel` Compose service: Cloudflare's connector (`cloudflared`), pinned, on the `egress` network only, its token a Compose secret; on with `docker compose up -d tunnel`, off with `docker compose stop tunnel`
+  - Cloudflare Access in front of both host names: the App for the owner and an allowlist of trusted people, the terminal for the owner only; login by one-time PIN; "Protect with Access" on each route
+  - `gaffer-web` accepts its public host name over https only; ttyd's `--check-origin` accepts the terminal's; both refuse every other origin (tests in `bridge.test.ts` and `verify.sh`)
+  - unchanged: the ports on `127.0.0.1`, ADR 0009's security rules, the budget caps ($1.50 a session, $5.00 a day)
+- **Exit:**
+  - The regression set passes as at the Phase 1.1 close (`pnpm test`, the sandboxd and `gaffer_lib` suites, `verify.sh`, `pnpm eval --model faux`); `git status` is clean apart from ignored files; no link in the repo points at a removed file; the README gets a new reader from clone to a running Gaffer.
+  - From a phone, off the home network: open the link, sign in, run *Recommend* in the App, and the result renders.
+  - A browser that isn't signed in gets no further than the login; another origin is refused (NFR-SEC-04).
+  - NFR-PRIV-02: an egress capture during a run through the tunnel shows the harness talking only to the LLM provider, FPL and football-data, and the connector only to Cloudflare.
+  - With the tunnel off, Gaffer works locally exactly as before.
+
+## Phase 3 — Cloud deployment (single user, AWS; also documented for a generic host)
+*Was Phase 2 until 2026-10-26; kept as written. A fuller AWS plan (research 13–16, ADRs numbered 0015–0020) sits on the unmerged `phase-2-plan` branch; if it is merged, its ADRs take 0016 onwards.*
 - **Scope:**
   - Terraform/CDK for: an ECS Fargate service (harness), a separate Fargate sandbox task definition with no egress and no IAM role, an ALB with OIDC (Cognito) and an idle timeout of 3600 s, EFS for `/sessions` and `/data` with nightly S3 copies, and Secrets Manager
   - the `SandboxProvider=ecs` implementation with a warm pool of 1
@@ -148,7 +166,8 @@ The break is the longest gap between deadlines this autumn, so the largest chang
   - Both UIs reachable only through OIDC; a run in each at once uses two sandboxes (run lock gone).
   - ADR 0011's Durable triggers reviewed (T3: the share of runs interrupted by restarts is measured here).
 
-## Phase 3 — Multi-user
+## Phase 4 — Multi-user
+*Was Phase 3 until 2026-10-26; kept as written.*
 - **Scope** (the seams from ARCHITECTURE §8):
   - **changed by Phase 1.1:** the `gaffer-web` bridge and the Gaffer App already exist (single-user, ADR 0014). Phase 3 adds OIDC → tenant mapping, per-tenant session and data paths, and sticky routing of each session's Pi process across N harness tasks; the browser terminal stays operator-only, and other users get the App
   - per-tenant paths
@@ -168,9 +187,9 @@ The break is the longest gap between deadlines this autumn, so the largest chang
 | Pi API churn (Pi minors break things; eleven releases from 0.87.1 to 1.3.0 in 24 days) | ADR 0009: exact pins incl. the transitive tree, gated upgrades landed after a deadline, rollback image | Every Pi minor |
 | New Pi built-ins load by default (MCP, codemode, tool search, llama.cpp in 0.99.0) | ADR 0012's lock and NFR-SEC-08 tests; the changelog review lists built-ins first | Every Pi release |
 | The command-refusal seam is undocumented (`CustomEditor.onSubmit`) | S5's script as a regression test; the security controls don't depend on it (ADR 0013) | Every Pi release |
-| Pi Durable becomes the better base | ADR 0011's triggers T1–T3 | Every Pi release; Phase 3 planning |
+| Pi Durable becomes the better base | ADR 0011's triggers T1–T3 | Every Pi release; Phase 4 (multi-user) planning |
 | Model prices change under a fixed catalogue (Sonnet 5.5 cache reads halved on 2026-10-07) | NFR-MNT-05 check; prices from the provider's list and release notes (ADR 0010) | Each upgrade; monthly |
 | FPL API change or blocking | Schema validation fails loudly; fallback to stale snapshot | Continuous |
 | GW19 chip-expiry conflict (API vs PL article) | Re-verify on the FPL site | Early December 2026 |
 | FT derivation wrong for edge cases | Reference accounts re-checked | After each WC/FH use in a reference account |
-| Terms of use (PL / football-data) | Legal review | Before phase 3 |
+| Terms of use (PL / football-data) | Legal review | Before phase 4 (multi-user); sharing with a trusted few in Phase 2 stays personal use |

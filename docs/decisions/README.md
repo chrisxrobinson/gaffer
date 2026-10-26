@@ -16,6 +16,7 @@
 | [0012](0012-builtins-locked-off.md) | Codemode, MCP, tool search and llama.cpp: off, locked by flag and setting | Accepted |
 | [0013](0013-gaffer-terminal.md) | Gaffer Terminal: Gaffer's identity and command surface on the Pi TUI | Accepted |
 | [0014](0014-gaffer-app.md) | Gaffer App: a local web app over `pi --mode rpc`, sharing one session store with the terminal | Accepted |
+| [0015](0015-tunnel.md) | Sharing the local stack: Cloudflare Tunnel with Cloudflare Access in front | Accepted |
 
 Format: context, options considered, decision, consequences. Evidence links point to `docs/research/` and `docs/spikes/` (each spike's findings; its code and raw output were build artefacts and are not in the repo).
 
